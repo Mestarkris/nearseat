@@ -86,7 +86,7 @@ npm run dev             # → http://localhost:5173
 | `npm run deploy` | Sub-accounts `tusdc`, `club`, `gate`, `relayer`, `fan01..fan10`; the vault deployed as a **global contract by hash**; NearSeat deployed on `<you>.testnet`; `.env` filled in |
 | `MY_ACCOUNT=<your wallet>.testnet npm run seed` | 10 memberships (each with a keyless vault), 3 fixtures (Harbour City FC, Lagoon Athletic, Eko Rangers), funded fans, 50 tUSDC in the members' pool, a kit poll |
 | `npm run verify` | ✅ for every vault: `keys=0`, `global_code=<hash>` = your local build |
-| `npm run relayer` (one terminal) and `npm run keeper` (another) | Relayer on `:8787` (gasless relay, members-only API, gate scanning); keeper settling payouts, refunds and auto-lend |
+| `npm run relayer` (one terminal) and `npm run keeper` (another) | Relayer on `:8787` (gasless relay, members-only API, gate scanning); keeper settling payouts, refunds and auto-lend. In production both run without a server: the relayer as Vercel functions under `/api`, the keeper as a GitHub Actions cron |
 | `npm run dev`, open **My membership** with `MY_ACCOUNT`'s wallet | Your card, balance, inventory and the live match card |
 | `npm run demo` | A full match, live: tickets sold → a member lends a seat → check-ins → kickoff → goals → full time → payout bar fills as each vault is settled |
 | **Pass** on your phone, **Scan** on another device | Green *Welcome in*, and attendance recorded on-chain. A screenshot shown 30 s later turns red |
@@ -206,7 +206,7 @@ docs/              THREAT_MODEL.md, ARCHITECTURE.md, SUBMISSION.md
 - **Gasless relaying needs a wallet that signs NEP-366 delegate actions.** When the wallet can't, the app falls back to a normal transaction, which costs the fan a fraction of a cent of testnet NEAR. 1-yocto deposits always come from the fan's own account.
 - **The gate scanner key lives in the relayer** (the club's server). A stolen scanner key still can't admit a non-holder, because the contract re-checks, but it could record attendance for absent holders (T35). The club can rotate it with `set_gate`.
 - **Sybil touts** across many accounts are only limited per account (T24).
-- **Free-tier hosting sleeps.** The first relayer request can take about 50 s, and the web app keeps working read-only meanwhile.
+- **Serverless relayer (Vercel).** The rate limiter and single-use NEP-413 nonce store live in memory per function instance, so a replay could slip through if it lands on a different instance within the 5-minute window. The live owner check still applies on every request. A shared store (e.g. Vercel KV) closes this. The keeper runs as a GitHub Actions cron every 10 minutes.
 - **No upgrade method by design.** After `lock`, a bug fix means a new deployment.
 - **Reproducible build image digest** is pinned at release. Until then, compare hashes built locally with the pinned toolchain.
 

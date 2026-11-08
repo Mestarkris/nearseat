@@ -50,7 +50,10 @@ export async function tick() {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url === `file://${process.argv[1]}` && process.argv.includes("--once")) {
+  // One pass, for schedulers (the GitHub Actions cron in .github/workflows/keeper.yml).
+  await tick();
+} else if (import.meta.url === `file://${process.argv[1]}`) {
   log(`keeper ${keeper.accountId} watching ${CONTRACT} every ${EVERY_MS / 1000}s`);
   for (;;) {
     await tick().catch((e) => log("tick failed:", e.message));

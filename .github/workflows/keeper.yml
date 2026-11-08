@@ -1,0 +1,26 @@
+name: Keeper
+# Settles payouts, processes refunds and fires auto-lend rules on testnet.
+# Every call is permissionless and re-checked by the contract.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: node keeper/src/keeper.mjs --once
+        env:
+          NEAR_NETWORK: testnet
+          NEAR_RPC_URL: https://test.rpc.fastnear.com
+          CONTRACT_ID: nearseat.testnet
+          RELAYER_ID: relayer.nearseat.testnet
+          RELAYER_NEARSEAT_TESTNET_PRIVATE_KEY: ${{ secrets.RELAYER_NEARSEAT_TESTNET_PRIVATE_KEY }}
