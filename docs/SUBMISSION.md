@@ -24,7 +24,7 @@ Record in the browser at 1280×800, with a phone mirrored for the gate pass. Run
 > Keyless vaults · NEP-171 · stablecoin payouts · gasless fans
 >
 > Built at NEAR HACKATHON #NEARHackathon
-> https://github.com/Mestarkris/nearseat · https://mestarkris.github.io/nearseat/
+> https://github.com/Mestarkris/nearseat · https://nearseat.vercel.app
 
 ## Project description (about 1,250 characters)
 

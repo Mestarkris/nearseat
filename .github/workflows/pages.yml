@@ -33,7 +33,7 @@ jobs:
           VITE_CONTRACT_ID: ${{ vars.VITE_CONTRACT_ID || 'nearseat.testnet' }}
           VITE_TUSDC_ID: ${{ vars.VITE_TUSDC_ID || 'tusdc.nearseat.testnet' }}
           VITE_CLUB_ID: ${{ vars.VITE_CLUB_ID || 'club.nearseat.testnet' }}
-          VITE_RELAYER_URL: ${{ vars.VITE_RELAYER_URL || 'https://nearseat-relayer.onrender.com' }}
+          VITE_RELAYER_URL: ${{ vars.VITE_RELAYER_URL || 'https://nearseat.vercel.app/api' }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: web/dist
