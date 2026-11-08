@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node src/server.mjs",
-    "test": "node --test test/"
+    "test": "node --test \"test/*.test.*\""
   },
   "dependencies": {
     "@nearseat/shared": "1.0.0",
