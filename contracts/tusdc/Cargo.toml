@@ -1,0 +1,17 @@
+[package]
+name = "tusdc"
+version = "1.0.0"
+description = "tUSDC: a valueless NEP-141 test token with an open faucet, for NearSeat on testnet"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+near-sdk.workspace = true
+near-contract-standards.workspace = true
+
+[dev-dependencies]
+near-sdk = { workspace = true, features = ["unit-testing"] }

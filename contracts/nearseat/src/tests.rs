@@ -1,0 +1,706 @@
+//! Unit tests. Cross-contract calls don't execute here, so callbacks are
+//! invoked directly with a simulated promise result. The same flows run
+//! end-to-end with real receipts in `tests/sandbox.rs`.
+
+use super::*;
+use crate::membership::MINT_DEPOSIT;
+use near_contract_standards::fungible_token::receiver::FungibleTokenReceiver;
+use near_contract_standards::non_fungible_token::core::NonFungibleTokenCore;
+use near_sdk::json_types::{Base58CryptoHash, U64};
+use near_sdk::test_utils::VMContextBuilder;
+use near_sdk::{testing_env, NearToken, PromiseResult, RuntimeFeesConfig};
+
+const CONTRACT: &str = "nearseat.testnet";
+const CLUB: &str = "club.testnet";
+const GATE: &str = "gate.testnet";
+const USDC: &str = "tusdc.testnet";
+const ALICE: &str = "alice.testnet";
+const BOB: &str = "bob.testnet";
+const CAROL: &str = "carol.testnet";
+
+const T0: u64 = 1_800_000_000_000_000_000;
+const HOUR: u64 = 3_600_000_000_000;
+const ONE: u128 = 1_000_000; // 1 tUSDC
+const SEAT_A: &str = "c5-12";
+const SEAT_B: &str = "c5-13";
+
+fn a(s: &str) -> AccountId {
+    s.parse().unwrap()
+}
+
+fn tid(seat: &str) -> TokenId {
+    membership_token_id(seat)
+}
+
+struct Env {
+    now: u64,
+}
+
+impl Env {
+    fn call(&self, who: &str, deposit: u128) {
+        let mut b = VMContextBuilder::new();
+        b.current_account_id(a(CONTRACT))
+            .predecessor_account_id(a(who))
+            .signer_account_id(a(who))
+            .attached_deposit(NearToken::from_yoctonear(deposit))
+            .block_timestamp(self.now);
+        testing_env!(b.build());
+    }
+
+    fn callback(&self, ok: bool) {
+        let mut b = VMContextBuilder::new();
+        b.current_account_id(a(CONTRACT))
+            .predecessor_account_id(a(CONTRACT))
+            .block_timestamp(self.now);
+        let result = if ok { PromiseResult::Successful(vec![]) } else { PromiseResult::Failed };
+        testing_env!(
+            b.build(),
+            near_sdk::test_vm_config(),
+            RuntimeFeesConfig::test(),
+            Default::default(),
+            vec![result]
+        );
+    }
+}
+
+fn setup() -> (NearSeat, Env) {
+    let env = Env { now: T0 };
+    env.call(CLUB, 0);
+    let c = NearSeat::new(
+        a(CLUB),
+        a(GATE),
+        a(USDC),
+        Base58CryptoHash::from([7u8; 32]),
+        "2026/27".into(),
+        U128(200 * ONE),
+        50,
+        None,
+    );
+    (c, env)
+}
+
+fn mint(c: &mut NearSeat, e: &Env, seat: &str, owner: &str) {
+    e.call(CLUB, MINT_DEPOSIT.as_yoctonear());
+    c.mint_membership(seat.into(), a(owner), None).detach();
+    e.callback(true);
+    assert!(c.on_vault_created(seat.into(), a(owner), Tier::Bronze));
+}
+
+fn pay(c: &mut NearSeat, e: &Env, from: &str, amount: u128, msg: &str) {
+    e.call(USDC, 0);
+    let _ = c.ft_on_transfer(a(from), U128(amount), msg.to_string());
+}
+
+fn new_match(c: &mut NearSeat, e: &Env) -> MatchId {
+    e.call(CLUB, 0);
+    c.create_match("Lagos City".into(), "League".into(), U64(e.now + HOUR), U128(15 * ONE), None, None)
+}
+
+fn club(e: &Env) {
+    e.call(CLUB, 0);
+}
+
+// ---------- membership & vault ----------
+
+#[test]
+fn mint_creates_membership_owning_vault_subaccount() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    let m = c.membership(tid(SEAT_A)).unwrap();
+    assert_eq!(m.vault.as_str(), "seat-c5-12.nearseat.testnet");
+    assert_eq!(m.owner_id.as_str(), ALICE);
+    assert_eq!(c.nft_token(tid(SEAT_A)).unwrap().owner_id.as_str(), ALICE);
+}
+
+#[test]
+#[should_panic(expected = "only the club can do this")]
+fn outsider_cannot_mint() {
+    let (mut c, e) = setup();
+    e.call(ALICE, MINT_DEPOSIT.as_yoctonear());
+    c.mint_membership(SEAT_A.into(), a(ALICE), None).detach();
+}
+
+#[test]
+#[should_panic(expected = "invalid seat")]
+fn invalid_seat_rejected() {
+    let (mut c, e) = setup();
+    e.call(CLUB, MINT_DEPOSIT.as_yoctonear());
+    c.mint_membership("z9-99".into(), a(ALICE), None).detach();
+}
+
+#[test]
+fn failed_vault_creation_mints_nothing() {
+    let (mut c, e) = setup();
+    e.call(CLUB, MINT_DEPOSIT.as_yoctonear());
+    c.mint_membership(SEAT_A.into(), a(ALICE), None).detach();
+    e.callback(false);
+    assert!(!c.on_vault_created(SEAT_A.into(), a(ALICE), Tier::Bronze));
+    assert!(c.membership(tid(SEAT_A)).is_none());
+}
+
+// ---------- pool accumulator ----------
+
+#[test]
+fn new_mint_gets_no_past_rewards() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    pay(&mut c, &e, CLUB, 100 * ONE, r#"{"action":"top_up_pool"}"#);
+    mint(&mut c, &e, SEAT_B, BOB);
+    assert_eq!(c.membership(tid(SEAT_A)).unwrap().unsettled.0, 100 * ONE);
+    assert_eq!(c.membership(tid(SEAT_B)).unwrap().unsettled.0, 0);
+}
+
+#[test]
+fn accumulator_never_over_distributes() {
+    let (mut c, e) = setup();
+    for seat in ["a1-1", "a1-2", "a1-3"] {
+        mint(&mut c, &e, seat, ALICE);
+    }
+    for amount in [1u128, 7, 10, 333_333, 2, 1_000_001] {
+        pay(&mut c, &e, CLUB, amount, r#"{"action":"top_up_pool"}"#);
+    }
+    let total: u128 = ["a1-1", "a1-2", "a1-3"]
+        .iter()
+        .map(|s| c.membership(tid(s)).unwrap().unsettled.0)
+        .sum();
+    assert!(total <= c.pool_total_distributed);
+    assert!(c.pool_total_distributed - total < 3 * 6, "dust stays tiny");
+}
+
+// ---------- tickets, refunds, matchday ----------
+
+#[test]
+fn full_time_moves_members_cut_to_pool() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    mint(&mut c, &e, SEAT_B, BOB);
+    let m = new_match(&mut c, &e);
+    pay(&mut c, &e, CAROL, 15 * ONE, &format!(r#"{{"action":"buy_seat","match_id":{m},"seat":"a1-1"}}"#));
+    pay(&mut c, &e, CAROL, 15 * ONE, &format!(r#"{{"action":"buy_seat","match_id":{m},"seat":"a1-2"}}"#));
+    club(&e);
+    c.kickoff(m);
+    c.full_time(m);
+    // 5% of 30 = 1.5 tUSDC, split over 2 memberships.
+    assert_eq!(c.membership(tid(SEAT_A)).unwrap().unsettled.0, 750_000);
+    assert_eq!(c.club_balance, 30 * ONE - 1_500_000);
+    assert_eq!(c.payout_round, 1);
+}
+
+#[test]
+#[should_panic(expected = "this member seat is not offered for this match")]
+fn cannot_sell_unlent_member_seat() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    let m = new_match(&mut c, &e);
+    pay(&mut c, &e, CAROL, 15 * ONE, &format!(r#"{{"action":"buy_seat","match_id":{m},"seat":"{SEAT_A}"}}"#));
+}
+
+#[test]
+#[should_panic(expected = "ticket limit per account reached")]
+fn per_account_ticket_cap() {
+    let (mut c, e) = setup();
+    let m = new_match(&mut c, &e);
+    for n in 1..=5 {
+        pay(&mut c, &e, CAROL, 15 * ONE, &format!(r#"{{"action":"buy_seat","match_id":{m},"seat":"b2-{n}"}}"#));
+    }
+}
+
+#[test]
+#[should_panic(expected = "seat already taken")]
+fn second_buyer_of_seat_rejected() {
+    let (mut c, e) = setup();
+    let m = new_match(&mut c, &e);
+    let msg = format!(r#"{{"action":"buy_seat","match_id":{m},"seat":"b2-1"}}"#);
+    pay(&mut c, &e, CAROL, 15 * ONE, &msg);
+    pay(&mut c, &e, BOB, 15 * ONE, &msg);
+}
+
+#[test]
+#[should_panic(expected = "single-match tickets are non-transferable")]
+fn ticket_nft_transfer_rejected() {
+    let (mut c, e) = setup();
+    let m = new_match(&mut c, &e);
+    pay(&mut c, &e, CAROL, 15 * ONE, &format!(r#"{{"action":"buy_seat","match_id":{m},"seat":"b2-1"}}"#));
+    e.call(CAROL, 1);
+    c.nft_transfer(a(BOB), format!("t{m}-b2-1"), None, None);
+}
+
+#[test]
+fn postpone_refunds_once_and_parks_failures() {
+    let (mut c, e) = setup();
+    let m = new_match(&mut c, &e);
+    pay(&mut c, &e, CAROL, 15 * ONE, &format!(r#"{{"action":"buy_seat","match_id":{m},"seat":"b2-1"}}"#));
+    pay(&mut c, &e, BOB, 15 * ONE, &format!(r#"{{"action":"buy_seat","match_id":{m},"seat":"b2-2"}}"#));
+    club(&e);
+    c.postpone(m);
+    e.call(CAROL, 0); // anyone may process refunds
+    assert_eq!(c.process_refunds(m, None), 2);
+    assert_eq!(c.process_refunds(m, None), 0, "no double refund");
+    e.callback(true);
+    c.on_refunded(m, 0);
+    e.callback(false);
+    c.on_refunded(m, 1);
+    assert_eq!(c.payment(m, 0).unwrap().status, PaymentStatus::Refunded);
+    assert_eq!(c.payment(m, 1).unwrap().status, PaymentStatus::RefundClaimable);
+    assert_eq!(c.claimable_of(a(BOB)).0, 15 * ONE);
+}
+
+#[test]
+#[should_panic(expected = "match is not live")]
+fn goal_before_kickoff_rejected() {
+    let (mut c, e) = setup();
+    let m = new_match(&mut c, &e);
+    club(&e);
+    c.goal(m, Side::Home, "Okafor".into());
+}
+
+#[test]
+#[should_panic(expected = "match is not live")]
+fn full_time_twice_rejected() {
+    let (mut c, e) = setup();
+    let m = new_match(&mut c, &e);
+    club(&e);
+    c.kickoff(m);
+    c.full_time(m);
+    c.full_time(m);
+}
+
+#[test]
+fn goal_stamps_only_for_checked_in_members() {
+    let (mut c, mut e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    mint(&mut c, &e, SEAT_B, BOB);
+    let m = new_match(&mut c, &e);
+    e.call(GATE, 0);
+    c.check_in(tid(SEAT_A), m, a(ALICE));
+    club(&e);
+    c.kickoff(m);
+    e.now += 12 * 60 * 1_000_000_000;
+    club(&e);
+    c.goal(m, Side::Home, "Okafor".into());
+    c.goal(m, Side::Away, "Visitor".into());
+    e.now += 1;
+    e.call(GATE, 0);
+    c.check_in(tid(SEAT_B), m, a(BOB)); // arrives after the goal
+    let stamps_a = c.membership(tid(SEAT_A)).unwrap().goal_stamps;
+    assert_eq!(stamps_a.len(), 1, "home goals only");
+    assert_eq!(stamps_a[0].minute, 13);
+    assert!(c.membership(tid(SEAT_B)).unwrap().goal_stamps.is_empty());
+}
+
+#[test]
+#[should_panic(expected = "only the gate scanner can do this")]
+fn non_gate_cannot_check_in() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    let m = new_match(&mut c, &e);
+    e.call(ALICE, 0);
+    c.check_in(tid(SEAT_A), m, a(ALICE));
+}
+
+#[test]
+#[should_panic(expected = "this seat already entered")]
+fn second_check_in_rejected() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    let m = new_match(&mut c, &e);
+    e.call(GATE, 0);
+    c.check_in(tid(SEAT_A), m, a(ALICE));
+    c.check_in(tid(SEAT_A), m, a(ALICE));
+}
+
+#[test]
+fn tier_only_from_attendance() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    assert_eq!(c.membership(tid(SEAT_A)).unwrap().tier, Tier::Bronze);
+    for _ in 0..2 {
+        let m = new_match(&mut c, &e);
+        e.call(GATE, 0);
+        c.check_in(tid(SEAT_A), m, a(ALICE));
+    }
+    assert_eq!(c.membership(tid(SEAT_A)).unwrap().tier, Tier::Gold);
+}
+
+#[test]
+#[should_panic(expected = "members_cut_bps must be 1%..20%")]
+fn admin_setters_clamped() {
+    let (mut c, e) = setup();
+    e.call(CLUB, 0);
+    c.set_config(Config { members_cut_bps: 0, ..Config::default() });
+}
+
+#[test]
+#[should_panic(expected = "only the current holder can do this")]
+fn club_cannot_move_member_funds() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    e.call(CLUB, 1);
+    c.withdraw(tid(SEAT_A), U128(1)).detach();
+}
+
+// ---------- lending ----------
+
+fn lend(c: &mut NearSeat, e: &Env, m: MatchId, price: u128) {
+    e.call(ALICE, 1);
+    c.lend(tid(SEAT_A), m, U128(price), None);
+}
+
+#[test]
+#[should_panic(expected = "price is above the club's lend cap")]
+fn lend_price_cap() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    let m = new_match(&mut c, &e);
+    lend(&mut c, &e, m, 23 * ONE); // cap = 1.5 × 15 = 22.5
+}
+
+#[test]
+#[should_panic(expected = "seat is already lent for this match")]
+fn double_lend_rejected() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    let m = new_match(&mut c, &e);
+    lend(&mut c, &e, m, 20 * ONE);
+    lend(&mut c, &e, m, 20 * ONE);
+}
+
+fn rent(c: &mut NearSeat, e: &Env, m: MatchId) {
+    pay(c, e, CAROL, 20 * ONE, &format!(r#"{{"action":"buy_seat","match_id":{m},"seat":"{SEAT_A}"}}"#));
+}
+
+#[test]
+fn renter_holds_pass_and_income_follows_token() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    let m = new_match(&mut c, &e);
+    lend(&mut c, &e, m, 20 * ONE);
+    rent(&mut c, &e, m);
+    assert_eq!(c.holder_for(tid(SEAT_A), m).as_str(), CAROL);
+    club(&e);
+    c.kickoff(m);
+    c.full_time(m);
+    // 20 tUSDC minus the 5% club fee is owed to the token, not to Alice.
+    assert_eq!(c.membership(tid(SEAT_A)).unwrap().unsettled.0, 19 * ONE);
+    assert_eq!(c.club_balance, ONE);
+}
+
+#[test]
+#[should_panic(expected = "pass holder is not the current holder for this match")]
+fn owner_refused_while_lent() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    let m = new_match(&mut c, &e);
+    lend(&mut c, &e, m, 20 * ONE);
+    rent(&mut c, &e, m);
+    e.call(GATE, 0);
+    c.check_in(tid(SEAT_A), m, a(ALICE));
+}
+
+#[test]
+#[should_panic(expected = "gates are closed for this match")]
+fn renter_locked_out_after_full_time() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    let m = new_match(&mut c, &e);
+    lend(&mut c, &e, m, 20 * ONE);
+    rent(&mut c, &e, m);
+    club(&e);
+    c.kickoff(m);
+    c.full_time(m);
+    e.call(GATE, 0);
+    c.check_in(tid(SEAT_A), m, a(CAROL));
+}
+
+#[test]
+#[should_panic(expected = "loans are locked once the match kicks off")]
+fn kickoff_locks_loans() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    let m = new_match(&mut c, &e);
+    club(&e);
+    c.kickoff(m);
+    lend(&mut c, &e, m, 20 * ONE);
+}
+
+#[test]
+fn postponed_rental_owes_token_nothing() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    let m = new_match(&mut c, &e);
+    lend(&mut c, &e, m, 20 * ONE);
+    rent(&mut c, &e, m);
+    club(&e);
+    c.postpone(m);
+    let v = c.membership(tid(SEAT_A)).unwrap();
+    assert_eq!(v.unsettled.0, 0);
+    assert_eq!(v.pending_loan_income.0, 0);
+}
+
+// ---------- settlement, withdrawal, resale ----------
+
+/// Gives SEAT_A a settled vault balance of `amount`.
+fn fund_vault(c: &mut NearSeat, e: &Env, amount: u128) {
+    pay(c, e, CLUB, amount, r#"{"action":"top_up_pool"}"#);
+    e.call(CAROL, 0);
+    c.settle(tid(SEAT_A)).unwrap().detach();
+    e.callback(true);
+    c.on_settled(tid(SEAT_A), U128(amount));
+}
+
+fn list(c: &mut NearSeat, e: &Env, price: u128) {
+    e.call(ALICE, 1);
+    c.list(tid(SEAT_A), U128(price));
+}
+
+fn buy_msg(nonce: u64) -> String {
+    format!(r#"{{"action":"buy_membership","token_id":"{}","expected_nonce":"{nonce}"}}"#, tid(SEAT_A))
+}
+
+#[test]
+fn failed_settlement_restores_credit() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    pay(&mut c, &e, CLUB, 10 * ONE, r#"{"action":"top_up_pool"}"#);
+    e.call(CAROL, 0);
+    c.settle(tid(SEAT_A)).unwrap().detach();
+    assert_eq!(c.member(&tid(SEAT_A)).credit, 0);
+    e.callback(false);
+    c.on_settled(tid(SEAT_A), U128(10 * ONE));
+    assert_eq!(c.member(&tid(SEAT_A)).credit, 10 * ONE);
+    assert_eq!(c.member(&tid(SEAT_A)).vault_balance, 0);
+}
+
+#[test]
+fn failed_withdraw_restores_balance() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    fund_vault(&mut c, &e, 10 * ONE);
+    e.call(ALICE, 1);
+    c.withdraw(tid(SEAT_A), U128(4 * ONE)).detach();
+    assert_eq!(c.member(&tid(SEAT_A)).outflows_in_flight, 1);
+    e.callback(false);
+    assert!(!c.on_withdrawn(tid(SEAT_A), U128(4 * ONE), a(ALICE)));
+    let m = c.member(&tid(SEAT_A));
+    assert_eq!((m.vault_balance, m.outflows_in_flight), (10 * ONE, 0));
+}
+
+#[test]
+#[should_panic(expected = "vault is frozen while listed")]
+fn withdraw_blocked_while_listed() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    fund_vault(&mut c, &e, 10 * ONE);
+    list(&mut c, &e, 200 * ONE);
+    e.call(ALICE, 1);
+    c.withdraw(tid(SEAT_A), U128(ONE)).detach();
+}
+
+#[test]
+#[should_panic(expected = "price must be 1..")]
+fn price_above_cap_rejected() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    list(&mut c, &e, 241 * ONE); // cap = 120% of 200
+}
+
+#[test]
+#[should_panic(expected = "vault changed since you looked")]
+fn wrong_nonce_rejected() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    list(&mut c, &e, 200 * ONE);
+    let seen = c.membership(tid(SEAT_A)).unwrap().nonce.0;
+    e.call(ALICE, 1);
+    c.delist(tid(SEAT_A));
+    list(&mut c, &e, 200 * ONE); // same price, new nonce
+    pay(&mut c, &e, BOB, 200 * ONE, &buy_msg(seen));
+}
+
+#[test]
+#[should_panic(expected = "a withdrawal is in flight")]
+fn buy_rejected_during_inflight_withdraw() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    fund_vault(&mut c, &e, 10 * ONE);
+    e.call(ALICE, 1);
+    c.withdraw(tid(SEAT_A), U128(ONE)).detach();
+    // Force a listing to exist while the withdrawal is in flight.
+    c.member_mut(&tid(SEAT_A)).listing = Some(Listing { price: U128(200 * ONE), listed_at: U64(0) });
+    let nonce = c.member(&tid(SEAT_A)).nonce;
+    pay(&mut c, &e, BOB, 200 * ONE, &buy_msg(nonce));
+}
+
+#[test]
+fn sale_mid_payout_buyer_receives_settlement() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    pay(&mut c, &e, CLUB, 5 * ONE, r#"{"action":"top_up_pool"}"#);
+    // Settlement into the vault is in flight...
+    e.call(CAROL, 0);
+    c.settle(tid(SEAT_A)).unwrap().detach();
+    // ...when Alice's listing is bought by Bob.
+    list(&mut c, &e, 200 * ONE);
+    let nonce = c.membership(tid(SEAT_A)).unwrap().nonce.0;
+    pay(&mut c, &e, BOB, 200 * ONE, &buy_msg(nonce));
+    assert_eq!(c.nft_token(tid(SEAT_A)).unwrap().owner_id.as_str(), BOB);
+    // Settlement lands after the sale: it belongs to the token, so to Bob.
+    e.callback(true);
+    c.on_settled(tid(SEAT_A), U128(5 * ONE));
+    assert_eq!(c.member(&tid(SEAT_A)).vault_balance, 5 * ONE);
+    e.call(BOB, 1);
+    c.withdraw(tid(SEAT_A), U128(5 * ONE)).detach();
+    // Royalty 5% to the club; Alice is paid the rest by a separate transfer.
+    assert_eq!(c.club_balance, 10 * ONE);
+}
+
+#[test]
+#[should_panic(expected = "only the current holder can do this")]
+fn old_owner_cannot_withdraw_after_sale() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    fund_vault(&mut c, &e, 10 * ONE);
+    list(&mut c, &e, 200 * ONE);
+    let nonce = c.membership(tid(SEAT_A)).unwrap().nonce.0;
+    pay(&mut c, &e, BOB, 200 * ONE, &buy_msg(nonce));
+    e.call(ALICE, 1);
+    c.withdraw(tid(SEAT_A), U128(ONE)).detach();
+}
+
+#[test]
+fn sale_clears_offers_but_renter_keeps_match() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    let m1 = new_match(&mut c, &e);
+    let m2 = new_match(&mut c, &e);
+    lend(&mut c, &e, m1, 20 * ONE);
+    rent(&mut c, &e, m1);
+    lend(&mut c, &e, m2, 20 * ONE);
+    list(&mut c, &e, 200 * ONE);
+    let nonce = c.membership(tid(SEAT_A)).unwrap().nonce.0;
+    pay(&mut c, &e, BOB, 200 * ONE, &buy_msg(nonce));
+    assert_eq!(c.holder_for(tid(SEAT_A), m1).as_str(), CAROL, "renter keeps the paid match");
+    assert!(c.loan_of(tid(SEAT_A), m2).is_none(), "un-rented offer cleared");
+}
+
+// ---------- Layer 2 ----------
+
+fn fund_advances(c: &mut NearSeat, e: &Env) {
+    pay(c, e, CLUB, 100 * ONE, r#"{"action":"top_up_advance_fund"}"#);
+    for _ in 0..4 {
+        new_match(c, e);
+    }
+}
+
+#[test]
+fn advance_repaid_on_sale() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    fund_advances(&mut c, &e);
+    // cap = 50% × 1 tUSDC × 4 remaining matches = 2 tUSDC
+    assert_eq!(c.advance_cap(tid(SEAT_A)).0, 2 * ONE);
+    e.call(ALICE, 1);
+    c.borrow(tid(SEAT_A), U128(2 * ONE)).detach();
+    list(&mut c, &e, 200 * ONE);
+    let nonce = c.membership(tid(SEAT_A)).unwrap().nonce.0;
+    pay(&mut c, &e, BOB, 200 * ONE, &buy_msg(nonce));
+    assert_eq!(c.member(&tid(SEAT_A)).debt, 0);
+    assert_eq!(c.advance_fund, 100 * ONE);
+}
+
+#[test]
+#[should_panic(expected = "repay the advance before transferring")]
+fn plain_transfer_blocked_with_open_advance() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    fund_advances(&mut c, &e);
+    e.call(ALICE, 1);
+    c.borrow(tid(SEAT_A), U128(ONE)).detach();
+    c.nft_transfer(a(BOB), tid(SEAT_A), None, None);
+}
+
+#[test]
+fn settlement_repays_advance_first() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    fund_advances(&mut c, &e);
+    e.call(ALICE, 1);
+    c.borrow(tid(SEAT_A), U128(2 * ONE)).detach();
+    pay(&mut c, &e, CLUB, 5 * ONE, r#"{"action":"top_up_pool"}"#);
+    e.call(CAROL, 0);
+    c.settle(tid(SEAT_A)).unwrap().detach();
+    assert_eq!(c.member(&tid(SEAT_A)).debt, 0);
+    assert_eq!(c.advance_fund, 100 * ONE);
+}
+
+#[test]
+#[should_panic(expected = "this membership already voted in this poll")]
+fn double_vote_blocked_after_sale() {
+    let (mut c, mut e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    let m = new_match(&mut c, &e);
+    e.call(GATE, 0);
+    c.check_in(tid(SEAT_A), m, a(ALICE));
+    e.now += 1;
+    e.call(CLUB, 0);
+    let poll = c.create_poll("New kit colour?".into(), vec!["Lime".into(), "Black".into()], 24);
+    e.call(ALICE, 1);
+    c.vote(tid(SEAT_A), poll, 0);
+    e.call(ALICE, 1);
+    c.nft_transfer(a(BOB), tid(SEAT_A), None, None);
+    e.call(BOB, 1);
+    c.vote(tid(SEAT_A), poll, 1);
+}
+
+#[test]
+fn vote_weight_is_snapshotted_at_poll_start() {
+    let (mut c, mut e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    e.call(CLUB, 0);
+    let poll = c.create_poll("Q?".into(), vec!["Y".into(), "N".into()], 24);
+    e.now += 1;
+    let m = new_match(&mut c, &e);
+    e.call(GATE, 0);
+    c.check_in(tid(SEAT_A), m, a(ALICE));
+    assert_eq!(c.vote_weight(tid(SEAT_A), poll), 0, "attendance after the poll opened doesn't count");
+}
+
+#[test]
+#[should_panic(expected = "no auto-lend rule for this match")]
+fn autolend_rule_cleared_on_transfer() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    let m = new_match(&mut c, &e);
+    e.call(ALICE, 1);
+    c.set_autolend(tid(SEAT_A), m, 2, U128(20 * ONE));
+    c.nft_transfer(a(BOB), tid(SEAT_A), None, None);
+    e.call(CAROL, 0);
+    c.execute_autolend(tid(SEAT_A), m);
+}
+
+#[test]
+#[should_panic(expected = "you already checked in for this match")]
+fn autolend_rechecks_conditions() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    let m = new_match(&mut c, &e);
+    e.call(ALICE, 1);
+    c.set_autolend(tid(SEAT_A), m, 2, U128(20 * ONE));
+    e.call(GATE, 0);
+    c.check_in(tid(SEAT_A), m, a(ALICE));
+    e.call(CAROL, 0); // the keeper
+    c.execute_autolend(tid(SEAT_A), m);
+}
+
+#[test]
+fn feed_keeps_recent_events_in_order() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    for _ in 0..70 {
+        new_match(&mut c, &e);
+    }
+    let feed = c.get_feed(None);
+    assert_eq!(feed.len() as u64, events::FEED_SIZE);
+    assert!(feed.windows(2).all(|w| w[0].seq.0 < w[1].seq.0));
+    assert_eq!(c.get_feed(Some(U64(c.feed_seq - 2))).len(), 2);
+}

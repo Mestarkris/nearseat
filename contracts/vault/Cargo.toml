@@ -1,0 +1,13 @@
+[package]
+name = "nearseat-vault"
+version = "1.0.0"
+description = "Keyless per-membership vault that only obeys the NearSeat contract (no_std, a few KB)"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+near-sys = "0.4.1"

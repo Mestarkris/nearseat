@@ -1,0 +1,23 @@
+[package]
+name = "nearseat"
+version = "1.0.0"
+description = "NearSeat: season memberships as NEP-171 NFTs that own keyless NEAR vault accounts"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[package.metadata.near.reproducible_build]
+image = "sourcescan/cargo-near:0.23.0-rust-1.99.1"
+image_digest = "REPLACE_WITH_DIGEST_AT_RELEASE"
+passed_env = []
+container_build_command = ["cargo", "near", "build", "non-reproducible-wasm", "--locked"]
+
+[dependencies]
+near-sdk.workspace = true
+near-contract-standards.workspace = true
+
+[dev-dependencies]
+near-sdk = { workspace = true, features = ["unit-testing"] }

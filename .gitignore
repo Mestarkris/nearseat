@@ -1,0 +1,21 @@
+# Rust
+/target
+**/target
+# Node
+node_modules/
+dist/
+.vite/
+*.tsbuildinfo
+# Secrets and local state
+.env
+.env.*
+!.env.example
+neardev/
+*.json.key
+credentials/
+.near-credentials/
+# OS / editors
+.DS_Store
+*.log
+.idea/
+.vscode/
