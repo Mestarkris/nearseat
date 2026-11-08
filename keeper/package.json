@@ -1,0 +1,15 @@
+{
+  "name": "@nearseat/keeper",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "start": "node src/keeper.mjs",
+    "demo": "node src/demo-match.mjs"
+  },
+  "dependencies": {
+    "@nearseat/shared": "1.0.0",
+    "near-api-js": "^7.4.0"
+  }
+}

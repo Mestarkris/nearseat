@@ -1,0 +1,111 @@
+import { useEffect, useState, type ReactNode } from "react";
+import { useWallet } from "./near/wallet";
+import { short } from "./lib/format";
+import { Crest } from "./components/ui";
+import { Landing } from "./pages/Landing";
+import { MemberPage } from "./pages/Member";
+import { MatchesPage } from "./pages/Matches";
+import { ClubPage } from "./pages/Club";
+import { VerifyPage } from "./pages/Verify";
+import { PassPage } from "./pages/Pass";
+import { ScanPage } from "./pages/Scan";
+import { MarketPage } from "./pages/Market";
+import { MembersOnlyPage } from "./pages/MembersOnly";
+import { AttackLabPage } from "./pages/AttackLab";
+
+/** Tiny hash router: works on any static host (GitHub Pages, Vercel). */
+function useRoute(): string[] {
+  const read = () => (location.hash.replace(/^#\/?/, "") || "").split("/").filter(Boolean);
+  const [parts, setParts] = useState(read);
+  useEffect(() => {
+    const on = () => {
+      setParts(read());
+      window.scrollTo(0, 0);
+    };
+    addEventListener("hashchange", on);
+    return () => removeEventListener("hashchange", on);
+  }, []);
+  return parts;
+}
+
+const NAV = [
+  ["", "Home"],
+  ["member", "My membership"],
+  ["matches", "Matches"],
+  ["market", "Market"],
+  ["club", "Club"],
+  ["lab", "Attack Lab"],
+] as const;
+
+function Nav({ route }: { route: string }) {
+  const { accountId, signIn, signOut, ready } = useWallet();
+  return (
+    <header className="sticky top-0 z-30 border-b border-line/60 bg-ink/85 backdrop-blur">
+      <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
+        <a href="#/" className="flex items-center gap-2 font-display text-lg font-bold">
+          <Crest size={30} /> NearSeat
+        </a>
+        <nav className="mx-auto hidden rounded-full border border-line bg-card p-1 lg:flex" aria-label="Main">
+          {NAV.map(([href, label]) => (
+            <a
+              key={href}
+              href={`#/${href}`}
+              aria-current={route === href ? "page" : undefined}
+              className={`rounded-full px-4 py-1.5 text-sm ${route === href ? "bg-card-2 text-white" : "text-muted hover:text-white"}`}
+            >
+              {label}
+            </a>
+          ))}
+        </nav>
+        {accountId ? (
+          <button className="btn-ghost ml-auto lg:ml-0" onClick={signOut} title="Sign out">
+            {short(accountId, 20)}
+          </button>
+        ) : (
+          <button className="btn-primary ml-auto lg:ml-0" onClick={signIn} disabled={!ready}>
+            Connect wallet
+          </button>
+        )}
+      </div>
+      <nav className="flex gap-1 overflow-x-auto px-4 pb-2 lg:hidden" aria-label="Main (mobile)">
+        {NAV.map(([href, label]) => (
+          <a
+            key={href}
+            href={`#/${href}`}
+            aria-current={route === href ? "page" : undefined}
+            className={`shrink-0 rounded-full px-3 py-1.5 text-sm ${route === href ? "bg-card-2 text-white" : "text-muted"}`}
+          >
+            {label}
+          </a>
+        ))}
+      </nav>
+    </header>
+  );
+}
+
+export function App() {
+  const [page = "", arg] = useRoute();
+  let body: ReactNode;
+  switch (page) {
+    case "": body = <Landing />; break;
+    case "member": body = <MemberPage tokenId={arg} />; break;
+    case "matches": body = <MatchesPage />; break;
+    case "club": body = <ClubPage />; break;
+    case "verify": body = <VerifyPage tokenId={arg} />; break;
+    case "pass": body = <PassPage tokenId={arg} />; break;
+    case "scan": body = <ScanPage />; break;
+    case "market": body = <MarketPage />; break;
+    case "members": body = <MembersOnlyPage />; break;
+    case "lab": body = <AttackLabPage />; break;
+    default: body = <div className="py-20 text-center text-muted">Page not found. <a className="text-lime" href="#/">Go home</a></div>;
+  }
+  return (
+    <>
+      <Nav route={page} />
+      <main className="mx-auto max-w-6xl px-4 pb-24 pt-6 sm:pt-10">{body}</main>
+      <footer className="border-t border-line/60 py-8 text-center text-xs text-muted">
+        NearSeat · built at NEAR Hackathon · testnet only · tUSDC is a valueless test token · Illia Stars United is fictional
+      </footer>
+    </>
+  );
+}

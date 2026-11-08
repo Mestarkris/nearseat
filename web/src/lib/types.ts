@@ -71,3 +71,4 @@ export interface HistoryEntry { at: string; kind: string; amount: string | null;
 export interface FeedItem { seq: string; at: string; event: string; data: string }
 export interface SeatView { seat: string; state: "sold" | "rented" | "lent" | "member" | "member_in"; price: string | null; token_id: string | null; holder: string | null }
 export interface Poll { id: number; question: string; options: string[]; tallies: number[]; starts_at: string; ends_at: string; voters: number }
+export interface TicketInfo { match_id: number; seat: string; buyer: string; payment_index: number }

@@ -15,3 +15,6 @@ serde_json.workspace = true
 anyhow.workspace = true
 sha2 = "0.10"
 bs58 = "0.5"
+# near-workspaces → near-jsonrpc-client enables native-tls; vendoring OpenSSL means
+# no system libssl-dev is needed to run the tests.
+openssl = { version = "0.10", features = ["vendored"] }
