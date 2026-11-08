@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+/* NearSeat design tokens (from the approved mockups). */
+@theme {
+  --color-ink: #0a0c0f;
+  --color-card: #12161b;
+  --color-card-2: #171c22;
+  --color-line: #232a31;
+  --color-muted: #8a949e;
+  --color-lime: #b8e62b;
+  --color-lime-ink: #0a0c0f;
+  --color-sky: #5aa9ff;
+  --color-danger: #ff6b5a;
+  --color-warn: #f5b84a;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Inter Tight", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-number: "Bebas Neue", Impact, sans-serif;
+
+  --radius-card: 24px;
+}
+
+@layer base {
+  html { color-scheme: dark; -webkit-text-size-adjust: 100%; }
+  body {
+    @apply bg-ink text-white font-sans antialiased;
+    min-height: 100dvh;
+    -webkit-tap-highlight-color: transparent;
+  }
+  h1, h2, h3 { @apply font-display tracking-tight; }
+  :focus-visible { outline: 2px solid var(--color-lime); outline-offset: 2px; }
+  button { cursor: pointer; }
+  button:disabled { cursor: not-allowed; }
+}
+
+@layer components {
+  .card { @apply bg-card border border-line rounded-[var(--radius-card)]; }
+  .card-glow {
+    @apply bg-card rounded-[var(--radius-card)];
+    border: 1.5px solid var(--color-lime);
+    box-shadow: 0 0 0 1px rgb(184 230 43 / 0.08), 0 0 48px -8px rgb(184 230 43 / 0.35);
+  }
+  .pill { @apply inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors; }
+  .btn-primary { @apply pill bg-lime text-lime-ink font-semibold hover:brightness-110 disabled:opacity-50; }
+  .btn-ghost { @apply pill border border-line text-white hover:bg-card-2 disabled:opacity-50; }
+  .btn-danger { @apply pill border border-warn/60 text-warn hover:bg-warn/10 disabled:opacity-50; }
+  .chip { @apply inline-flex items-center rounded-full border border-line bg-ink/60 px-3 py-1 text-xs; }
+  .label { @apply text-xs uppercase tracking-wider text-muted; }
+  .input { @apply w-full rounded-2xl border border-line bg-ink px-4 py-3 text-sm placeholder:text-muted focus:border-lime focus:outline-none; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .pitch {
+    background:
+      repeating-linear-gradient(90deg, #1d3a1f 0 32px, #214523 32px 64px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}

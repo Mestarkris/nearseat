@@ -1,0 +1,33 @@
+{
+  "name": "nearseat",
+  "private": true,
+  "license": "MIT",
+  "description": "NearSeat: season memberships that own their own NEAR accounts",
+  "workspaces": [
+    "shared",
+    "web",
+    "relayer",
+    "keeper",
+    "scripts"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "setup": "npm install && ./scripts/build-contracts.sh",
+    "build:contracts": "./scripts/build-contracts.sh",
+    "test": "npm run test:contracts && npm run test:js",
+    "test:contracts": "cargo test --workspace",
+    "test:unit": "cargo test -p nearseat -p nearseat-vault -p tusdc",
+    "test:sandbox": "cargo test -p sandbox-tests",
+    "test:js": "npm test --workspaces --if-present",
+    "dev": "npm run dev -w web",
+    "build": "npm run build -w web",
+    "relayer": "npm start -w relayer",
+    "keeper": "npm start -w keeper",
+    "deploy": "node scripts/deploy.mjs",
+    "seed": "node scripts/seed.mjs",
+    "demo": "node keeper/src/demo-match.mjs",
+    "verify": "node scripts/verify.mjs"
+  }
+}

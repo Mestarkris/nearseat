@@ -3096,8 +3096,10 @@ name = "sandbox-tests"
 version = "1.0.0"
 dependencies = [
  "anyhow",
+ "bs58 0.5.1",
  "near-workspaces",
  "serde_json",
+ "sha2 0.10.9",
  "tokio",
 ]
 
