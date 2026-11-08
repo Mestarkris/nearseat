@@ -1,0 +1,49 @@
+name: Deploy web to GitHub Pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build web
+        run: npm run build -w web
+        env:
+          # Public config only (no secrets). Override with repository variables.
+          VITE_BASE: /${{ github.event.repository.name }}/
+          VITE_NETWORK: testnet
+          VITE_RPC_URL: ${{ vars.VITE_RPC_URL || 'https://test.rpc.fastnear.com' }}
+          VITE_CONTRACT_ID: ${{ vars.VITE_CONTRACT_ID || 'nearseat.testnet' }}
+          VITE_TUSDC_ID: ${{ vars.VITE_TUSDC_ID || 'tusdc.nearseat.testnet' }}
+          VITE_CLUB_ID: ${{ vars.VITE_CLUB_ID || 'club.nearseat.testnet' }}
+          VITE_RELAYER_URL: ${{ vars.VITE_RELAYER_URL || 'https://nearseat-relayer.onrender.com' }}
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
