@@ -18,6 +18,7 @@ services:
       - { key: RELAYER_ID, value: relayer.nearseat.testnet }
       - { key: GATE_ID, value: gate.nearseat.testnet }
       - { key: RUN_KEEPER, value: "1" }
-      - { key: RELAYER_ALLOWED_ORIGIN, sync: false }
+      - { key: RELAYER_ALLOWED_ORIGIN, value: "https://mestarkris.github.io" }
+      - { key: NEAR_RPC_URL, value: "https://test.rpc.fastnear.com" }
       - { key: RELAYER_NEARSEAT_TESTNET_PRIVATE_KEY, sync: false }
       - { key: GATE_NEARSEAT_TESTNET_PRIVATE_KEY, sync: false }
