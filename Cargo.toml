@@ -11,7 +11,7 @@ members = [
 [workspace.package]
 edition = "2021"
 license = "MIT"
-repository = "https://github.com/REPLACE_ME/nearseat"
+repository = "https://github.com/Mestarkris/nearseat"
 
 [workspace.dependencies]
 near-sdk = "5.30.1"

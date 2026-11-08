@@ -12,6 +12,8 @@ Every season membership is an NEP-171 NFT that owns a keyless NEAR sub-account, 
 
 **Whoever holds the NFT controls the account.** Sell the NFT and the balance, inventory, record and access rights move to the buyer in one transaction. The seller keeps nothing.
 
+**Live app:** https://mestarkris.github.io/nearseat/ · **Contract:** [`nearseat.testnet`](https://testnet.nearblocks.io/address/nearseat.testnet) · **Example vault:** [`seat-c5-12.nearseat.testnet`](https://testnet.nearblocks.io/address/seat-c5-12.nearseat.testnet)
+
 > Testnet only. **tUSDC is a valueless test token** with an open faucet. Illia Stars United, its players and its stadium are fictional.
 
 ## Tracks
@@ -41,7 +43,7 @@ Every season membership is an NEP-171 NFT that owns a keyless NEAR sub-account, 
 Prerequisites: Rust (the pinned toolchain installs itself via `rust-toolchain.toml`), [`cargo-near`](https://github.com/near/cargo-near) 0.23+, and Node 22+.
 
 ```bash
-git clone <this repo> && cd nearseat
+git clone https://github.com/Mestarkris/nearseat && cd nearseat
 npm install
 npm run build:contracts      # → target/near/*/*.wasm + prints code hashes
 npm run test:unit            # see: 53 Rust unit tests pass
