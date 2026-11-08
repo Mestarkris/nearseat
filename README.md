@@ -135,9 +135,9 @@ npm run verify                     # compares them with what is live on testnet
 Or by hand, with nothing but `curl`:
 
 ```bash
-curl -s https://rpc.testnet.near.org -H 'content-type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"query","params":{"request_type":"view_account","finality":"final","account_id":"seat-c5-12.nearseat.testnet"}}'
+curl -s https://test.rpc.fastnear.com -H 'content-type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"query","params":{"request_type":"view_account","finality":"final","account_id":"seat-c5-12.nearseat.testnet"}}'
 # → "global_contract_hash": "<vault hash>"  (must equal the build output for nearseat_vault.wasm)
-curl -s https://rpc.testnet.near.org -H 'content-type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"query","params":{"request_type":"view_access_key_list","finality":"final","account_id":"seat-c5-12.nearseat.testnet"}}'
+curl -s https://test.rpc.fastnear.com -H 'content-type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"query","params":{"request_type":"view_access_key_list","finality":"final","account_id":"seat-c5-12.nearseat.testnet"}}'
 # → "keys": []
 ```
 

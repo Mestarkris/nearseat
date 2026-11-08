@@ -3,7 +3,7 @@ const env = import.meta.env;
 
 export const config = {
   network: (env.VITE_NETWORK ?? "testnet") as "testnet" | "mainnet",
-  rpcUrl: env.VITE_RPC_URL ?? "https://rpc.testnet.near.org",
+  rpcUrl: env.VITE_RPC_URL ?? "https://test.rpc.fastnear.com",
   contractId: env.VITE_CONTRACT_ID ?? "nearseat.testnet",
   tusdcId: env.VITE_TUSDC_ID ?? "tusdc.nearseat.testnet",
   clubId: env.VITE_CLUB_ID ?? "club.nearseat.testnet",

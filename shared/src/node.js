@@ -27,7 +27,7 @@ export function env(name, fallback) {
 
 export const repoRoot = ROOT;
 export const network = () => process.env.NEAR_NETWORK ?? "testnet";
-export const provider = () => new JsonRpcProvider({ url: process.env.NEAR_RPC_URL ?? `https://rpc.${network()}.near.org` });
+export const provider = () => new JsonRpcProvider({ url: process.env.NEAR_RPC_URL ?? (network() === "mainnet" ? "https://free.rpc.fastnear.com" : "https://test.rpc.fastnear.com") });
 
 /** Finds a private key: $<ID>_PRIVATE_KEY, or ~/.near-credentials/<net>/<id>.json, or <id>/<pk>.json. */
 export function findKey(accountId) {
@@ -78,7 +78,7 @@ export async function isFullAccessKey(accountId, publicKey) {
 
 /** Raw JSON-RPC `query` (keeps every field, e.g. global_contract_hash). */
 export async function rawQuery(params) {
-  const url = process.env.NEAR_RPC_URL ?? `https://rpc.${network()}.near.org`;
+  const url = process.env.NEAR_RPC_URL ?? (network() === "mainnet" ? "https://free.rpc.fastnear.com" : "https://test.rpc.fastnear.com");
   const res = await fetch(url, {
     method: "POST",
     headers: { "content-type": "application/json" },
