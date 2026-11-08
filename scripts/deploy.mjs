@@ -15,7 +15,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { KeyPair } from "near-api-js";
 import { base58Encode } from "@nearseat/shared";
-import { account, call, env, loadEnv, network, provider, repoRoot, TGAS } from "@nearseat/shared/node";
+import { account, call, env, loadEnv, network, provider, rawQuery, repoRoot, TGAS } from "@nearseat/shared/node";
 
 loadEnv();
 const MASTER = env("MASTER_ACCOUNT");
@@ -74,12 +74,12 @@ for (let i = 1; i <= 10; i++) await ensureSub(`fan${String(i).padStart(2, "0")}`
 step("Vault code → global contract, addressed by hash (immutable)");
 const vault = wasm("nearseat_vault");
 const hash = base58Encode(createHash("sha256").update(vault).digest());
-try {
+const globalExists = await rawQuery({ request_type: "view_global_contract_code", code_hash: hash }).then(() => true, () => false);
+if (globalExists) {
+  console.log(`  global vault ${hash} already on-chain`);
+} else {
   await master.deployGlobalContract(vault, "codeHash");
   console.log(`  deployed global vault ${hash}`);
-} catch (e) {
-  if (!/already/i.test(String(e.message))) throw e;
-  console.log(`  global vault ${hash} already deployed`);
 }
 
 step("tUSDC test token");

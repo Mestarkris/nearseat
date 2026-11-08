@@ -8,6 +8,7 @@ import { setupMyNearWallet } from "@near-wallet-selector/my-near-wallet";
 import { setupHotWallet } from "@near-wallet-selector/hot-wallet";
 import "@near-wallet-selector/modal-ui/styles.css";
 import { JsonRpcProvider, actions as naj, buildDelegateAction, encodeSignedDelegate } from "near-api-js";
+import { actionCreators } from "@near-js/transactions";
 import { b64encode, randomNonce } from "@nearseat/shared";
 import { config } from "../config";
 
@@ -117,7 +118,8 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       const w = await wallet();
       return w.signAndSendTransaction({
         receiverId,
-        actions: [{ type: "FunctionCall", params: { methodName: method, args, gas: gas.toString(), deposit } }],
+        // Wallet Selector speaks @near-js/transactions actions.
+        actions: [actionCreators.functionCall(method, args, gas, BigInt(deposit))],
       });
     },
     [wallet, gasless, relay],

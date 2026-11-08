@@ -6,8 +6,8 @@
 
 use near_workspaces::network::Sandbox;
 use near_workspaces::result::ExecutionFinalResult;
-use near_workspaces::types::{ContractState, NearToken};
-use near_workspaces::{Account, AccountId, Contract, Worker};
+use near_workspaces::types::NearToken;
+use near_workspaces::{Account, AccountId, Contract, ContractState, Worker};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 
@@ -36,9 +36,18 @@ struct World {
     vault_hash: [u8; 32],
 }
 
-async fn ok(r: ExecutionFinalResult) -> ExecutionFinalResult {
+async fn sub(root: &Account, name: &str, near: u128) -> anyhow::Result<Account> {
+    Ok(root.create_subaccount(name).initial_balance(NearToken::from_near(near)).transact().await?.into_result()?)
+}
+
+/// Asserts success and hands the result back (for `.json()`).
+fn succeeded(r: ExecutionFinalResult) -> ExecutionFinalResult {
     assert!(r.is_success(), "expected success, got {:#?}", r.failures());
     r
+}
+
+async fn ok(r: ExecutionFinalResult) {
+    let _ = succeeded(r);
 }
 
 fn failed_with(r: &ExecutionFinalResult, needle: &str) {
@@ -50,19 +59,17 @@ impl World {
     async fn new(real_tusdc: bool) -> anyhow::Result<Self> {
         let worker = near_workspaces::sandbox().await?;
         let root = worker.root_account()?;
-        let sub = |name: &str, near: u128| {
-            root.create_subaccount(name).initial_balance(NearToken::from_near(near)).transact()
-        };
 
         // 1. Vault code as an immutable global contract (by hash).
-        let globals = sub("globals", 20).await?.into_result()?;
+        let globals = sub(&root, "globals", 20).await?;
         let globals = globals.deploy(&wasm("mock_ft")).await?.into_result()?;
+        ok(globals.call("new").transact().await?).await;
         let vault_code = wasm("nearseat_vault");
         ok(globals.call("deploy_global").args_borsh(vault_code.clone()).max_gas().transact().await?).await;
         let vault_hash: [u8; 32] = Sha256::digest(&vault_code).into();
 
         // 2. Stablecoin.
-        let token_acc = sub("tusdc", 20).await?.into_result()?;
+        let token_acc = sub(&root, "tusdc", 20).await?;
         let token = if real_tusdc {
             token_acc.deploy(&wasm("tusdc")).await?.into_result()?
         } else {
@@ -71,14 +78,14 @@ impl World {
         ok(token.call("new").transact().await?).await;
 
         // 3. People.
-        let club = sub("club", 30).await?.into_result()?;
-        let gate = sub("gate", 10).await?.into_result()?;
-        let alice = sub("alice", 10).await?.into_result()?;
-        let bob = sub("bob", 10).await?.into_result()?;
-        let carol = sub("carol", 10).await?.into_result()?;
+        let club = sub(&root, "club", 30).await?;
+        let gate = sub(&root, "gate", 10).await?;
+        let alice = sub(&root, "alice", 10).await?;
+        let bob = sub(&root, "bob", 10).await?;
+        let carol = sub(&root, "carol", 10).await?;
 
         // 4. NearSeat. Vaults become <seat>.nearseat.<root>.
-        let seat_acc = sub("nearseat", 50).await?.into_result()?;
+        let seat_acc = sub(&root, "nearseat", 50).await?;
         let seat = seat_acc.deploy(&wasm("nearseat")).await?.into_result()?;
         ok(seat
             .call("new")
@@ -180,7 +187,7 @@ impl World {
 
     async fn new_match(&self) -> anyhow::Result<u32> {
         let now = self.worker.view_block().await?.timestamp();
-        let r = ok(self
+        let r = succeeded(self
             .call(
                 &self.club,
                 "create_match",
@@ -192,8 +199,7 @@ impl World {
                 }),
                 0,
             )
-            .await?)
-        .await;
+            .await?);
         Ok(r.json()?)
     }
 
@@ -332,7 +338,8 @@ async fn failed_settlement_callback_restores_state() -> anyhow::Result<()> {
     ok(w.token.call("set_failing").args_json(json!({ "account_id": w.vault_id(), "failing": true })).transact().await?).await;
     w.fund(&w.club, 10 * ONE).await?;
     ok(w.pay(&w.club, 10 * ONE, json!({ "action": "top_up_pool" })).await?).await;
-    w.call(&w.carol, "settle", json!({ "token_id": TOKEN }), 0).await?; // inner transfer fails
+    // The outer call succeeds; the transfer it spawns fails, and the callback must undo it.
+    let _ = w.call(&w.carol, "settle", json!({ "token_id": TOKEN }), 0).await?;
 
     let card = w.membership().await?;
     assert_eq!(u(&card["unsettled"]), 10 * ONE, "credit restored by the callback");
@@ -352,7 +359,7 @@ async fn failed_withdraw_callback_restores_vault_balance() -> anyhow::Result<()>
     w.mint(SEAT, &w.alice).await?;
     w.pay_members(10 * ONE).await?;
     ok(w.token.call("set_failing").args_json(json!({ "account_id": w.alice.id(), "failing": true })).transact().await?).await;
-    w.call(&w.alice, "withdraw", json!({ "token_id": TOKEN, "amount": (4 * ONE).to_string() }), 1).await?;
+    let _ = w.call(&w.alice, "withdraw", json!({ "token_id": TOKEN, "amount": (4 * ONE).to_string() }), 1).await?;
     let card = w.membership().await?;
     assert_eq!(u(&card["vault_balance"]), 10 * ONE);
     assert_eq!(card["outflows_in_flight"], 0);
@@ -487,10 +494,9 @@ async fn double_vote_blocked_after_sale() -> anyhow::Result<()> {
     w.mint(SEAT, &w.alice).await?;
     let m = w.new_match().await?;
     ok(w.call(&w.gate, "check_in", json!({ "token_id": TOKEN, "match_id": m, "holder": w.alice.id() }), 0).await?).await;
-    let poll: u32 = ok(w
-        .club_does("create_poll", json!({ "question": "Kit colour?", "options": ["Lime", "Black"], "duration_hours": 24 }))
-        .await?)
-    .await
+    let poll: u32 = succeeded(
+        w.club_does("create_poll", json!({ "question": "Kit colour?", "options": ["Lime", "Black"], "duration_hours": 24 })).await?,
+    )
     .json()?;
     ok(w.call(&w.alice, "vote", json!({ "token_id": TOKEN, "poll_id": poll, "option": 0 }), 1).await?).await;
     ok(w.call(&w.alice, "nft_transfer", json!({ "receiver_id": w.bob.id(), "token_id": TOKEN }), 1).await?).await;

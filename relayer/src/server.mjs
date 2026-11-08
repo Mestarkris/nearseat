@@ -109,3 +109,11 @@ app.post("/gate/scan", async (req, res) => {
 });
 
 app.listen(PORT, () => console.log(`NearSeat relayer on :${PORT} → ${CONTRACT} (relayer ${relayer.accountId})`));
+
+// Free hosting plans have no background workers: optionally run the keeper here.
+if (process.env.RUN_KEEPER === "1") {
+  const { tick } = await import("../../keeper/src/keeper.mjs");
+  const every = Number(process.env.KEEPER_INTERVAL_MS ?? 15_000);
+  setInterval(() => tick().catch((e) => console.error("keeper tick failed:", e.message)), every);
+  console.log(`keeper loop running every ${every / 1000}s`);
+}

@@ -29,5 +29,10 @@
     "seed": "node scripts/seed.mjs",
     "demo": "node keeper/src/demo-match.mjs",
     "verify": "node scripts/verify.mjs"
+  },
+  "allowScripts": {
+    "bufferutil": false,
+    "utf-8-validate": false,
+    "secp256k1": false
   }
 }

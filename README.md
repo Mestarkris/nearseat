@@ -38,7 +38,7 @@ Every season membership is an NEP-171 NFT that owns a keyless NEAR sub-account, 
 
 ### A. Run the tests (no accounts, no NEAR needed)
 
-Prerequisites: Rust (the pinned toolchain installs itself via `rust-toolchain.toml`), [`cargo-near`](https://github.com/near/cargo-near) 0.23+, `wasm-opt` (binaryen), and Node 22+.
+Prerequisites: Rust (the pinned toolchain installs itself via `rust-toolchain.toml`), [`cargo-near`](https://github.com/near/cargo-near) 0.23+, and Node 22+.
 
 ```bash
 git clone <this repo> && cd nearseat
@@ -51,10 +51,12 @@ npm run test:js              # see: gate pass, NEP-413 and relayer policy tests 
 
 The first sandbox run downloads a NEAR sandbox node and compiles OpenSSL from source (vendored, so no system OpenSSL headers are needed). It takes a few minutes.
 
-### B. Use the live testnet deployment (just a browser)
+### B. Use the testnet deployment (just a browser)
+
+The reference deployment lives at `nearseat.testnet`, and `.env.example` points at it. If you deployed your own copy (C), `npm run deploy` rewrites `.env` for you.
 
 ```bash
-cp .env.example .env    # already points at the live testnet deployment
+cp .env.example .env
 npm run dev             # → http://localhost:5173
 ```
 
@@ -92,7 +94,7 @@ npm run dev             # → http://localhost:5173
 ## How control passes on transfer
 
 1. **The vault has no keys.** `mint_membership` creates `seat-<seat>.<contract>` with exactly three actions: `CreateAccount`, `Transfer` (gas money for 1-yocto deposits) and `UseGlobalContract(hash)`. There is no `AddKey`, and the vault code has no method that adds one. Nobody, including the club, the deployer or the first owner, can sign as the vault.
-2. **The vault obeys exactly one account: its parent.** Its only state-changing method, `pay`, checks `predecessor_account_id == <parent>`, where the parent is derived from its own account id ([`contracts/vault/src/lib.rs`](contracts/vault/src/lib.rs), 4 KB, `no_std`).
+2. **The vault obeys exactly one account: its parent.** Its only state-changing method, `pay`, checks `predecessor_account_id == <parent>`, where the parent is derived from its own account id ([`contracts/vault/src/lib.rs`](contracts/vault/src/lib.rs), 8 KB, `no_std`).
 3. **The parent obeys only the current NFT owner.** Every vault-affecting method (`withdraw`, `lend`, `list`, `borrow`, `vote`…) reads `owner_id` from the NEP-171 token map **in the same receipt** it acts in (`assert_owner` in [`lib.rs`](contracts/nearseat/src/lib.rs)). There is no cached ownership anywhere.
 4. **So transferring the NFT is transferring the account.** When `owner_id` changes, the previous owner's next call fails with `only the current holder can do this`. Nothing else needs handing over.
 5. **Money follows the token, not the person.** Pool rewards and rental income are credited to the token id and settle *into the vault*. A payout that is in flight during a sale lands in the vault and belongs to the buyer (`sale_mid_payout_buyer_receives_settlement`).
@@ -162,7 +164,7 @@ Builds are deterministic for a given toolchain. `rust-toolchain.toml` pins Rust 
 ```
 contracts/
   nearseat/        main contract (NEP-171/177/178/181/199 + NEP-297 events)
-  vault/           keyless vault, no_std, 4 KB, global contract by hash
+  vault/           keyless vault, no_std, 8 KB, global contract by hash
   tusdc/           valueless NEP-141 test token with faucet
   mock-ft/         TEST ONLY: token that fails transfers on demand + global deploy helper
   sandbox-tests/   near-workspaces end-to-end tests

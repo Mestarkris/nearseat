@@ -160,3 +160,40 @@ Legend: **[AL]** = shown in the Attack Lab with a "Try it on testnet" button. Te
 ## 6. Attack Lab entries (≥ 12)
 
 T1, T2, T5, T6, T7, T8, T9, T12, T13, T20, T23, T24, T26, T27, T28, T31, T32, T33, T34, T41, T45. These are 21 attacks across seller, previous owner, renter, tout, outsider and co-owner/club. Co-owner attacks move to the lab only if shared tickets ship.
+
+## 7. Test map (as built)
+
+The test column above was written before the code. These are the tests that actually exist and prove each threat. Unit tests are in `contracts/nearseat/src/tests.rs`, sandbox tests in `contracts/sandbox-tests/tests/sandbox.rs`, JS tests in `shared/test/` and `relayer/test/`.
+
+| Threat | Proving test(s) |
+|---|---|
+| T1, T3, T5 | sandbox `vault_is_keyless_runs_global_code_and_obeys_only_parent`; vault unit `parent_is_everything_after_the_first_dot`, `rejects_trailing_bytes_and_bad_accounts` |
+| T2 | approvals are cleared by `NonFungibleToken::internal_transfer` on every path; covered indirectly by sandbox `advance_repaid_on_sale` / `renter_and_old_owner_locked_out` (sales go through `internal_transfer`) |
+| T6 | unit `withdraw_blocked_while_listed` |
+| T7 | sandbox `wrong_nonce_refunds_buyer_and_keeps_owner`; unit `wrong_nonce_rejected` |
+| T8 | unit `buy_rejected_during_inflight_withdraw` |
+| T9 | sandbox + unit `sale_mid_payout_buyer_receives_settlement` |
+| T10 | sandbox `failed_settlement_callback_restores_state`, `failed_withdraw_callback_restores_vault_balance`; unit `failed_settlement_restores_credit`, `failed_withdraw_restores_balance` |
+| T11, T21, T22 | unit `postpone_refunds_once_and_parks_failures` |
+| T12 | unit `old_owner_cannot_withdraw_after_sale`; sandbox `sale_mid_payout_buyer_receives_settlement`; shared `old owner's pass fails after a sale` |
+| T13, T29 | sandbox `price_caps_enforced`; unit `price_above_cap_rejected`, `lend_price_cap` |
+| T14, T41 | sandbox `advance_repaid_on_sale`; unit `plain_transfer_blocked_with_open_advance`, `advance_repaid_on_sale` |
+| T16, T17 | unit `new_mint_gets_no_past_rewards`, `accumulator_never_over_distributes` |
+| T19 | unit `full_time_moves_members_cut_to_pool`; sandbox `full_season_on_real_tusdc` |
+| T20 | sandbox `postpone_refunds_every_ticket` |
+| T23 | unit `cannot_sell_unlent_member_seat` |
+| T24, T25 | unit `per_account_ticket_cap`, `ticket_nft_transfer_rejected`, `second_buyer_of_seat_rejected` |
+| T26 | unit `double_lend_rejected` |
+| T27, T28, T30 | sandbox `renter_and_old_owner_locked_out`; unit `renter_locked_out_after_full_time`, `owner_refused_while_lent`, `renter_holds_pass_and_income_follows_token`, `sale_clears_offers_but_renter_keeps_match`, `postponed_rental_owes_token_nothing` |
+| T31, T32 | shared `screenshot older than 30 s is rejected`, `certificate signed by a key that isn't the holder's full-access key fails`, `tampered match id breaks the rotating signature`, `expired certificate fails`; unit `second_check_in_rejected` |
+| T33, T34 | sandbox `goal_stamps_only_for_checked_in_members`; unit `non_gate_cannot_check_in`, `goal_stamps_only_for_checked_in_members` |
+| T36 | unit `tier_only_from_attendance` |
+| T37 | unit `goal_before_kickoff_rejected`, `full_time_twice_rejected` |
+| T38 | unit `admin_setters_clamped`, `club_cannot_move_member_funds`, `outsider_cannot_mint` |
+| T39 | unit `kickoff_locks_loans` |
+| T42 | unit `settlement_repays_advance_first` (withdraw guard: `withdraw` requires `debt == 0`) |
+| T45, T46 | sandbox + unit `double_vote_blocked_after_sale`; unit `vote_weight_is_snapshotted_at_poll_start` |
+| T47 | unit `autolend_rule_cleared_on_transfer`, `autolend_rechecks_conditions` |
+| T51, T53, T54 | relayer `rejects non-allowlisted receiver`, `rejects unknown method and big deposits`, `rate limiter caps per account per minute`, `nonces are single-use`; shared `members-only request: valid once, replay rejected, non-holder rejected` |
+| T55 | unit `svg::svg_tests::escapes_markup` |
+| T4, T35, T40, T44, T52, T56 | Not covered by an automated test: verified manually (`npm run verify`), by protocol guarantees, or by the CI secret scan. Recorded as residual or manual in §5 |
