@@ -19,3 +19,5 @@ credentials/
 *.log
 .idea/
 .vscode/
+.vercel
+.env*

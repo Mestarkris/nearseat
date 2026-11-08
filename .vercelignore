@@ -1,0 +1,8 @@
+# Upload only what the web build and the /api function need.
+target
+contracts
+.env
+.env.*
+.github
+docs
+*.log
