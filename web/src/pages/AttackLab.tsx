@@ -102,7 +102,7 @@ export function AttackLabPage() {
               <h2 className="mt-3 text-lg font-bold">{a.title}</h2>
               <p className="mt-1 text-sm text-white/80"><b className="text-danger">Attack:</b> {a.path}</p>
               <p className="mt-1 text-sm text-white/80"><b className="text-lime">Mitigation:</b> {a.fix}</p>
-              <ul className="mt-2 space-y-0.5 text-xs text-muted">{a.tests.map((t) => <li key={t} className="mono">✓ {t}</li>)}</ul>
+              <ul className="mt-2 space-y-0.5 text-xs text-muted">{a.tests.map((t) => <li key={t} className="mono break-all">✓ {t}</li>)}</ul>
               {a.attempt && <button className="btn-ghost mt-3" disabled={r?.state === "busy"} onClick={() => go(a)}>Try it on testnet</button>}
               {r && (
                 <p className={`mt-3 rounded-xl p-3 text-sm ${r.state === "refused" ? "bg-lime/15 text-lime" : r.state === "passed" ? "bg-warn/15 text-warn" : "text-muted"}`} role="status">
