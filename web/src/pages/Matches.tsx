@@ -46,6 +46,7 @@ function SeatPicker({ match }: { match: Match }) {
   const seats = usePoll(() => view<SeatView[]>("seat_map", { match_id: match.id }), [match.id]);
   const season = usePoll(() => view<Season>("season"), []);
   const [pick, setPick] = useState<{ seat: string; v?: SeatView }>();
+  const [bought, setBought] = useState<{ label: string; passId: string }>();
   const a = useAction(() => { seats.refresh(); setPick(undefined); });
 
   const lent = pick?.v?.state === "lent";
@@ -64,7 +65,17 @@ function SeatPicker({ match }: { match: Match }) {
       </section>
       <aside className="card-glow h-fit p-5 lg:sticky lg:top-24" aria-label="Ticket slip">
         <div className="flex items-center justify-between"><h2 className="text-lg font-bold">Ticket slip</h2></div>
-        {!pick || !s ? <p className="mt-4 text-sm text-muted">Tap a grey or lime seat on the map.</p> : (
+        {bought && !pick && (
+          <div className="mt-4 rounded-2xl border border-lime/60 bg-lime/10 p-4" role="status">
+            <div className="font-semibold text-lime">✓ Ticket bought: {bought.label}</div>
+            <p className="mt-1 text-sm text-white/80">It's in your wallet as an NFT and shows on your gate pass on match day.</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <a className="btn-primary" href={`#/pass/${bought.passId}`}>Gate pass</a>
+              <a className="btn-ghost" href="#/member">My tickets</a>
+            </div>
+          </div>
+        )}
+        {!pick || !s ? <p className="mt-4 text-sm text-muted">{bought ? "Tap another seat to buy more." : "Tap a grey or lime seat on the map."}</p> : (
           <>
             <div className="mt-4 rounded-2xl border border-line p-3">
               <div className="flex justify-between font-semibold"><span>{standName(pick.seat)} · Row {s.row} · Seat {s.number}</span><span>{usd(price)}</span></div>
@@ -93,7 +104,11 @@ function SeatPicker({ match }: { match: Match }) {
             </dl>
             {accountId ? (
               <button className="btn-primary mt-4 w-full justify-center py-3" disabled={!!a.busy}
-                onClick={() => a.run("Buying", () => payTusdc(price.toString(), { action: "buy_seat", match_id: match.id, seat: pick.seat }), "Ticket is yours. It's in your wallet and on your gate pass")}>
+                onClick={async () => {
+                  const label = `${standName(pick.seat)} · Row ${s.row} · Seat ${s.number}`;
+                  const passId = lent ? pick.v!.token_id! : `t${match.id}-${pick.seat}`;
+                  if (await a.run("Buying", () => payTusdc(price.toString(), { action: "buy_seat", match_id: match.id, seat: pick.seat }))) setBought({ label, passId });
+                }}>
                 Buy ticket
               </button>
             ) : <button className="btn-primary mt-4 w-full justify-center py-3" onClick={signIn}>Connect wallet to buy</button>}

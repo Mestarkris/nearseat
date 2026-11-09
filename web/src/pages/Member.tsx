@@ -8,6 +8,7 @@ import { useAction } from "../lib/useAction";
 import type { HistoryEntry, Match, Membership, Poll, Season } from "../lib/types";
 import { matchMinute, seatLabel, shortDate, toRaw, usd } from "../lib/format";
 import { Feed } from "../components/Feed";
+import { MyTickets } from "../components/MyTickets";
 import { ActionStatus } from "../components/ActionStatus";
 import { Crest, Empty, ErrorBox, LiveBadge, Loading, Progress, Section, TierBadge } from "../components/ui";
 
@@ -31,9 +32,12 @@ export function MemberPage({ tokenId }: { tokenId?: string }) {
   const chosen = tokenId ?? mine.data?.[0]?.token_id;
   if (!chosen) {
     return (
-      <Empty title="This account holds no membership">
-        Buy one on the <a className="text-lime" href="#/market">market</a>, or pick a single-match ticket in <a className="text-lime" href="#/matches">Matches</a>.
-      </Empty>
+      <div className="space-y-6">
+        {accountId && <MyTickets accountId={accountId} />}
+        <Empty title="This account holds no season membership">
+          Buy one on the <a className="text-lime" href="#/market">market</a>, or pick a single-match ticket in <a className="text-lime" href="#/matches">Matches</a>.
+        </Empty>
+      </div>
     );
   }
   return (
@@ -46,6 +50,7 @@ export function MemberPage({ tokenId }: { tokenId?: string }) {
         </div>
       )}
       <Dashboard tokenId={chosen} />
+      {accountId && <div className="mt-6"><MyTickets accountId={accountId} /></div>}
     </>
   );
 }
