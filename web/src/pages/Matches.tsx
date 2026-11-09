@@ -42,7 +42,7 @@ export function MatchesPage() {
 }
 
 function SeatPicker({ match }: { match: Match }) {
-  const { accountId, signIn, payTusdc } = useWallet();
+  const { accountId, signIn, payTusdc, gasless, setGasless } = useWallet();
   const seats = usePoll(() => view<SeatView[]>("seat_map", { match_id: match.id }), [match.id]);
   const season = usePoll(() => view<Season>("season"), []);
   const [pick, setPick] = useState<{ seat: string; v?: SeatView }>();
@@ -80,7 +80,15 @@ function SeatPicker({ match }: { match: Match }) {
               ) : (
                 <div className="flex justify-between"><dt className="text-muted">Of which to members' pool</dt><dd>{usd((price * BigInt(season.data?.config.members_cut_bps ?? 500)) / 10_000n)}</dd></div>
               )}
-              <div className="flex justify-between"><dt className="text-muted">Gas</dt><dd className="text-lime">Free with relayer</dd></div>
+              <div className="flex items-center justify-between gap-2">
+                <dt className="text-muted">Network fee</dt>
+                <dd>
+                  <label className="flex cursor-pointer items-center gap-2 text-xs">
+                    <input type="checkbox" checked={gasless} onChange={(e) => setGasless(e.target.checked)} className="accent-lime" />
+                    <span className={gasless ? "text-lime" : "text-muted"}>{gasless ? "Gasless via relayer*" : "< 0.001 NEAR from your wallet"}</span>
+                  </label>
+                </dd>
+              </div>
               <div className="flex justify-between border-t border-line pt-2 text-base font-bold"><dt>Total</dt><dd>{usd(price)} tUSDC</dd></div>
             </dl>
             {accountId ? (
@@ -91,6 +99,7 @@ function SeatPicker({ match }: { match: Match }) {
             ) : <button className="btn-primary mt-4 w-full justify-center py-3" onClick={signIn}>Connect wallet to buy</button>}
             <ActionStatus a={a} />
             <p className="mt-3 text-center text-xs text-muted">Your pass appears on match day. If the match is postponed you're refunded automatically.</p>
+            {gasless && <p className="mt-1 text-center text-[11px] text-muted">*If your wallet can't sign meta-transactions, it falls back to a normal transaction.</p>}
             <div className="mt-3"><Faucet /></div>
           </>
         )}

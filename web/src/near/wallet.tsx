@@ -8,6 +8,7 @@ import { setupMyNearWallet } from "@near-wallet-selector/my-near-wallet";
 import { setupHotWallet } from "@near-wallet-selector/hot-wallet";
 import "@near-wallet-selector/modal-ui/styles.css";
 import { JsonRpcProvider, actions as naj, buildDelegateAction, encodeSignedDelegate } from "near-api-js";
+import { Buffer } from "buffer";
 import { actionCreators } from "@near-js/transactions";
 import { b64encode, randomNonce } from "@nearseat/shared";
 import { config } from "../config";
@@ -136,7 +137,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       const w = await wallet();
       if (!w.signMessage) throw new Error("This wallet can't sign messages. Try Meteor, HOT or MyNearWallet.");
       const nonce = randomNonce();
-      const signed = await w.signMessage({ message, recipient, nonce: nonce as never });
+      const signed = await w.signMessage({ message, recipient, nonce: Buffer.from(nonce) });
       if (!signed) throw new Error("Signing was cancelled");
       return { accountId: signed.accountId, publicKey: signed.publicKey, signature: signed.signature, message, nonce: b64encode(nonce) };
     },
