@@ -76,26 +76,39 @@ export function ClubPage() {
 function MatchdayControl({ matches, refresh }: { matches: Match[]; refresh: () => void }) {
   const { accountId, call } = useWallet();
   const a = useAction(refresh);
-  const [scorer, setScorer] = useState("Adewale");
+  const [scorer, setScorer] = useState("");
   const m = matches.find((x) => x.status === "Live") ?? matches.find((x) => x.status === "Scheduled");
   const isClub = accountId === config.clubId;
   if (!m) return null;
   const run = (label: string, method: string, args: object) => a.run(label, () => call(method, { match_id: m.id, ...args }), `${label} recorded on-chain`);
+  // The scorer is optional; the contract needs a name, so fall back to the team's.
+  const goal = (side: "Home" | "Away", team: string) => {
+    const name = scorer.trim() || team;
+    run(`Goal · ${team}`, "goal", { side, scorer: name.slice(0, 32) }).then((ok) => ok && setScorer(""));
+  };
   return (
     <section className="card p-5">
       <div className="flex items-center justify-between"><h2 className="text-lg font-bold">Matchday control</h2>{m.status === "Live" && <LiveBadge label={`LIVE ${matchMinute(m.started_at)}'`} />}</div>
       <div className="mt-4 flex items-center justify-between rounded-2xl bg-ink/70 px-4 py-3 font-semibold">
         <span>Illia Stars</span><span className="font-display text-2xl">{m.home_goals} – {m.away_goals}</span><span>{m.opponent}</span>
       </div>
-      {!isClub && <p className="mt-3 text-xs text-warn">Connected as {accountId ?? "nobody"}. Only {config.clubId} can run matchday; anyone else is refused by the contract.</p>}
-      <input className="input mt-3" value={scorer} onChange={(e) => setScorer(e.target.value)} aria-label="Scorer name" placeholder="Scorer" />
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        <button className="btn-ghost justify-center" disabled={m.status !== "Scheduled" || !!a.busy} onClick={() => run("Kickoff", "kickoff", {})}>Kickoff{m.status === "Live" ? " ✓" : ""}</button>
-        <button className="btn-primary justify-center" disabled={m.status !== "Live" || !!a.busy} onClick={() => run("Goal · Illia Stars", "goal", { side: "Home", scorer })}>Goal · Illia Stars</button>
-        <button className="btn-ghost justify-center" disabled={m.status !== "Live" || !!a.busy} onClick={() => run(`Goal · ${m.opponent}`, "goal", { side: "Away", scorer })}>Goal · {m.opponent.split(" ")[0]}</button>
-        <button className="btn-ghost justify-center" disabled={m.status !== "Live" || !!a.busy} onClick={() => run("Full time", "full_time", {})}>Full time</button>
-      </div>
-      <button className="btn-danger mt-2 w-full justify-center" disabled={!!a.busy} onClick={() => run("Postpone", "postpone", {})}>Postpone match · refund all tickets</button>
+      {!isClub ? (
+        <p className="mt-3 rounded-xl border border-warn/40 bg-warn/10 p-3 text-xs text-warn">
+          Read-only: you're connected as {accountId ?? "nobody"}. Only {config.clubId} can run matchday, and the contract refuses anyone else.
+          Try it yourself in the Attack Lab ("Fake a goal stamp").
+        </p>
+      ) : (
+        <>
+          <input className="input mt-3" value={scorer} maxLength={32} onChange={(e) => setScorer(e.target.value)} aria-label="Goal scorer (optional)" placeholder="Goal scorer (optional)" />
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <button className="btn-ghost justify-center" disabled={m.status !== "Scheduled" || !!a.busy} onClick={() => run("Kickoff", "kickoff", {})}>Kickoff{m.status === "Live" ? " ✓" : ""}</button>
+            <button className="btn-primary justify-center" disabled={m.status !== "Live" || !!a.busy} onClick={() => goal("Home", "Illia Stars")}>Goal · Illia Stars</button>
+            <button className="btn-ghost justify-center" disabled={m.status !== "Live" || !!a.busy} onClick={() => goal("Away", m.opponent)}>Goal · {m.opponent.split(" ")[0]}</button>
+            <button className="btn-ghost justify-center" disabled={m.status !== "Live" || !!a.busy} onClick={() => run("Full time", "full_time", {})}>Full time</button>
+          </div>
+          <button className="btn-danger mt-2 w-full justify-center" disabled={!!a.busy} onClick={() => run("Postpone", "postpone", {})}>Postpone match · refund all tickets</button>
+        </>
+      )}
       <ActionStatus a={a} />
       <p className="mt-3 text-xs text-muted">Each button is an on-chain transaction from {config.clubId}. Goals stamp every checked-in member; full time ends loans and starts the payout.</p>
     </section>
