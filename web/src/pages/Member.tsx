@@ -97,7 +97,7 @@ function Dashboard({ tokenId }: { tokenId: string }) {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]">
         <div className="space-y-6">
-          {tab === "overview" && <Overview m={m} live={live} next={next} season={season} />}
+          {tab === "overview" && <Overview m={m} live={live} next={next} season={season} isHolder={isHolder} />}
           {tab === "lending" && <Lending m={m} matches={matches} isHolder={isHolder} refresh={data.refresh} />}
           {tab === "advance" && <Advance m={m} isHolder={isHolder} refresh={data.refresh} />}
           {tab === "vote" && <Vote m={m} isHolder={isHolder} />}
@@ -109,7 +109,7 @@ function Dashboard({ tokenId }: { tokenId: string }) {
   );
 }
 
-function Overview({ m, live, next, season }: { m: Membership; live?: Match; next?: Match; season: Season }) {
+function Overview({ m, live, next, season, isHolder }: { m: Membership; live?: Match; next?: Match; season: Season; isHolder: boolean }) {
   const legend = season.config.tier_thresholds[2];
   const cutBps = BigInt(season.config.members_cut_bps);
   const shareToday = live && season.memberships > 0 ? (BigInt(live.escrow) * cutBps) / 10_000n / BigInt(season.memberships) : 0n;
@@ -142,7 +142,7 @@ function Overview({ m, live, next, season }: { m: Membership; live?: Match; next
             <>
               <div className="mt-2 font-display text-2xl font-bold">Illia Stars United v {next.opponent}</div>
               <div className="text-sm text-muted">{shortDate(next.kickoff_at)} · {next.tickets_sold} tickets sold</div>
-              <a className="btn-primary mt-4" href={`#/pass/${m.token_id}`}>Open gate pass</a>
+              {isHolder && <a className="btn-primary mt-4" href={`#/pass/${m.token_id}`}>Open gate pass</a>}
             </>
           ) : <p className="mt-2 text-muted">No fixtures scheduled.</p>}
         </section>

@@ -58,7 +58,7 @@ function SeatPicker({ match }: { match: Match }) {
   return (
     <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px]">
       <section className="card p-4 sm:p-6">
-        <div className="mb-3 flex justify-between text-sm"><span className="font-display text-lg font-bold">Stars Arena</span><span className="text-muted">vs {match.opponent} · {shortDate(match.kickoff_at)}</span></div>
+        <div className="mb-3 flex flex-wrap justify-between gap-x-4 gap-y-1 text-sm"><span className="font-display text-lg font-bold">Stars Arena</span><span className="text-muted">vs {match.opponent} · {shortDate(match.kickoff_at)}</span></div>
         {seats.loading && !seats.data ? <Loading what="Loading seats" /> : seats.error && !seats.data ? <ErrorBox error={seats.error} retry={seats.refresh} /> : (
           <StadiumMap seats={seats.data ?? []} picked={pick?.seat} onPick={(seat, v) => { a.clear(); setPick({ seat, v }); }} />
         )}

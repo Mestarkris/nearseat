@@ -68,7 +68,7 @@ function Nav({ route }: { route: string }) {
           </button>
         )}
       </div>
-      <nav className="flex gap-1 overflow-x-auto px-4 pb-2 lg:hidden" aria-label="Main (mobile)">
+      <nav className="no-scrollbar flex gap-1 overflow-x-auto px-4 pb-2 lg:hidden" aria-label="Main (mobile)">
         {NAV.map(([href, label]) => (
           <a
             key={href}
