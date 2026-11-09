@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useWallet } from "./near/wallet";
+import { config } from "./config";
 import { short } from "./lib/format";
 import { Crest } from "./components/ui";
 import { Landing } from "./pages/Landing";
@@ -102,10 +103,23 @@ export function App() {
   return (
     <>
       <Nav route={page} />
+      <ContractAccountWarning />
       <main className="mx-auto max-w-6xl px-4 pb-24 pt-6 sm:pt-10">{body}</main>
       <footer className="border-t border-line/60 py-8 text-center text-xs text-muted">
         NearSeat · built at NEAR Hackathon · testnet only · tUSDC is a valueless test token · Illia Stars United is fictional
       </footer>
     </>
+  );
+}
+
+/** The contract can't pay itself (NEP-141 forbids sender == receiver), so warn early. */
+function ContractAccountWarning() {
+  const { accountId } = useWallet();
+  if (accountId !== config.contractId) return null;
+  return (
+    <div className="border-b border-warn/40 bg-warn/10 px-4 py-3 text-center text-sm text-warn" role="alert">
+      You're connected as <b>{accountId}</b>, the NearSeat contract account itself. It can't buy tickets or memberships from itself.
+      Connect a fan wallet (any other testnet account) to try the app.
+    </div>
   );
 }
