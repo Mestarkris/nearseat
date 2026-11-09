@@ -704,3 +704,66 @@ fn feed_keeps_recent_events_in_order() {
     assert!(feed.windows(2).all(|w| w[0].seq.0 < w[1].seq.0));
     assert_eq!(c.get_feed(Some(U64(c.feed_seq - 2))).len(), 2);
 }
+
+// ---------- buying a new membership from the club ----------
+
+fn buy_new_msg(seat: &str) -> String {
+    format!(r#"{{"action":"buy_new_membership","seat":"{seat}"}}"#)
+}
+
+#[test]
+fn buy_new_membership_mints_to_buyer_and_pays_club() {
+    let (mut c, e) = setup();
+    pay(&mut c, &e, BOB, 200 * ONE, &buy_new_msg("b3-7"));
+    e.callback(true);
+    assert_eq!(c.on_vault_bought("b3-7".into(), a(BOB), U128(200 * ONE)).0, 0, "nothing refunded");
+    let m = c.membership(tid("b3-7")).unwrap();
+    assert_eq!(m.owner_id.as_str(), BOB);
+    assert_eq!(m.vault.as_str(), "seat-b3-7.nearseat.testnet");
+    assert_eq!(c.club_balance, 200 * ONE);
+}
+
+#[test]
+fn failed_vault_on_purchase_refunds_buyer() {
+    let (mut c, e) = setup();
+    pay(&mut c, &e, BOB, 200 * ONE, &buy_new_msg("b3-7"));
+    e.callback(false);
+    // Returning the full amount makes the stablecoin refund Bob (NEP-141 resolve).
+    assert_eq!(c.on_vault_bought("b3-7".into(), a(BOB), U128(200 * ONE)).0, 200 * ONE);
+    assert!(c.membership(tid("b3-7")).is_none());
+    assert_eq!(c.club_balance, 0);
+    // The seat is free again.
+    pay(&mut c, &e, CAROL, 200 * ONE, &buy_new_msg("b3-7"));
+}
+
+#[test]
+#[should_panic(expected = "send exactly the season price")]
+fn buy_new_membership_wrong_price_rejected() {
+    let (mut c, e) = setup();
+    pay(&mut c, &e, BOB, 100 * ONE, &buy_new_msg("b3-7"));
+}
+
+#[test]
+#[should_panic(expected = "seat already has a membership")]
+fn cannot_buy_existing_member_seat() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    pay(&mut c, &e, BOB, 200 * ONE, &buy_new_msg(SEAT_A));
+}
+
+#[test]
+#[should_panic(expected = "a purchase for this seat is in progress")]
+fn concurrent_purchase_of_same_seat_rejected() {
+    let (mut c, e) = setup();
+    pay(&mut c, &e, BOB, 200 * ONE, &buy_new_msg("b3-7"));
+    pay(&mut c, &e, CAROL, 200 * ONE, &buy_new_msg("b3-7"));
+}
+
+#[test]
+#[should_panic(expected = "seat is sold as a single-match ticket for an upcoming match")]
+fn cannot_buy_membership_for_seat_sold_as_ticket() {
+    let (mut c, e) = setup();
+    let m = new_match(&mut c, &e);
+    pay(&mut c, &e, CAROL, 15 * ONE, &format!(r#"{{"action":"buy_seat","match_id":{m},"seat":"b3-7"}}"#));
+    pay(&mut c, &e, BOB, 200 * ONE, &buy_new_msg("b3-7"));
+}

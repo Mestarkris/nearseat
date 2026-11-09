@@ -13,6 +13,7 @@ import { ScanPage } from "./pages/Scan";
 import { MarketPage } from "./pages/Market";
 import { MembersOnlyPage } from "./pages/MembersOnly";
 import { AttackLabPage } from "./pages/AttackLab";
+import { JoinPage } from "./pages/Join";
 
 /** Tiny hash router: works on any static host (GitHub Pages, Vercel). */
 function useRoute(): string[] {
@@ -31,6 +32,7 @@ function useRoute(): string[] {
 
 const NAV = [
   ["", "Home"],
+  ["join", "Join"],
   ["member", "My membership"],
   ["matches", "Matches"],
   ["market", "Market"],
@@ -90,6 +92,7 @@ export function App() {
   switch (page) {
     case "": body = <Landing />; break;
     case "member": body = <MemberPage tokenId={arg} />; break;
+    case "join": body = <JoinPage />; break;
     case "matches": body = <MatchesPage />; break;
     case "club": body = <ClubPage />; break;
     case "verify": body = <VerifyPage tokenId={arg} />; break;

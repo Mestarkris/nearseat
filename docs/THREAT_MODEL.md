@@ -150,12 +150,20 @@ Legend: **[AL]** = shown in the Attack Lab with a "Try it on testnet" button. Te
 | T55 | XSS through on-chain SVG | Renter account ID or sponsor name injected into SVG | All strings XML-escaped on-chain before SVG output; frontend renders SVG as `<img src=data:…>`, never `innerHTML` | `unit::svg_escapes_strings` |
 | T56 | Secrets in repo | Keys committed | `.env.example` only; `.gitignore` for `.env`, `neardev/`, credentials; CI secret scan (gitleaks) | CI job |
 
+### 4.11 Added during build: buying a new membership
+
+| # | Threat | Attack path | Mitigation | Proving test |
+|---|---|---|---|---|
+| T57 | One seat, two gate passes | Buy a season membership for a seat already sold as a single ticket for an upcoming match | Purchase refused while any Scheduled/Live match has that seat sold; club ticket sales already refuse member seats unless lent | unit `cannot_buy_membership_for_seat_sold_as_ticket`, `cannot_buy_existing_member_seat`, `concurrent_purchase_of_same_seat_rejected` |
+| T58 | Fan pays, gets nothing | Vault creation fails after the tUSDC arrived | `ft_on_transfer` returns the vault promise; its callback returns the full price as "unused" on failure, so NEP-141 refunds the buyer; the club is credited only on success | unit `failed_vault_on_purchase_refunds_buyer`; sandbox `fan_buys_new_membership_from_club_with_tusdc` (wrong price refunded) |
+
 ## 5. Residual risks we accept (stated in README)
 
 - Sybil touts across many accounts (T24) and compromised gate scanner keys (T35).
 - After keys are removed, bugs can't be patched; a fix means a new deployment.
 - Testnet RPC availability; the frontend shows error states rather than stale data.
 - tUSDC is a valueless test token with an open faucet.
+- Fan purchases spend about 0.025 NEAR of the contract's own balance per new vault; the club must keep the contract funded.
 
 ## 6. Attack Lab entries (≥ 12)
 

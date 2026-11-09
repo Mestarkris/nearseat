@@ -35,7 +35,8 @@ export function Landing() {
             refunds itself, lends your seat, and opens the gate. Sell it, and everything inside moves to the buyer.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <a href="#/member" className="btn-primary px-6 py-3">Open my membership</a>
+            <a href="#/join" className="btn-primary px-6 py-3">Become a member</a>
+            <a href="#/member" className="btn-ghost px-6 py-3">My membership</a>
             <a href="#/verify/seat-c5-12" className="btn-ghost px-6 py-3">See a live membership</a>
           </div>
         </div>

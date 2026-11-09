@@ -128,7 +128,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
   const payTusdc = useCallback<WalletApi["payTusdc"]>(
     (amountRaw, msg) =>
-      call("ft_transfer_call", { receiver_id: config.contractId, amount: amountRaw, msg: JSON.stringify(msg) }, { deposit: ONE_YOCTO, gasTgas: 150, contractId: config.tusdcId }),
+      call("ft_transfer_call", { receiver_id: config.contractId, amount: amountRaw, msg: JSON.stringify(msg) }, { deposit: ONE_YOCTO, gasTgas: 100, contractId: config.tusdcId }),
     [call],
   );
 

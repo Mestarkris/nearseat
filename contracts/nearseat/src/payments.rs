@@ -25,6 +25,10 @@ impl FungibleTokenReceiver for NearSeat {
         let message: FtMessage =
             serde_json::from_str(&msg).unwrap_or_else(|_| env::panic_str("unknown payment message"));
         match message {
+            FtMessage::BuyNewMembership { seat } => {
+                // The callback returns the unused amount: 0, or the full price on failure.
+                return PromiseOrValue::Promise(self.internal_buy_new_membership(sender_id, amount.0, seat));
+            }
             FtMessage::BuySeat { match_id, seat } => self.buy_seat(sender_id, amount.0, match_id, seat),
             FtMessage::BuyMembership { token_id, expected_nonce } => {
                 self.internal_buy_membership(sender_id, amount.0, token_id, expected_nonce.0)

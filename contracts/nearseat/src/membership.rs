@@ -40,6 +40,7 @@ trait FtStorage {
 #[allow(dead_code)]
 trait SelfMint {
     fn on_vault_created(&mut self, seat: String, owner_id: AccountId, tier_floor: Tier);
+    fn on_vault_bought(&mut self, seat: String, buyer: AccountId, amount: U128) -> U128;
 }
 
 /// Seats are `<stand a-d><row 1-6>-<number 1-15>`, e.g. `c5-12`. 4 × 6 × 15 = 360 seats.
@@ -74,31 +75,7 @@ impl NearSeat {
             env::attached_deposit() >= MINT_DEPOSIT,
             format!("attach at least {MINT_DEPOSIT} to cover the vault and storage")
         );
-        assert_valid_seat(&seat);
-        let token_id = membership_token_id(&seat);
-        require!(!self.members.contains_key(&token_id), "seat already has a membership");
-        require!(!self.pending_seats.contains(&seat), "mint for this seat is in progress");
-        require!(
-            (self.members.len() + 1) <= self.max_supply,
-            "season membership supply is exhausted"
-        );
-        self.pending_seats.insert(seat.clone());
-
-        let vault: AccountId = format!("{token_id}.{}", env::current_account_id())
-            .parse()
-            .unwrap_or_else(|_| env::panic_str("vault account id is invalid"));
-
-        // CreateAccount + Transfer + UseGlobalContract. Deliberately no AddKey.
-        Promise::new(vault.clone())
-            .create_account()
-            .transfer(VAULT_FUNDING)
-            .use_global_contract(self.vault_code_hash)
-            .and(
-                ext_ft_storage::ext(self.stablecoin.clone())
-                    .with_attached_deposit(FT_STORAGE_DEPOSIT)
-                    .with_static_gas(GAS_FOR_STORAGE_DEPOSIT)
-                    .storage_deposit(Some(vault), Some(true)),
-            )
+        self.start_vault_creation(&seat)
             .then(
                 ext_self_mint::ext(env::current_account_id())
                     .with_static_gas(GAS_FOR_ON_VAULT_CREATED)
@@ -117,6 +94,95 @@ impl NearSeat {
             self.emit("vault_create_failed", json!({ "seat": seat }));
             return false;
         }
+        self.mint_to(&seat, &owner_id, tier_floor);
+        true
+    }
+
+    /// Callback for a fan buying a new membership from the club with tUSDC
+    /// (`BuyNewMembership` in `ft_on_transfer`). Returns the unused amount:
+    /// 0 on success, or the full price if the vault couldn't be created, which
+    /// makes the stablecoin refund the buyer automatically (NEP-141 resolve).
+    #[private]
+    pub fn on_vault_bought(&mut self, seat: String, buyer: AccountId, amount: U128) -> U128 {
+        self.pending_seats.remove(&seat);
+        if env::promise_result_checked(0, 64).is_err() {
+            self.emit("vault_create_failed", json!({ "seat": seat, "refunded": buyer }));
+            return amount;
+        }
+        self.mint_to(&seat, &buyer, Tier::Bronze);
+        self.club_balance += amount.0;
+        let token_id = membership_token_id(&seat);
+        self.record(&token_id, "bought_from_club", Some(amount.0), Some(buyer.clone()), None);
+        self.emit("membership_bought", json!({ "token_id": token_id, "buyer": buyer, "price": amount }));
+        U128(0)
+    }
+
+    /// Anyone can (re)register a vault in the stablecoin if minting's
+    /// registration step failed. Caller pays the NEP-145 deposit.
+    #[payable]
+    pub fn register_vault(&mut self, token_id: TokenId) -> Promise {
+        require!(env::attached_deposit() >= FT_STORAGE_DEPOSIT, "attach the storage deposit");
+        let vault = self.member(&token_id).vault.clone();
+        ext_ft_storage::ext(self.stablecoin.clone())
+            .with_attached_deposit(env::attached_deposit())
+            .with_static_gas(GAS_FOR_STORAGE_DEPOSIT)
+            .storage_deposit(Some(vault), Some(true))
+    }
+}
+
+// ---------- minting helpers (club mint and fan purchase share these) ----------
+impl NearSeat {
+    /// Checks the seat can become a membership, reserves it, and starts creating
+    /// its keyless vault: CreateAccount + Transfer + UseGlobalContract, deliberately
+    /// no AddKey, plus the vault's NEP-145 registration in the stablecoin.
+    pub(crate) fn start_vault_creation(&mut self, seat: &str) -> Promise {
+        assert_valid_seat(seat);
+        let token_id = membership_token_id(seat);
+        require!(!self.members.contains_key(&token_id), "seat already has a membership");
+        require!(!self.pending_seats.contains(&seat.to_string()), "a purchase for this seat is in progress");
+        require!((self.members.len() + 1) <= self.max_supply, "season membership supply is exhausted");
+        // A seat already sold as a single-match ticket for an upcoming match can't
+        // also become a membership, or two people would hold that seat's gate pass.
+        let taken = self
+            .matches
+            .values()
+            .filter(|m| matches!(m.status, MatchStatus::Scheduled | MatchStatus::Live))
+            .any(|m| self.sold_seats.contains_key(&(m.id, seat.to_string())));
+        require!(!taken, "seat is sold as a single-match ticket for an upcoming match");
+        self.pending_seats.insert(seat.to_string());
+
+        let vault: AccountId = format!("{token_id}.{}", env::current_account_id())
+            .parse()
+            .unwrap_or_else(|_| env::panic_str("vault account id is invalid"));
+        Promise::new(vault.clone())
+            .create_account()
+            .transfer(VAULT_FUNDING)
+            .use_global_contract(self.vault_code_hash)
+            .and(
+                ext_ft_storage::ext(self.stablecoin.clone())
+                    .with_attached_deposit(FT_STORAGE_DEPOSIT)
+                    .with_static_gas(GAS_FOR_STORAGE_DEPOSIT)
+                    .storage_deposit(Some(vault), Some(true)),
+            )
+    }
+
+    /// A fan buys a brand-new membership from the club with tUSDC (called from
+    /// `ft_on_transfer`). The price must be exactly the season price; the money
+    /// is credited to the club only after the vault exists, otherwise refunded.
+    /// The contract's own NEAR pays for the vault account and its storage.
+    pub(crate) fn internal_buy_new_membership(&mut self, buyer: AccountId, amount: u128, seat: String) -> Promise {
+        require!(amount == self.season_price, "send exactly the season price");
+        self.start_vault_creation(&seat).then(
+            ext_self_mint::ext(env::current_account_id())
+                .with_static_gas(GAS_FOR_ON_VAULT_CREATED)
+                .on_vault_bought(seat, buyer, U128(amount)),
+        )
+    }
+
+    /// Mints the membership NFT and its state once the vault exists.
+    pub(crate) fn mint_to(&mut self, seat: &str, owner_id: &AccountId, tier_floor: Tier) {
+        let seat = seat.to_string();
+        let owner_id = owner_id.clone();
         let token_id = membership_token_id(&seat);
         let vault: AccountId = format!("{token_id}.{}", env::current_account_id()).parse().unwrap();
         let now = env::block_timestamp();
@@ -177,19 +243,6 @@ impl NearSeat {
             "membership_minted",
             json!({ "token_id": token_id, "owner_id": owner_id, "vault": vault, "seat": seat }),
         );
-        true
-    }
-
-    /// Anyone can (re)register a vault in the stablecoin if minting's
-    /// registration step failed. Caller pays the NEP-145 deposit.
-    #[payable]
-    pub fn register_vault(&mut self, token_id: TokenId) -> Promise {
-        require!(env::attached_deposit() >= FT_STORAGE_DEPOSIT, "attach the storage deposit");
-        let vault = self.member(&token_id).vault.clone();
-        ext_ft_storage::ext(self.stablecoin.clone())
-            .with_attached_deposit(env::attached_deposit())
-            .with_static_gas(GAS_FOR_STORAGE_DEPOSIT)
-            .storage_deposit(Some(vault), Some(true))
     }
 }
 

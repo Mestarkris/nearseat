@@ -291,6 +291,8 @@ pub struct TicketInfo {
 pub enum FtMessage {
     /// Buy a club seat, or rent a member's offered seat, for one match.
     BuySeat { match_id: MatchId, seat: String },
+    /// Buy a brand-new season membership from the club for a free seat.
+    BuyNewMembership { seat: String },
     /// Buy a listed membership; reverts unless the vault state still matches.
     BuyMembership { token_id: TokenId, expected_nonce: U64 },
     /// Add to the members' pool, split equally across all memberships.

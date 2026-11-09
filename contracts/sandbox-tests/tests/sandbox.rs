@@ -504,3 +504,25 @@ async fn double_vote_blocked_after_sale() -> anyhow::Result<()> {
     failed_with(&r, "already voted");
     Ok(())
 }
+
+#[tokio::test]
+async fn fan_buys_new_membership_from_club_with_tusdc() -> anyhow::Result<()> {
+    let w = World::new(true).await?;
+    w.fund(&w.alice, 1000 * ONE).await?;
+    ok(w.pay(&w.alice, SEASON_PRICE, json!({ "action": "buy_new_membership", "seat": "b3-7" })).await?).await;
+
+    let card = w.view("membership", json!({ "token_id": "seat-b3-7" })).await?;
+    assert_eq!(card["owner_id"], w.alice.id().as_str());
+    let vault: AccountId = card["vault"].as_str().unwrap().parse()?;
+    assert!(w.worker.view_access_keys(&vault).await?.is_empty(), "bought vault is keyless too");
+    assert_eq!(w.balance(w.alice.id()).await?, 1000 * ONE - SEASON_PRICE);
+    assert_eq!(u(&w.view("season", json!({})).await?["club_balance"]), SEASON_PRICE);
+
+    // Wrong price: refunded in full, nothing minted.
+    let before = w.balance(w.alice.id()).await?;
+    let r = w.pay(&w.alice, SEASON_PRICE / 2, json!({ "action": "buy_new_membership", "seat": "b3-8" })).await?;
+    failed_with(&r, "send exactly the season price");
+    assert_eq!(w.balance(w.alice.id()).await?, before);
+    assert!(w.view("membership", json!({ "token_id": "seat-b3-8" })).await?.is_null());
+    Ok(())
+}

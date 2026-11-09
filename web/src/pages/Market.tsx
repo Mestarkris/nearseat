@@ -27,7 +27,7 @@ export function MarketPage() {
       </p>
       <div className="mt-4 max-w-md"><Faucet /></div>
       <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {listed.length === 0 ? <div className="md:col-span-3"><Empty title="Nothing listed right now">Holders list from the Sell tab of their membership.</Empty></div> :
+        {listed.length === 0 ? <div className="md:col-span-3"><Empty title="Nothing listed right now">Holders list from the Sell tab of their membership. Or <a className="text-lime" href="#/join">buy a new one from the club</a>.</Empty></div> :
           listed.map((m) => <Listing key={m.token_id} m={m} refresh={d.refresh} />)}
       </div>
     </div>

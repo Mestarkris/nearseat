@@ -46,8 +46,8 @@ Prerequisites: Rust (the pinned toolchain installs itself via `rust-toolchain.to
 git clone https://github.com/Mestarkris/nearseat && cd nearseat
 npm install
 npm run build:contracts      # → target/near/*/*.wasm + prints code hashes
-npm run test:unit            # see: 53 Rust unit tests pass
-npm run test:sandbox         # see: 12 end-to-end tests pass on a local NEAR sandbox
+npm run test:unit            # see: 59 Rust unit tests pass
+npm run test:sandbox         # see: 13 end-to-end tests pass on a local NEAR sandbox
 npm run test:js              # see: gate pass, NEP-413 and relayer policy tests pass
 ```
 
@@ -67,7 +67,8 @@ npm run dev             # → http://localhost:5173
 | Open **Home** | The live `seat-c5-12` card, rendered from chain state |
 | Open **Verify** (`#/verify/seat-c5-12`), press **Verify on-chain** | Live RPC results: **0 access keys** on the vault, vault code hash = the published hash, current owner, active loan |
 | Scroll the same page | Every payout, rental, withdrawal and check-in, plus every past holder with dates. No wallet needed |
-| **Connect wallet** (Meteor, HOT or MyNearWallet on testnet) → **Matches**, then **Get 100 test tUSDC** | Free test tokens in your wallet |
+| **Connect wallet** (Meteor, HOT or MyNearWallet on testnet) → **Join**, then **Get 250 test tUSDC** | Free test tokens in your wallet |
+| On **Join**, tap a grey seat → **Buy membership** (200 tUSDC) | The contract creates `seat-<your seat>.nearseat.testnet` with **zero keys** and mints the membership NFT to you. **My membership** opens your new seat account |
 | Tap a grey seat, press **Buy ticket** | The seat turns dark; the live feed shows `Ticket sold`; the fixture's members' pool grows by 5% |
 | Tap a **lime** seat (lent by a member), buy it | The ticket slip shows the money going to that member's seat account, minus a 5% club fee |
 | **Attack Lab** → **Try it on testnet** on any card | A real transaction is sent and the contract refuses it, e.g. *"vault only obeys its parent contract"* |
@@ -145,6 +146,8 @@ curl -s https://test.rpc.fastnear.com -H 'content-type: application/json' -d '{"
 
 The vault is deployed **by hash**, not by account. A global contract deployed by account can be replaced later by whoever controls that account; one deployed by hash cannot.
 
+Before locking, `node scripts/redeploy.mjs --yes` can push new contract code while keeping all state (it checks that the state still reads correctly).
+
 After the final deploy, `node scripts/lock.mjs --yes-delete-all-keys` deletes every key on the NearSeat contract account. `npm run verify` then shows `access keys on contract: 0`. This is irreversible, so it is the very last step.
 
 Builds are deterministic for a given toolchain. `rust-toolchain.toml` pins Rust 1.99.1 and `Cargo.lock` pins every crate. The `reproducible_build` metadata in `contracts/nearseat/Cargo.toml` is set up for a Docker-based `cargo near build reproducible-wasm`. The final image digest is filled in at release (see Known limits).
@@ -155,8 +158,8 @@ Builds are deterministic for a given toolchain. `rust-toolchain.toml` pins Rust 
 
 | Command | What it proves |
 |---|---|
-| `npm run test:unit` | **46** NearSeat unit tests + 4 vault + 3 tUSDC. Includes: sale mid-payout, failed-callback rollback (settle, withdraw, refunds), wrong nonce, old owner locked out, renter locked out after full time, price caps (lend + resale), goal stamps only for checked-in members, advance repaid on sale, double vote blocked, auto-lend cleared on sale, admin bounds |
-| `npm run test:sandbox` | **12** end-to-end tests with real receipts, including: vault keyless + global code hash + parent-only; full season on real tUSDC; **sale mid-payout with interleaved receipts**; failed settlement and withdrawal callbacks with a failing token; wrong nonce refunds buyer; renter + old owner locked out; goal stamps; postponement refunds; advance repaid on sale; double vote blocked |
+| `npm run test:unit` | **52** NearSeat unit tests + 4 vault + 3 tUSDC. Includes: sale mid-payout, failed-callback rollback (settle, withdraw, refunds), wrong nonce, old owner locked out, renter locked out after full time, price caps (lend + resale), goal stamps only for checked-in members, advance repaid on sale, double vote blocked, auto-lend cleared on sale, admin bounds |
+| `npm run test:sandbox` | **13** end-to-end tests with real receipts, including: a fan buying a new membership from the club with tUSDC; vault keyless + global code hash + parent-only; full season on real tUSDC; **sale mid-payout with interleaved receipts**; failed settlement and withdrawal callbacks with a failing token; wrong nonce refunds buyer; renter + old owner locked out; goal stamps; postponement refunds; advance repaid on sale; double vote blocked |
 | `npm run test:js` | Gate pass (fresh OK, screenshot > 30 s rejected, old owner rejected, forged cert rejected), members-only replay and non-holder rejection, relayer allow-list and rate limits |
 
 ---
@@ -181,7 +184,7 @@ docs/              THREAT_MODEL.md, ARCHITECTURE.md, SUBMISSION.md
 ## Features
 
 **Layer 1 (core), all built and tested.**
-- Membership NFT owning a keyless vault.
+- Membership NFT owning a keyless vault, bought from the club with tUSDC (`#/join`) or second-hand on the market.
 - Members' pool: an O(1) reward-per-share accumulator with settlement into vaults and rollback callbacks.
 - Single-match tickets (soulbound NEP-171) with per-match escrow, sold from a 360-seat map.
 - Automatic refunds on postponement (permissionless batches; failures parked in `claimable`).

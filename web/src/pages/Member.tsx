@@ -35,7 +35,7 @@ export function MemberPage({ tokenId }: { tokenId?: string }) {
       <div className="space-y-6">
         {accountId && <MyTickets accountId={accountId} />}
         <Empty title="This account holds no season membership">
-          Buy one on the <a className="text-lime" href="#/market">market</a>, or pick a single-match ticket in <a className="text-lime" href="#/matches">Matches</a>.
+          <a className="text-lime" href="#/join">Buy one from the club</a>, buy one second-hand on the <a className="text-lime" href="#/market">market</a>, or pick a single-match ticket in <a className="text-lime" href="#/matches">Matches</a>.
         </Empty>
       </div>
     );
