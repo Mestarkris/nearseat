@@ -69,7 +69,7 @@
 @keyframes rise { from { transform: translateY(105%); } to { transform: none; } }
 @keyframes settle { from { opacity: 0; transform: translateY(28px) rotate(2.5deg); } to { opacity: 1; transform: none; } }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-.rise-line { display: block; overflow: hidden; }
+.rise-line { display: block; overflow: hidden; padding-block: .04em; }
 .rise-line > span { display: block; animation: rise .95s cubic-bezier(.2,.8,.2,1) both; animation-delay: var(--d, 0ms); }
 .hero-settle { animation: settle 1s cubic-bezier(.2,.8,.2,1) .35s both; }
 .hero-fade { animation: fade-in .8s ease .6s both; }

@@ -133,11 +133,20 @@ export function SeatStory() {
   // Wide screens: the step nearest the middle of the viewport is the active one.
   useEffect(() => {
     if (!wide) return;
-    const io = new IntersectionObserver((entries) => {
-      for (const e of entries) if (e.isIntersecting) setStep(Number((e.target as HTMLElement).dataset.i));
-    }, { rootMargin: "-48% 0px -48% 0px" });
-    stepRefs.current.forEach((el) => el && io.observe(el));
-    return () => io.disconnect();
+    // Read from the scroll position, so a fast flick can never leave the stage a step behind.
+    let raf = 0;
+    const pick = () => {
+      raf = 0;
+      const mid = window.innerHeight / 2;
+      let active = 0;
+      stepRefs.current.forEach((el, i) => { if (el && el.getBoundingClientRect().top <= mid) active = i; });
+      setStep(active);
+    };
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(pick); };
+    pick();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => { cancelAnimationFrame(raf); window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); };
   }, [wide]);
 
   // Phones: play through the steps until the reader takes over.

@@ -52,7 +52,7 @@ function Hero() {
     <section className={`${wrap} grid items-center gap-10 pb-14 pt-8 sm:pt-14 lg:min-h-[calc(100dvh-140px)] lg:grid-cols-[1.25fr_1fr]`}>
       <div>
         <p className="hero-fade text-sm text-muted">Illia Stars United, season 2026/27. Running on NEAR testnet.</p>
-        <h1 className="mt-4 font-number text-[clamp(4.5rem,13vw,10.5rem)] font-normal leading-[0.86] tracking-normal">
+        <h1 className="mt-4 font-number whitespace-nowrap text-[clamp(4rem,8.5vw,7.5rem)] font-normal leading-[0.9] tracking-normal">
           <span className="rise-line"><span>Your seat</span></span>
           <span className="rise-line"><span style={{ "--d": "110ms" } as CSSProperties}>now <span className="text-lime">earns.</span></span></span>
         </h1>
