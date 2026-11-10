@@ -89,6 +89,7 @@ npm run dev             # → http://localhost:5173
 | `npm run verify` | ✅ for every vault: `keys=0`, `global_code=<hash>` = your local build |
 | `npm run relayer` (one terminal) and `npm run keeper` (another) | Relayer on `:8787` (gasless relay, members-only API, gate scanning); keeper settling payouts, refunds and auto-lend. In production both run without a server: the relayer as Vercel functions under `/api`, the keeper as a GitHub Actions cron |
 | `npm run dev`, open **My membership** with `MY_ACCOUNT`'s wallet | Your card, balance, inventory and the live match card |
+| `npm run club-check` | Every club action run once on a new fixture and checked on-chain: fixture, ticket sale, check-in, non-club refused, kickoff, goals, full time, payout round, pool top-up, poll, club withdrawal. Ends with **All club actions valid ✔** |
 | `npm run demo` | A full match, live: tickets sold → a member lends a seat → check-ins → kickoff → goals → full time → payout bar fills as each vault is settled |
 | **Pass** on your phone, **Scan** on another device | Green *Welcome in*, and attendance recorded on-chain. A screenshot shown 30 s later turns red |
 

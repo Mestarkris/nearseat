@@ -77,7 +77,11 @@ function MatchdayControl({ matches, refresh }: { matches: Match[]; refresh: () =
   const { accountId, call } = useWallet();
   const a = useAction(refresh);
   const [scorer, setScorer] = useState("");
-  const m = matches.find((x) => x.status === "Live") ?? matches.find((x) => x.status === "Scheduled");
+  const [chosen, setChosen] = useState<number>();
+  const [confirmPostpone, setConfirmPostpone] = useState(false);
+  // Only fixtures that matchday actions can still apply to.
+  const open = matches.filter((x) => x.status === "Live" || x.status === "Scheduled");
+  const m = open.find((x) => x.id === chosen) ?? open.find((x) => x.status === "Live") ?? open[0];
   const isClub = accountId === config.clubId;
   if (!m) return null;
   const run = (label: string, method: string, args: object) => a.run(label, () => call(method, { match_id: m.id, ...args }), `${label} recorded on-chain`);
@@ -86,10 +90,16 @@ function MatchdayControl({ matches, refresh }: { matches: Match[]; refresh: () =
     const name = scorer.trim() || team;
     run(`Goal · ${team}`, "goal", { side, scorer: name.slice(0, 32) }).then((ok) => ok && setScorer(""));
   };
+  const refunds = m.payment_count;
   return (
     <section className="card p-5">
       <div className="flex items-center justify-between"><h2 className="text-lg font-bold">Matchday control</h2>{m.status === "Live" && <LiveBadge label={`LIVE ${matchMinute(m.started_at)}'`} />}</div>
-      <div className="mt-4 flex items-center justify-between rounded-2xl bg-ink/70 px-4 py-3 font-semibold">
+      {open.length > 1 && (
+        <select className="input mt-3" value={m.id} onChange={(e) => { setChosen(Number(e.target.value)); setConfirmPostpone(false); a.clear(); }} aria-label="Fixture to control">
+          {open.map((x) => <option key={x.id} value={x.id}>v {x.opponent} · {x.status === "Live" ? "LIVE" : shortDate(x.kickoff_at)}</option>)}
+        </select>
+      )}
+      <div className="mt-3 flex items-center justify-between rounded-2xl bg-ink/70 px-4 py-3 font-semibold">
         <span>Illia Stars</span><span className="font-display text-2xl">{m.home_goals} – {m.away_goals}</span><span>{m.opponent}</span>
       </div>
       {!isClub ? (
@@ -106,7 +116,17 @@ function MatchdayControl({ matches, refresh }: { matches: Match[]; refresh: () =
             <button className="btn-ghost justify-center" disabled={m.status !== "Live" || !!a.busy} onClick={() => goal("Away", m.opponent)}>Goal · {m.opponent.split(" ")[0]}</button>
             <button className="btn-ghost justify-center" disabled={m.status !== "Live" || !!a.busy} onClick={() => run("Full time", "full_time", {})}>Full time</button>
           </div>
-          <button className="btn-danger mt-2 w-full justify-center" disabled={!!a.busy} onClick={() => run("Postpone", "postpone", {})}>Postpone match · refund all tickets</button>
+          {!confirmPostpone ? (
+            <button className="btn-danger mt-2 w-full justify-center" disabled={!!a.busy} onClick={() => setConfirmPostpone(true)}>Postpone match · refund all tickets</button>
+          ) : (
+            <div className="mt-2 rounded-2xl border border-warn/60 bg-warn/10 p-3 text-sm text-warn" role="alert">
+              Postpone v {m.opponent}? This can't be undone: all {refunds} payment{refunds === 1 ? "" : "s"} for this match will be refunded.
+              <div className="mt-2 flex gap-2">
+                <button className="btn-danger" disabled={!!a.busy} onClick={() => run("Postpone", "postpone", {}).then(() => setConfirmPostpone(false))}>Yes, postpone</button>
+                <button className="btn-ghost" onClick={() => setConfirmPostpone(false)}>Cancel</button>
+              </div>
+            </div>
+          )}
         </>
       )}
       <ActionStatus a={a} />
@@ -137,19 +157,52 @@ function ClubTools({ season, refresh }: { season: Season; refresh: () => void })
   const a = useAction(refresh);
   const [topUp, setTopUp] = useState("");
   const [opp, setOpp] = useState("");
+  const [when, setWhen] = useState("");
+  const [price, setPrice] = useState("10");
+  const [big, setBig] = useState(false);
   if (accountId !== config.clubId) return null;
+
+  const amount = (() => { try { const r = BigInt(toRaw(topUp)); return r > 0n ? r : null; } catch { return null; } })();
+  const fixtureError = (() => {
+    const name = opp.trim();
+    if (!name) return "Enter the opponent's name";
+    if (name.length > 40) return "Opponent name must be 40 characters or fewer";
+    const t = Date.parse(when);
+    if (!when || Number.isNaN(t)) return "Pick a kickoff date and time";
+    if (t <= Date.now()) return "Kickoff must be in the future";
+    try { if (BigInt(toRaw(price)) <= 0n) return "Ticket price must be above 0"; } catch { return "Ticket price must be a number like 10 or 12.50"; }
+    return null;
+  })();
+
   return (
     <section className="card p-5">
       <h2 className="text-lg font-bold">Club treasury</h2>
       <p className="mt-1 text-sm text-muted">Club balance: {usd(season.club_balance)} tUSDC · advance fund {usd(season.advance_fund)}</p>
       <div className="mt-3 flex gap-2">
-        <input className="input" placeholder="Top up members' pool (tUSDC)" value={topUp} onChange={(e) => setTopUp(e.target.value)} />
-        <button className="btn-primary" onClick={() => a.run("Topping up", () => payTusdc(toRaw(topUp), { action: "top_up_pool" }))}>Send</button>
+        <input className="input" inputMode="decimal" placeholder="Top up members' pool (tUSDC)" aria-label="Top-up amount" value={topUp} onChange={(e) => setTopUp(e.target.value)} />
+        <button className="btn-primary" disabled={!amount || !!a.busy} onClick={() => a.run("Topping up", () => payTusdc(String(amount), { action: "top_up_pool" }), `${topUp} tUSDC shared across all members`).then((ok) => ok && setTopUp(""))}>Send</button>
       </div>
-      <button className="btn-ghost mt-2 w-full justify-center" disabled={BigInt(season.club_balance) === 0n} onClick={() => a.run("Withdrawing club revenue", () => call("club_withdraw", { amount: season.club_balance }, { deposit: "1" }))}>Withdraw club revenue</button>
-      <div className="mt-3 flex gap-2">
-        <input className="input" placeholder="New fixture: opponent" value={opp} onChange={(e) => setOpp(e.target.value)} />
-        <button className="btn-ghost" onClick={() => a.run("Creating fixture", () => call("create_match", { opponent: opp, competition: "Lagos Premier League", kickoff_at: String(BigInt(Date.now() + 3_600_000) * 1_000_000n), ticket_price: "10000000" }))}>Add</button>
+      <button className="btn-ghost mt-2 w-full justify-center" disabled={BigInt(season.club_balance) === 0n || !!a.busy} onClick={() => a.run("Withdrawing club revenue", () => call("club_withdraw", { amount: season.club_balance }, { deposit: "1" }), `${usd(season.club_balance)} tUSDC sent to ${config.clubId}`)}>
+        Withdraw {usd(season.club_balance)} tUSDC club revenue
+      </button>
+
+      <h3 className="mt-5 font-semibold">New fixture</h3>
+      <div className="mt-2 grid gap-2">
+        <input className="input" placeholder="Opponent" aria-label="Opponent" maxLength={40} value={opp} onChange={(e) => setOpp(e.target.value)} />
+        <input className="input" type="datetime-local" aria-label="Kickoff date and time" value={when} onChange={(e) => setWhen(e.target.value)} />
+        <div className="flex gap-2">
+          <input className="input" inputMode="decimal" aria-label="Ticket price in tUSDC" placeholder="Ticket price" value={price} onChange={(e) => setPrice(e.target.value)} />
+          <label className="flex shrink-0 items-center gap-2 text-sm"><input type="checkbox" className="accent-lime" checked={big} onChange={(e) => setBig(e.target.checked)} />Big match</label>
+        </div>
+        {fixtureError && (opp || when) ? <p className="text-xs text-warn">{fixtureError}</p> : null}
+        <button className="btn-primary justify-center" disabled={!!fixtureError || !!a.busy}
+          onClick={() => a.run("Creating fixture", () => call("create_match", {
+            opponent: opp.trim(), competition: "Lagos Premier League",
+            kickoff_at: String(BigInt(Date.parse(when)) * 1_000_000n), ticket_price: toRaw(price),
+            big_match: big, priority_hours: big ? 48 : null,
+          }), `Fixture v ${opp.trim()} added`).then((ok) => { if (ok) { setOpp(""); setWhen(""); } })}>
+          Add fixture
+        </button>
       </div>
       <ActionStatus a={a} />
     </section>

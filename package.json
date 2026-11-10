@@ -28,7 +28,8 @@
     "deploy": "node scripts/deploy.mjs",
     "seed": "node scripts/seed.mjs",
     "demo": "node keeper/src/demo-match.mjs",
-    "verify": "node scripts/verify.mjs"
+    "verify": "node scripts/verify.mjs",
+    "club-check": "node scripts/club-check.mjs"
   },
   "allowScripts": {
     "bufferutil": false,

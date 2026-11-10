@@ -54,8 +54,9 @@ export function account(accountId, privateKey = findKey(accountId)) {
   return new Account(accountId, provider(), KeyPairSigner.fromSecretKey(privateKey));
 }
 
+/** Reads the latest (optimistic) state, so a read right after a write sees it. */
 export async function view(contractId, method, args = {}) {
-  return provider().callFunction({ contractId, method, args });
+  return provider().callFunction({ contractId, method, args, finality: "optimistic" });
 }
 
 export const TGAS = 1_000_000_000_000n;
@@ -82,7 +83,7 @@ export async function rawQuery(params) {
   const res = await fetch(url, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "query", params: { finality: "final", ...params } }),
+    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "query", params: { finality: "optimistic", ...params } }),
   });
   const body = await res.json();
   if (body.error) throw new Error(JSON.stringify(body.error));
