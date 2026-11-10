@@ -14,6 +14,8 @@ import { MarketPage } from "./pages/Market";
 import { MembersOnlyPage } from "./pages/MembersOnly";
 import { AttackLabPage } from "./pages/AttackLab";
 import { JoinPage } from "./pages/Join";
+import { WhitepaperPage } from "./pages/Whitepaper";
+import { Footer } from "./components/Footer";
 
 /** Tiny hash router: works on any static host (GitHub Pages, Vercel). */
 function useRoute(): string[] {
@@ -39,6 +41,8 @@ const NAV = [
   ["club", "Club"],
   ["lab", "Attack Lab"],
 ] as const;
+
+const LANDING_PARTS = ["", "how", "roadmap", "faq"];
 
 function Nav({ route }: { route: string }) {
   const { accountId, signIn, signOut, ready } = useWallet();
@@ -90,7 +94,6 @@ export function App() {
   const [page = "", arg] = useRoute();
   let body: ReactNode;
   switch (page) {
-    case "": body = <Landing />; break;
     case "member": body = <MemberPage tokenId={arg} />; break;
     case "join": body = <JoinPage />; break;
     case "matches": body = <MatchesPage />; break;
@@ -101,16 +104,17 @@ export function App() {
     case "market": body = <MarketPage />; break;
     case "members": body = <MembersOnlyPage />; break;
     case "lab": body = <AttackLabPage />; break;
+    case "whitepaper": body = <WhitepaperPage />; break;
     default: body = <div className="py-20 text-center text-muted">Page not found. <a className="text-lime" href="#/">Go home</a></div>;
   }
+  // The landing page runs edge to edge; "how", "roadmap" and "faq" are parts of it.
+  const landing = LANDING_PARTS.includes(page);
   return (
     <>
-      <Nav route={page} />
+      <Nav route={landing ? "" : page} />
       <ContractAccountWarning />
-      <main className="mx-auto max-w-6xl px-4 pb-24 pt-6 sm:pt-10">{body}</main>
-      <footer className="border-t border-line/60 py-8 text-center text-xs text-muted">
-        NearSeat · built at NEAR Hackathon · testnet only · tUSDC is a valueless test token · Illia Stars United is fictional
-      </footer>
+      {landing ? <Landing section={page || undefined} /> : <main className="mx-auto max-w-6xl px-4 pb-24 pt-6 sm:pt-10">{body}</main>}
+      <Footer />
     </>
   );
 }

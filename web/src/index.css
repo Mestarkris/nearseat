@@ -59,3 +59,52 @@
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+/* ---------- Landing motion ---------- */
+/* Sections ease in once as they arrive. */
+.reveal { opacity: 0; transform: translateY(20px); transition: opacity .8s cubic-bezier(.2,.7,.2,1), transform .8s cubic-bezier(.2,.7,.2,1); transition-delay: var(--d, 0ms); }
+.reveal[data-in] { opacity: 1; transform: none; }
+
+/* Hero: headline lines rise out of a mask, then the card settles. */
+@keyframes rise { from { transform: translateY(105%); } to { transform: none; } }
+@keyframes settle { from { opacity: 0; transform: translateY(28px) rotate(2.5deg); } to { opacity: 1; transform: none; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+.rise-line { display: block; overflow: hidden; }
+.rise-line > span { display: block; animation: rise .95s cubic-bezier(.2,.8,.2,1) both; animation-delay: var(--d, 0ms); }
+.hero-settle { animation: settle 1s cubic-bezier(.2,.8,.2,1) .35s both; }
+.hero-fade { animation: fade-in .8s ease .6s both; }
+.tilt { transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform .25s ease-out; will-change: transform; }
+
+/* Live ticker of contract events. */
+@keyframes marquee { to { transform: translateX(-50%); } }
+.marquee-track { display: flex; width: max-content; animation: marquee 70s linear infinite; }
+.marquee:hover .marquee-track { animation-play-state: paused; }
+
+/* Seat story: one stage, four states driven by data-step. */
+.story-seat { fill: #1a2027; transition: fill .5s ease; transition-delay: var(--d, 0ms); }
+.story[data-filled="true"] .story-seat[data-sold] { fill: #56616c; }
+@keyframes coin { 0% { transform: translate(0, 0); opacity: 0; } 12% { opacity: 1; } 80% { opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)); opacity: 0; } }
+.story-coin { opacity: 0; }
+.story[data-step="1"] .story-coin { animation: coin 2.4s cubic-bezier(.5,0,.3,1) infinite; animation-delay: var(--d, 0ms); }
+@keyframes seat-ring { 0% { opacity: .7; transform: scale(1); } 100% { opacity: 0; transform: scale(2.4); } }
+.story-ring { transform-origin: center; transform-box: fill-box; animation: seat-ring 2s ease-out infinite; }
+.story-token { transition: transform .9s cubic-bezier(.6,0,.2,1); }
+.story[data-step="3"] .story-token { transform: translateX(calc(100% + 12px)); }
+.story-fade { transition: opacity .5s ease, transform .5s ease; }
+
+/* FAQ disclosure */
+details.faq > summary { list-style: none; cursor: pointer; }
+details.faq > summary::-webkit-details-marker { display: none; }
+details.faq .faq-plus { transition: transform .25s ease; }
+details.faq[open] .faq-plus { transform: rotate(45deg); }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; }
+  .story-coin { display: none; }
+}
+
+@media print {
+  header, footer, .no-print { display: none !important; }
+  body { background: #fff !important; }
+  body * { color: #000 !important; background: transparent !important; border-color: #bbb !important; }
+}
