@@ -1,3 +1,5 @@
+<p align="center"><img src="web/public/brand/logo-dark-bg.svg#gh-dark-mode-only" alt="NearSeat" width="320"><img src="web/public/brand/logo-light-bg.svg#gh-light-mode-only" alt="NearSeat" width="320"></p>
+
 # NearSeat: your seat now earns
 
 **Season memberships that own their own NEAR accounts.** Built for the fictional Nigerian club **Illia Stars United**.

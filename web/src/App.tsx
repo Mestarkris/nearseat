@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useWallet } from "./near/wallet";
 import { config } from "./config";
 import { short } from "./lib/format";
-import { Crest } from "./components/ui";
+import { Logo } from "./components/ui";
 import { Landing } from "./pages/Landing";
 import { MemberPage } from "./pages/Member";
 import { MatchesPage } from "./pages/Matches";
@@ -45,8 +45,8 @@ function Nav({ route }: { route: string }) {
   return (
     <header className="sticky top-0 z-30 border-b border-line/60 bg-ink/85 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
-        <a href="#/" className="flex items-center gap-2 font-display text-lg font-bold">
-          <Crest size={30} /> NearSeat
+        <a href="#/" className="flex items-center" aria-label="NearSeat home">
+          <Logo size={32} />
         </a>
         <nav className="mx-auto hidden rounded-full border border-line bg-card p-1 lg:flex" aria-label="Main">
           {NAV.map(([href, label]) => (
