@@ -15,7 +15,7 @@ const STEPS = [
   },
   {
     title: "Every matchday pays in",
-    body: "At full time, 5% of that match's ticket sales is split between the members and paid into each seat's account. The holder can withdraw it at any time.",
+    body: "At full time, 5% of that match's ticket sales is split between the members by seat category and paid into each seat's account. The holder can withdraw it at any time.",
     note: "Its share of tonight's ticket sales",
     balance: 12.5,
   },

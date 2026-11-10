@@ -6,6 +6,7 @@ import { usePoll } from "../lib/usePoll";
 import { useAction } from "../lib/useAction";
 import type { Membership, Season } from "../lib/types";
 import { seatLabel, usd } from "../lib/format";
+import { CATEGORIES } from "../lib/category";
 import { ActionStatus } from "../components/ActionStatus";
 import { Faucet } from "../components/Faucet";
 import { Empty, ErrorBox, Loading, TierBadge } from "../components/ui";
@@ -23,7 +24,7 @@ export function MarketPage() {
       <h1 className="text-4xl font-extrabold sm:text-5xl">Membership market</h1>
       <p className="mt-2 max-w-3xl text-white/70">
         Buy a season membership second-hand. You get the seat, its account balance, remaining passes, attendance record and gate access in one transaction.
-        Prices are capped at {usd(d.data!.season.resale_cap, 0)} tUSDC, so touts can't gouge.
+        Every listing is capped at {d.data!.season.config.resale_cap_bps / 100}% of what a seat of its category costs from the club, so touts can't gouge.
       </p>
       <div className="mt-4 max-w-md"><Faucet /></div>
       <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -41,6 +42,7 @@ function Listing({ m, refresh }: { m: Membership; refresh: () => void }) {
     <article className="card p-5">
       <div className="flex items-center justify-between"><span className="font-display text-xl font-bold">{m.token_id}</span><TierBadge tier={m.tier} /></div>
       <div className="text-sm text-muted">{seatLabel(m.seat)} · held by {m.owner_id}</div>
+      <div className="mt-1 text-sm"><span className={`font-semibold ${CATEGORIES[m.category].text}`}>{CATEGORIES[m.category].label}</span> <span className="text-muted">· {m.share_weight / 4}x a standard share · {usd(m.season_price, 0)} tUSDC new from the club</span></div>
       <dl className="mt-4 grid grid-cols-2 gap-2 text-sm">
         <div className="rounded-xl bg-ink/70 p-2"><dt className="text-xs text-muted">Vault balance</dt><dd className="font-semibold">{usd(m.vault_balance)}</dd></div>
         <div className="rounded-xl bg-ink/70 p-2"><dt className="text-xs text-muted">Unsettled</dt><dd className="font-semibold">{usd(m.unsettled)}</dd></div>

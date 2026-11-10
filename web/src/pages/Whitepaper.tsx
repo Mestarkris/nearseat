@@ -43,12 +43,12 @@ export function WhitepaperPage() {
   const c = s?.config;
   const go = (id: string) => document.getElementById(`wp-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
   const params: [string, string][] = s && c ? [
-    ["Season price", `${usd(s.season_price, 0)} tUSDC`],
+    ...s.categories.map((k): [string, string] => [`${k.category === "FansEnd" ? "Fans' End" : k.category === "Vip" ? "VIP" : k.category} seat: season price, share of the pool`, `${usd(k.season_price, 0)} tUSDC, ${k.weight / 4}x a standard share`]),
     ["Memberships sold / maximum", `${s.memberships} / ${s.max_supply}`],
     ["Members' share of each match's ticket sales", pct(c.members_cut_bps)],
-    ["Highest price for lending a seat", `${pct(c.lend_cap_bps)} of the match ticket price`],
+    ["Highest price for lending a seat", `${pct(c.lend_cap_bps)} of the club's ticket price for that category`],
     ["Club fee on a seat loan", pct(c.lend_club_fee_bps)],
-    ["Highest resale price", `${usd(s.resale_cap, 0)} tUSDC (${pct(c.resale_cap_bps)} of the season price)`],
+    ["Highest resale price", `${pct(c.resale_cap_bps)} of the season price for that category`],
     ["Club royalty on a resale", pct(c.resale_fee_bps)],
     ["Single tickets one account may buy per match", String(c.max_tickets_per_account)],
     ["Matches attended for Silver / Gold / Legend", c.tier_thresholds.join(" / ")],
@@ -95,7 +95,8 @@ export function WhitepaperPage() {
 
           <S id="money" n={++n} title="How money moves">
             <p>Fans buy match tickets and memberships in tUSDC. Ticket money for a match is held by the contract until the match is played. At full time a fixed share of that match's sales goes to the members' pool and the rest becomes club revenue.</p>
-            <p>The pool is split equally between memberships using a running per-share total, so the cost of a payout does not grow with the number of members. Each seat's share is then settled into its own account. If a membership changes hands in the middle of a payout round, earnings up to the sale stay with the seat, and so go to the buyer, exactly as the listing showed.</p>
+            <p>Seats come in four categories, set by where they are in the stadium: VIP, Pitchside, Standard and Fans' End. The category sets the price of the membership and of a single ticket, and it sets the seat's share of the pool in the same proportion. A VIP seat costs 2.5 times a standard seat and earns 2.5 times a standard share. A seat in the Fans' End costs three quarters and earns three quarters. These ratios are fixed in the contract, so the club cannot re-weight the pool after fans have bought in.</p>
+            <p>The pool is split between memberships by those weights using a running per-share total, so the cost of a payout does not grow with the number of members. Each seat's share is then settled into its own account. If a membership changes hands in the middle of a payout round, earnings up to the sale stay with the seat, and so go to the buyer, exactly as the listing showed.</p>
             <p>A holder can withdraw from the seat account to their wallet at any time. They can also take a capped advance on future earnings, which is repaid first out of later payouts or out of the sale price.</p>
           </S>
 
@@ -106,12 +107,12 @@ export function WhitepaperPage() {
           </S>
 
           <S id="lending" n={++n} title="Lending a seat">
-            <p>A member who can't attend offers the seat for one match at a price up to a cap. Another fan pays and becomes the seat's holder for that match only. The rent, minus a small club fee, goes into the seat's account.</p>
+            <p>A member who can't attend offers the seat for one match at a price up to a cap, which is a multiple of what the club charges for a seat of the same category. Another fan pays and becomes the seat's holder for that match only. The rent, minus a small club fee, goes into the seat's account.</p>
             <p>For that match the borrower's wallet produces the valid gate pass and the owner's is paused, so one seat never admits two people. After full time the seat is the owner's again without anyone doing anything. Loans lock at kickoff, and members can set a rule that offers the seat automatically if they haven't checked in by a chosen time.</p>
           </S>
 
           <S id="resale" n={++n} title="Selling a membership">
-            <p>A member lists the membership at a price up to the resale cap. Listing freezes withdrawals, loans and advances on that seat, so what a buyer sees is what they get.</p>
+            <p>A member lists the membership at a price up to the resale cap for its category. Listing freezes withdrawals, loans and advances on that seat, so what a buyer sees is what they get.</p>
             <p>Every change to a seat's state bumps a counter. The buyer's payment names the counter value they looked at. If anything changed in between, the purchase is cancelled and the payment returns in full. On success, one transaction pays the seller, pays the club its royalty, and moves the NFT. The balance, passes, attendance record and gate access follow because they belong to the seat, not the person.</p>
           </S>
 
@@ -122,7 +123,7 @@ export function WhitepaperPage() {
 
           <S id="security" n={++n} title="Security model">
             <p>The threat model was written before any code. It lists 58 ways a seller, a past owner, a borrower, a tout, the club's own staff or an outsider might try to cheat, and what stops each one.</p>
-            <p>The contracts are covered by 86 automated tests, including a sale that lands in the middle of a payout and failures injected into every callback. Twenty-one of the attacks are also wired into the <a className="text-lime" href="#/lab">Attack Lab</a>, where anyone can attempt them against the live contract and watch them be refused.</p>
+            <p>The contracts are covered by 97 automated tests, including a sale that lands in the middle of a payout and failures injected into every callback. Twenty-one of the attacks are also wired into the <a className="text-lime" href="#/lab">Attack Lab</a>, where anyone can attempt them against the live contract and watch them be refused.</p>
             <p>The <a className="text-lime" href="#/verify/seat-c5-12">Verify page</a> checks a seat without a wallet: zero keys on its account, the code hash, the current owner, and every past holder and payout.</p>
             <p className="no-print">Read the full <a className="text-lime" href={`${REPO}/blob/main/docs/THREAT_MODEL.md`} target="_blank" rel="noreferrer">threat model</a> and <a className="text-lime" href={`${REPO}/blob/main/docs/ARCHITECTURE.md`} target="_blank" rel="noreferrer">architecture diagrams</a>.</p>
           </S>
@@ -148,7 +149,8 @@ export function WhitepaperPage() {
           </S>
 
           <S id="roadmap" n={++n} title="Roadmap">
-            <p><b className="text-white">Next:</b> seat categories (VIP, pitchside, standard, fans' end) with their own prices and share of earnings, category perks at the gate, shared tickets for groups, and sponsor rewards paid straight into seat accounts.</p>
+            <p><b className="text-white">Live now:</b> everything described above, including seat categories with their own prices and share of earnings.</p>
+            <p><b className="text-white">Next:</b> category perks at the gate such as lounge access, shared tickets for groups, and sponsor rewards paid straight into seat accounts.</p>
             <p><b className="text-white">Later:</b> an independent audit, a mainnet launch with a regulated stablecoin alongside a real club, and support for several clubs and seasons on the same contracts.</p>
           </S>
         </div>

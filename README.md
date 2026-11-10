@@ -7,7 +7,7 @@
 Every season membership is an NEP-171 NFT that owns a keyless NEAR sub-account, for example `seat-c5-12.nearseat.testnet`. That account:
 
 - holds the member's tUSDC;
-- collects 5% of every match's single-ticket sales;
+- collects its share of 5% of every match's single-ticket sales, weighted by seat category;
 - earns when the member lends their seat;
 - carries attendance and goal stamps;
 - opens the stadium gate and the members-only page.
@@ -48,8 +48,8 @@ Prerequisites: Rust (the pinned toolchain installs itself via `rust-toolchain.to
 git clone https://github.com/Mestarkris/nearseat && cd nearseat
 npm install
 npm run build:contracts      # → target/near/*/*.wasm + prints code hashes
-npm run test:unit            # see: 59 Rust unit tests pass
-npm run test:sandbox         # see: 13 end-to-end tests pass on a local NEAR sandbox
+npm run test:unit            # see: 69 Rust unit tests pass
+npm run test:sandbox         # see: 14 end-to-end tests pass on a local NEAR sandbox
 npm run test:js              # see: gate pass, NEP-413 and relayer policy tests pass
 ```
 
@@ -70,7 +70,7 @@ npm run dev             # → http://localhost:5173
 | Open **Verify** (`#/verify/seat-c5-12`), press **Verify on-chain** | Live RPC results: **0 access keys** on the vault, vault code hash = the published hash, current owner, active loan |
 | Scroll the same page | Every payout, rental, withdrawal and check-in, plus every past holder with dates. No wallet needed |
 | **Connect wallet** (Meteor, HOT or MyNearWallet on testnet) → **Join**, then **Get 250 test tUSDC** | Free test tokens in your wallet |
-| On **Join**, tap a grey seat → **Buy membership** (200 tUSDC) | The contract creates `seat-<your seat>.nearseat.testnet` with **zero keys** and mints the membership NFT to you. **My membership** opens your new seat account |
+| On **Join**, tap a grey seat → **Buy membership** (150 to 500 tUSDC, by seat category) | The contract creates `seat-<your seat>.nearseat.testnet` with **zero keys** and mints the membership NFT to you. **My membership** opens your new seat account |
 | Tap a grey seat, press **Buy ticket** | The seat turns dark; the live feed shows `Ticket sold`; the fixture's members' pool grows by 5% |
 | Tap a **lime** seat (lent by a member), buy it | The ticket slip shows the money going to that member's seat account, minus a 5% club fee |
 | **Attack Lab** → **Try it on testnet** on any card | A real transaction is sent and the contract refuses it, e.g. *"vault only obeys its parent contract"* |
@@ -149,7 +149,7 @@ curl -s https://test.rpc.fastnear.com -H 'content-type: application/json' -d '{"
 
 The vault is deployed **by hash**, not by account. A global contract deployed by account can be replaced later by whoever controls that account; one deployed by hash cannot.
 
-Before locking, `node scripts/redeploy.mjs --yes` can push new contract code while keeping all state (it checks that the state still reads correctly).
+Before locking, `node scripts/redeploy.mjs --yes` can push new contract code while keeping all state (it checks that the state still reads correctly). When the stored layout changes, the deploy and its migration go in one transaction: `node scripts/migrate.mjs --yes` did this for the seat-categories upgrade and checks that every membership is still owed exactly what it was owed before.
 
 After the final deploy, `node scripts/lock.mjs --yes-delete-all-keys` deletes every key on the NearSeat contract account. `npm run verify` then shows `access keys on contract: 0`. This is irreversible, so it is the very last step.
 
@@ -161,8 +161,8 @@ Builds are deterministic for a given toolchain. `rust-toolchain.toml` pins Rust 
 
 | Command | What it proves |
 |---|---|
-| `npm run test:unit` | **52** NearSeat unit tests + 4 vault + 3 tUSDC. Includes: sale mid-payout, failed-callback rollback (settle, withdraw, refunds), wrong nonce, old owner locked out, renter locked out after full time, price caps (lend + resale), goal stamps only for checked-in members, advance repaid on sale, double vote blocked, auto-lend cleared on sale, admin bounds |
-| `npm run test:sandbox` | **13** end-to-end tests with real receipts, including: a fan buying a new membership from the club with tUSDC; vault keyless + global code hash + parent-only; full season on real tUSDC; **sale mid-payout with interleaved receipts**; failed settlement and withdrawal callbacks with a failing token; wrong nonce refunds buyer; renter + old owner locked out; goal stamps; postponement refunds; advance repaid on sale; double vote blocked |
+| `npm run test:unit` | **62** NearSeat unit tests + 4 vault + 3 tUSDC. Includes: seat categories (prices, weighted split that never over-distributes, per-category caps, migration from the equal-split layout), sale mid-payout, failed-callback rollback (settle, withdraw, refunds), wrong nonce, old owner locked out, renter locked out after full time, price caps (lend + resale), goal stamps only for checked-in members, advance repaid on sale, double vote blocked, auto-lend cleared on sale, admin bounds |
+| `npm run test:sandbox` | **14** end-to-end tests with real receipts, including: a VIP seat costing more and earning a bigger share; a fan buying a new membership from the club with tUSDC; vault keyless + global code hash + parent-only; full season on real tUSDC; **sale mid-payout with interleaved receipts**; failed settlement and withdrawal callbacks with a failing token; wrong nonce refunds buyer; renter + old owner locked out; goal stamps; postponement refunds; advance repaid on sale; double vote blocked |
 | `npm run test:js` | Gate pass (fresh OK, screenshot > 30 s rejected, old owner rejected, forged cert rejected), members-only replay and non-holder rejection, relayer allow-list and rate limits |
 
 ---
@@ -188,7 +188,8 @@ docs/              THREAT_MODEL.md, ARCHITECTURE.md, SUBMISSION.md
 
 **Layer 1 (core), all built and tested.**
 - Membership NFT owning a keyless vault, bought from the club with tUSDC (`#/join`) or second-hand on the market.
-- Members' pool: an O(1) reward-per-share accumulator with settlement into vaults and rollback callbacks.
+- **Seat categories.** VIP (2.5x), Pitchside (1.5x), Standard (1x) and Fans' End (0.75x), derived from the seat id, never stored. The category sets the membership price, the single-ticket price, the lend and resale caps, the advance cap and the seat's weight in the members' pool (10 / 6 / 4 / 3).
+- Members' pool: an O(1) reward-per-weight accumulator with settlement into vaults and rollback callbacks.
 - Single-match tickets (soulbound NEP-171) with per-match escrow, sold from a 360-seat map.
 - Automatic refunds on postponement (permissionless batches; failures parked in `claimable`).
 - Seat lending for one match, with a price cap and club fee.

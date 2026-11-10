@@ -8,6 +8,7 @@ import { usePoll } from "../lib/usePoll";
 import { useAction } from "../lib/useAction";
 import type { Match, Membership, Season, SeatView } from "../lib/types";
 import { parseSeat, usd } from "../lib/format";
+import { CATEGORIES, CATEGORY_ORDER, categoryOf, multiple, priceFor } from "../lib/category";
 import { StadiumMap, standName } from "../components/StadiumMap";
 import { ActionStatus } from "../components/ActionStatus";
 import { Faucet } from "../components/Faucet";
@@ -16,7 +17,7 @@ import { config } from "../config";
 
 const PERKS = [
   "Your own NEAR account for the seat, with zero keys: only the NFT holder controls it",
-  "5% of every match's ticket sales, shared between all members and paid into that account",
+  "A share of 5% of every match's ticket sales, sized by your seat's category and paid into that account",
   "A gate pass for every home match this season",
   "Lend the seat for matches you can't make; the rent goes to your seat's account",
   "Sell it any time on the market, with everything inside it",
@@ -47,6 +48,8 @@ export function JoinPage() {
   const { season, taken } = d.data!;
   const left = season.max_supply - season.memberships;
   const s = pick ? parseSeat(pick) : null;
+  const cat = pick ? categoryOf(pick) : null;
+  const price = pick ? priceFor(season.season_price, pick) : 0n;
 
   return (
     <div>
@@ -59,7 +62,7 @@ export function JoinPage() {
         <section className="card p-4 sm:p-6">
           <div className="mb-3 flex flex-wrap justify-between gap-x-4 text-sm">
             <span className="font-display text-lg font-bold">Stars Arena · choose a seat</span>
-            <span className="text-muted">Blue = taken by a member · dark = sold for an upcoming match</span>
+            <span className="text-muted">Colour shows the category. Blue seats belong to members already.</span>
           </div>
           <StadiumMap seats={taken} picked={pick} onPick={(seat) => { a.clear(); setBought(undefined); setPick(seat); }} />
         </section>
@@ -73,22 +76,39 @@ export function JoinPage() {
             </div>
           )}
           {!pick || !s ? (
-            !bought && <p className="mt-4 text-sm text-muted">Tap a grey seat on the map.</p>
+            !bought && (
+              <>
+                <p className="mt-4 text-sm text-muted">Tap a free seat on the map. Where it is sets the price and its share of every payout.</p>
+                <table className="mt-4 w-full text-sm">
+                  <thead className="text-left text-xs text-muted"><tr><th className="pb-2 font-normal">Category</th><th className="pb-2 text-right font-normal">Season</th><th className="pb-2 text-right font-normal">Pool share</th></tr></thead>
+                  <tbody>
+                    {CATEGORY_ORDER.map((c) => (
+                      <tr key={c} className="border-t border-line">
+                        <td className="py-2"><span className="flex items-center gap-2"><span className={`size-3 shrink-0 rounded-sm ${CATEGORIES[c].swatch}`} /><span><span className="font-semibold">{CATEGORIES[c].label}</span><span className="block text-xs text-muted">{CATEGORIES[c].where}</span></span></span></td>
+                        <td className="py-2 text-right align-top font-semibold tabular-nums">{usd((BigInt(season.season_price) * CATEGORIES[c].bps) / 10_000n, 0)}</td>
+                        <td className="py-2 text-right align-top tabular-nums text-muted">{multiple(c)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
+            )
           ) : (
             <>
               <div className="mt-4 rounded-2xl border border-line p-3">
-                <div className="flex justify-between font-semibold"><span>{standName(pick)} · Row {s.row} · Seat {s.number}</span></div>
+                <div className="flex items-start justify-between gap-2 font-semibold"><span>{standName(pick)} · Row {s.row} · Seat {s.number}</span><span className={`shrink-0 rounded-full border border-current px-2 py-0.5 text-[11px] font-bold uppercase ${CATEGORIES[cat!].text}`}>{CATEGORIES[cat!].label}</span></div>
                 <div className="mono text-xs text-muted">seat-{pick}.{config.contractId}</div>
               </div>
               <ul className="mt-4 space-y-2 text-sm text-white/80">
                 {PERKS.map((p) => <li key={p} className="flex gap-2"><span className="text-lime">✓</span>{p}</li>)}
               </ul>
-              <div className="mt-4 flex justify-between border-t border-line pt-3 text-base font-bold"><span>Season price</span><span>{usd(season.season_price)} tUSDC</span></div>
+              <div className="mt-4 flex justify-between border-t border-line pt-3 text-base font-bold"><span>Season price</span><span>{usd(price)} tUSDC</span></div>
+              <p className="mt-1 text-xs text-muted">{CATEGORIES[cat!].label} seats pay {multiple(cat!)} the standard price and earn {multiple(cat!)} a standard share of every payout.</p>
               {accountId ? (
                 <button className="btn-primary mt-4 w-full justify-center py-3" disabled={!!a.busy || left <= 0}
                   onClick={async () => {
                     const seat = pick;
-                    if (await a.run("Buying membership", () => payTusdc(season.season_price, { action: "buy_new_membership", seat }))) setBought(seat);
+                    if (await a.run("Buying membership", () => payTusdc(price.toString(), { action: "buy_new_membership", seat }))) setBought(seat);
                   }}>
                   Buy membership
                 </button>

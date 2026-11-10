@@ -29,7 +29,7 @@ impl NearSeat {
     pub fn list(&mut self, token_id: TokenId, price: U128) {
         assert_one_yocto();
         self.assert_owner(&token_id);
-        let cap = self.resale_cap().0;
+        let cap = self.resale_cap_for(&token_id);
         require!(price.0 > 0 && price.0 <= cap, format!("price must be 1..{cap} (resale cap)"));
         {
             let m = self.member_mut(&token_id);
@@ -55,9 +55,20 @@ impl NearSeat {
         self.emit("delisted", json!({ "token_id": token_id }));
     }
 
-    /// Maximum resale price for a membership.
+    /// Maximum resale price for a standard-category membership.
     pub fn resale_cap(&self) -> U128 {
         U128(self.season_price * self.config.resale_cap_bps as u128 / BPS)
+    }
+
+    /// Maximum resale price for this membership: the cap applies to what a
+    /// seat of its category costs.
+    pub fn resale_cap_of(&self, token_id: TokenId) -> U128 {
+        U128(self.resale_cap_for(&token_id))
+    }
+
+    pub(crate) fn resale_cap_for(&self, token_id: &TokenId) -> u128 {
+        let category = Category::of_seat(&self.member(token_id).seat);
+        category.price(self.season_price) * self.config.resale_cap_bps as u128 / BPS
     }
 
     /// NEP-199. Payout for selling `token_id` at `balance`.
@@ -90,7 +101,7 @@ impl NearSeat {
     ) -> Payout {
         assert_one_yocto();
         require!(self.members.contains_key(&token_id), "only memberships can be resold");
-        require!(balance.0 <= self.resale_cap().0, "price is above the resale cap");
+        require!(balance.0 <= self.resale_cap_for(&token_id), "price is above the resale cap");
         self.before_transfer(&token_id);
         let payout = self.nft_payout(token_id.clone(), balance, max_len_payout);
         let from = self.owner_of(&token_id);

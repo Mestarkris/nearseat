@@ -10,6 +10,8 @@ import { matchMinute, seatLabel, shortDate, toRaw, usd } from "../lib/format";
 import { Feed } from "../components/Feed";
 import { MyTickets } from "../components/MyTickets";
 import { ActionStatus } from "../components/ActionStatus";
+import { CATEGORIES, multiple, priceFor } from "../lib/category";
+import { GateAccess } from "../components/GateAccess";
 import { Crest, Empty, ErrorBox, LiveBadge, Loading, Progress, Section, TierBadge } from "../components/ui";
 
 type Tab = "overview" | "lending" | "advance" | "vote" | "sell";
@@ -112,7 +114,9 @@ function Dashboard({ tokenId }: { tokenId: string }) {
 function Overview({ m, live, next, season, isHolder }: { m: Membership; live?: Match; next?: Match; season: Season; isHolder: boolean }) {
   const legend = season.config.tier_thresholds[2];
   const cutBps = BigInt(season.config.members_cut_bps);
-  const shareToday = live && season.memberships > 0 ? (BigInt(live.escrow) * cutBps) / 10_000n / BigInt(season.memberships) : 0n;
+  // The pool is split by category weight, not equally.
+  const totalWeight = BigInt(season.total_weight);
+  const shareToday = live && totalWeight > 0n ? ((BigInt(live.escrow) * cutBps) / 10_000n) * BigInt(m.share_weight) / totalWeight : 0n;
   const rule = next && m.autolend_rules.find((r) => r.match_id === next.id);
   return (
     <>
@@ -191,7 +195,12 @@ function SeatAccount({ m, isHolder, refresh }: { m: Membership; isHolder: boolea
   const frozen = !!m.listing || BigInt(m.debt) > 0n;
   return (
     <aside className="card-glow h-fit space-y-4 p-5 lg:sticky lg:top-24" aria-label="Seat account">
-      <div className="flex items-center justify-between"><h2 className="text-lg font-bold">Seat account</h2><TierBadge tier={m.tier} /></div>
+      <div className="flex items-center justify-between gap-2"><h2 className="text-lg font-bold">Seat account</h2><TierBadge tier={m.tier} /></div>
+      <div className="flex items-center justify-between gap-3 rounded-2xl border border-line px-3 py-2.5 text-sm">
+        <span><span className={`font-bold ${CATEGORIES[m.category].text}`}>{CATEGORIES[m.category].label}</span><span className="block text-xs text-muted">{CATEGORIES[m.category].where}</span></span>
+        <span className="shrink-0 text-right"><span className="font-semibold">{multiple(m.category)} share</span><span className="block text-xs text-muted">of every payout</span></span>
+      </div>
+      <GateAccess m={m} />
       <div className="mono text-xs text-muted">{m.vault} · keys: {keys.data ?? "…"}</div>
       <div>
         <div className="text-sm text-muted">Balance</div>
@@ -253,11 +262,13 @@ function Lending({ m, matches, isHolder, refresh }: { m: Membership; matches: Ma
   if (!upcoming.length) return <Empty title="No upcoming matches to lend for" />;
   return (
     <Section title="Lend your seat for one match">
-      <p className="mb-4 text-sm text-muted">The renter gets the gate pass for that match only. You earn the price minus a 5% club fee, paid into your seat account at full time. Prices are capped at 1.5× face value.</p>
+      <p className="mb-4 text-sm text-muted">The renter gets the gate pass for that match only. You earn the price minus a 5% club fee, paid into your seat account at full time. Prices are capped at 1.5× what the club charges for a seat of your category.</p>
       <ul className="space-y-4">
         {upcoming.map((x) => {
           const loan = m.loans.find((l) => l.match_id === x.id)?.loan;
-          const cap = (BigInt(x.ticket_price) * 15n) / 10n;
+          // 1.5x what the club charges for a seat of this category.
+          const face = priceFor(x.ticket_price, m.seat);
+          const cap = (face * 15n) / 10n;
           const rule = m.autolend_rules.find((r) => r.match_id === x.id);
           return (
             <li key={x.id} className="rounded-2xl border border-line p-4">
@@ -285,7 +296,7 @@ function Lending({ m, matches, isHolder, refresh }: { m: Membership; matches: Ma
                       <button className="btn-ghost" onClick={() => a.run("Clearing rule", () => call("clear_autolend", { token_id: m.token_id, match_id: x.id }, { deposit: ONE_YOCTO }))}>Clear</button>
                     </>
                   ) : (
-                    <button className="btn-ghost" disabled={!!a.busy} onClick={() => a.run("Setting auto-lend", () => call("set_autolend", { token_id: m.token_id, match_id: x.id, hours_before: 3, price: toRaw(price[x.id] || usd(x.ticket_price)) }, { deposit: ONE_YOCTO }), "Auto-lend rule set (3h before kickoff)")}>
+                    <button className="btn-ghost" disabled={!!a.busy} onClick={() => a.run("Setting auto-lend", () => call("set_autolend", { token_id: m.token_id, match_id: x.id, hours_before: 3, price: toRaw(price[x.id] || usd(face).replace(/,/g, "")) }, { deposit: ONE_YOCTO }), "Auto-lend rule set (3h before kickoff)")}>
                       Lend automatically if I'm not in 3h before
                     </button>
                   )}
@@ -369,7 +380,7 @@ function Sell({ m, season, isHolder, refresh }: { m: Membership; season: Season;
       <p className="text-sm text-muted">
         Listing freezes the seat account: no withdrawals, loans or advances until it sells or you delist. The buyer pays exactly your price and gets the balance,
         passes, history and gate access in one transaction. You receive the price minus a {season.config.resale_fee_bps / 100}% club royalty
-        {BigInt(m.debt) > 0n ? ` and your ${usd(m.debt)} tUSDC advance` : ""}. Cap: {usd(season.resale_cap)} tUSDC.
+        {BigInt(m.debt) > 0n ? ` and your ${usd(m.debt)} tUSDC advance` : ""}. Cap for a {CATEGORIES[m.category].label} seat: {usd(m.resale_cap)} tUSDC.
       </p>
       {m.listing ? (
         <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -378,7 +389,7 @@ function Sell({ m, season, isHolder, refresh }: { m: Membership; season: Season;
         </div>
       ) : isHolder ? (
         <div className="mt-4 flex gap-2">
-          <input className="input" inputMode="decimal" placeholder={`Price (max ${usd(season.resale_cap)})`} aria-label="Sale price" value={price} onChange={(e) => setPrice(e.target.value)} />
+          <input className="input" inputMode="decimal" placeholder={`Price (max ${usd(m.resale_cap)})`} aria-label="Sale price" value={price} onChange={(e) => setPrice(e.target.value)} />
           <button className="btn-primary" disabled={!!a.busy} onClick={() => a.run("Listing", () => call("list", { token_id: m.token_id, price: toRaw(price) }, { deposit: ONE_YOCTO }), "Listed on the market")}>List</button>
         </div>
       ) : null}

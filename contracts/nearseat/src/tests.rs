@@ -153,13 +153,13 @@ fn new_mint_gets_no_past_rewards() {
 #[test]
 fn accumulator_never_over_distributes() {
     let (mut c, e) = setup();
-    for seat in ["a1-1", "a1-2", "a1-3"] {
+    for seat in ["a3-1", "a3-2", "a3-3"] {
         mint(&mut c, &e, seat, ALICE);
     }
     for amount in [1u128, 7, 10, 333_333, 2, 1_000_001] {
         pay(&mut c, &e, CLUB, amount, r#"{"action":"top_up_pool"}"#);
     }
-    let total: u128 = ["a1-1", "a1-2", "a1-3"]
+    let total: u128 = ["a3-1", "a3-2", "a3-3"]
         .iter()
         .map(|s| c.membership(tid(s)).unwrap().unsettled.0)
         .sum();
@@ -175,8 +175,8 @@ fn full_time_moves_members_cut_to_pool() {
     mint(&mut c, &e, SEAT_A, ALICE);
     mint(&mut c, &e, SEAT_B, BOB);
     let m = new_match(&mut c, &e);
-    pay(&mut c, &e, CAROL, 15 * ONE, &format!(r#"{{"action":"buy_seat","match_id":{m},"seat":"a1-1"}}"#));
-    pay(&mut c, &e, CAROL, 15 * ONE, &format!(r#"{{"action":"buy_seat","match_id":{m},"seat":"a1-2"}}"#));
+    pay(&mut c, &e, CAROL, 15 * ONE, &format!(r#"{{"action":"buy_seat","match_id":{m},"seat":"a3-1"}}"#));
+    pay(&mut c, &e, CAROL, 15 * ONE, &format!(r#"{{"action":"buy_seat","match_id":{m},"seat":"a3-2"}}"#));
     club(&e);
     c.kickoff(m);
     c.full_time(m);
@@ -201,7 +201,7 @@ fn per_account_ticket_cap() {
     let (mut c, e) = setup();
     let m = new_match(&mut c, &e);
     for n in 1..=5 {
-        pay(&mut c, &e, CAROL, 15 * ONE, &format!(r#"{{"action":"buy_seat","match_id":{m},"seat":"b2-{n}"}}"#));
+        pay(&mut c, &e, CAROL, 15 * ONE, &format!(r#"{{"action":"buy_seat","match_id":{m},"seat":"b3-{n}"}}"#));
     }
 }
 
@@ -210,7 +210,7 @@ fn per_account_ticket_cap() {
 fn second_buyer_of_seat_rejected() {
     let (mut c, e) = setup();
     let m = new_match(&mut c, &e);
-    let msg = format!(r#"{{"action":"buy_seat","match_id":{m},"seat":"b2-1"}}"#);
+    let msg = format!(r#"{{"action":"buy_seat","match_id":{m},"seat":"b3-1"}}"#);
     pay(&mut c, &e, CAROL, 15 * ONE, &msg);
     pay(&mut c, &e, BOB, 15 * ONE, &msg);
 }
@@ -220,17 +220,17 @@ fn second_buyer_of_seat_rejected() {
 fn ticket_nft_transfer_rejected() {
     let (mut c, e) = setup();
     let m = new_match(&mut c, &e);
-    pay(&mut c, &e, CAROL, 15 * ONE, &format!(r#"{{"action":"buy_seat","match_id":{m},"seat":"b2-1"}}"#));
+    pay(&mut c, &e, CAROL, 15 * ONE, &format!(r#"{{"action":"buy_seat","match_id":{m},"seat":"b3-1"}}"#));
     e.call(CAROL, 1);
-    c.nft_transfer(a(BOB), format!("t{m}-b2-1"), None, None);
+    c.nft_transfer(a(BOB), format!("t{m}-b3-1"), None, None);
 }
 
 #[test]
 fn postpone_refunds_once_and_parks_failures() {
     let (mut c, e) = setup();
     let m = new_match(&mut c, &e);
-    pay(&mut c, &e, CAROL, 15 * ONE, &format!(r#"{{"action":"buy_seat","match_id":{m},"seat":"b2-1"}}"#));
-    pay(&mut c, &e, BOB, 15 * ONE, &format!(r#"{{"action":"buy_seat","match_id":{m},"seat":"b2-2"}}"#));
+    pay(&mut c, &e, CAROL, 15 * ONE, &format!(r#"{{"action":"buy_seat","match_id":{m},"seat":"b3-1"}}"#));
+    pay(&mut c, &e, BOB, 15 * ONE, &format!(r#"{{"action":"buy_seat","match_id":{m},"seat":"b3-2"}}"#));
     club(&e);
     c.postpone(m);
     e.call(CAROL, 0); // anyone may process refunds
@@ -766,4 +766,204 @@ fn cannot_buy_membership_for_seat_sold_as_ticket() {
     let m = new_match(&mut c, &e);
     pay(&mut c, &e, CAROL, 15 * ONE, &format!(r#"{{"action":"buy_seat","match_id":{m},"seat":"b3-7"}}"#));
     pay(&mut c, &e, BOB, 200 * ONE, &buy_new_msg("b3-7"));
+}
+
+// ---------- seat categories ----------
+
+#[test]
+fn category_follows_the_seat_location() {
+    for (seat, cat, weight) in [
+        ("a1-1", Category::Vip, 10),
+        ("a2-15", Category::Vip, 10),
+        ("a3-1", Category::Standard, 4),
+        ("b1-4", Category::Pitchside, 6),
+        ("c2-9", Category::Pitchside, 6),
+        ("c5-12", Category::Standard, 4),
+        ("b6-15", Category::Standard, 4),
+        ("d1-1", Category::FansEnd, 3),
+        ("d6-15", Category::FansEnd, 3),
+    ] {
+        assert_eq!(Category::of_seat(seat), cat, "{seat}");
+        assert_eq!(cat.weight(), weight, "{seat}");
+    }
+    let (c, _) = setup();
+    assert_eq!(c.season_price_for("a1-1".into()).0, 500 * ONE);
+    assert_eq!(c.season_price_for("b1-1".into()).0, 300 * ONE);
+    assert_eq!(c.season_price_for("c5-12".into()).0, 200 * ONE);
+    assert_eq!(c.season_price_for("d3-3".into()).0, 150 * ONE);
+    assert_eq!(c.season().categories.len(), 4);
+}
+
+#[test]
+fn membership_price_depends_on_category() {
+    let (mut c, e) = setup();
+    pay(&mut c, &e, BOB, 500 * ONE, &buy_new_msg("a1-1"));
+    e.callback(true);
+    assert_eq!(c.on_vault_bought("a1-1".into(), a(BOB), U128(500 * ONE)).0, 0);
+    let m = c.membership(tid("a1-1")).unwrap();
+    assert_eq!(m.category, Category::Vip);
+    assert_eq!(m.share_weight, 10);
+    assert_eq!(m.season_price.0, 500 * ONE);
+    assert_eq!(m.resale_cap.0, c.resale_cap().0 * 5 / 2);
+    assert_eq!(c.total_weight, 10);
+}
+
+#[test]
+#[should_panic(expected = "send exactly the season price for this seat's category")]
+fn vip_seat_at_standard_price_rejected() {
+    let (mut c, e) = setup();
+    pay(&mut c, &e, BOB, 200 * ONE, &buy_new_msg("a1-1"));
+}
+
+#[test]
+fn ticket_price_depends_on_category() {
+    let (mut c, e) = setup();
+    let m = new_match(&mut c, &e);
+    assert_eq!(c.ticket_price_for(m, "a1-1".into()).0, 37_500_000);
+    assert_eq!(c.ticket_price_for(m, "d1-1".into()).0, 11_250_000);
+    pay(&mut c, &e, CAROL, 37_500_000, &format!(r#"{{"action":"buy_seat","match_id":{m},"seat":"a1-1"}}"#));
+    pay(&mut c, &e, BOB, 11_250_000, &format!(r#"{{"action":"buy_seat","match_id":{m},"seat":"d1-1"}}"#));
+    assert_eq!(c.get_match(m).unwrap().tickets_sold, 2);
+}
+
+#[test]
+#[should_panic(expected = "send exactly the ticket price for this seat's category")]
+fn vip_ticket_at_standard_price_rejected() {
+    let (mut c, e) = setup();
+    let m = new_match(&mut c, &e);
+    pay(&mut c, &e, CAROL, 15 * ONE, &format!(r#"{{"action":"buy_seat","match_id":{m},"seat":"a1-1"}}"#));
+}
+
+#[test]
+fn pool_is_split_by_category_weight() {
+    let (mut c, e) = setup();
+    for seat in ["a1-1", "b1-1", SEAT_A, "d1-1"] {
+        mint(&mut c, &e, seat, ALICE);
+    }
+    assert_eq!(c.total_weight, 23);
+    pay(&mut c, &e, CLUB, 23 * ONE, r#"{"action":"top_up_pool"}"#);
+    let owed = |c: &NearSeat, s: &str| c.membership(tid(s)).unwrap().unsettled.0;
+    assert_eq!(owed(&c, "a1-1"), 10 * ONE);
+    assert_eq!(owed(&c, "b1-1"), 6 * ONE);
+    assert_eq!(owed(&c, SEAT_A), 4 * ONE);
+    assert_eq!(owed(&c, "d1-1"), 3 * ONE);
+    // A seat minted later only shares in what arrives after it.
+    mint(&mut c, &e, SEAT_B, BOB);
+    assert_eq!(owed(&c, SEAT_B), 0);
+    pay(&mut c, &e, CLUB, 27 * ONE, r#"{"action":"top_up_pool"}"#);
+    assert_eq!(owed(&c, SEAT_B), 4 * ONE);
+    assert_eq!(owed(&c, "a1-1"), 20 * ONE);
+}
+
+#[test]
+fn weighted_pool_never_over_distributes() {
+    let (mut c, e) = setup();
+    let seats = ["a1-1", "a2-2", "b1-1", SEAT_A, SEAT_B, "d1-1", "d6-15"];
+    for seat in seats {
+        mint(&mut c, &e, seat, ALICE);
+    }
+    let mut paid = 0u128;
+    for (i, amount) in [1u128, 7, 10, 333_333, 2, 1_000_001, 39, 86_500_000].into_iter().enumerate() {
+        pay(&mut c, &e, CLUB, amount, r#"{"action":"top_up_pool"}"#);
+        // Settle a different seat after every top-up, so snapshots advance unevenly.
+        let id = tid(seats[i % seats.len()]);
+        let before = c.membership(id.clone()).unwrap().unsettled.0;
+        e.call(ALICE, 0);
+        if let Some(p) = c.settle(id.clone()) {
+            p.detach();
+        }
+        paid += before - c.membership(id).unwrap().unsettled.0;
+    }
+    let owed: u128 = seats.iter().map(|s| c.membership(tid(s)).unwrap().unsettled.0).sum();
+    assert!(paid + owed <= c.pool_total_distributed, "{paid} + {owed}");
+    assert!(c.pool_total_distributed - paid - owed < 100, "dust stays tiny");
+}
+
+#[test]
+fn lend_and_resale_caps_follow_category() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, "a1-1", ALICE);
+    mint(&mut c, &e, "d1-1", ALICE);
+    let m = new_match(&mut c, &e);
+    assert_eq!(c.lend_cap(m, None).0, 22_500_000);
+    assert_eq!(c.lend_cap(m, Some(tid("a1-1"))).0, 56_250_000);
+    assert_eq!(c.lend_cap(m, Some(tid("d1-1"))).0, 16_875_000);
+    assert_eq!(c.resale_cap_of(tid("a1-1")).0, c.resale_cap().0 * 5 / 2);
+    assert_eq!(c.resale_cap_of(tid("d1-1")).0, c.resale_cap().0 * 3 / 4);
+    e.call(ALICE, 1);
+    c.list(tid("a1-1"), U128(c.resale_cap().0 * 2));
+}
+
+#[test]
+#[should_panic(expected = "resale cap")]
+fn fans_end_seat_cannot_list_at_standard_cap() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, "d1-1", ALICE);
+    e.call(ALICE, 1);
+    c.list(tid("d1-1"), U128(c.resale_cap().0));
+}
+
+#[test]
+fn migration_pays_out_old_equal_shares_then_switches_to_weights() {
+    let (mut c, e) = setup();
+    for seat in ["a1-1", SEAT_A, "d1-1"] {
+        mint(&mut c, &e, seat, ALICE);
+    }
+    // Rebuild the pre-upgrade state: 30 tUSDC split equally (10 each), with the
+    // fans' end seat having already collected 4 of its 10.
+    c.member_mut(&tid("d1-1")).acc_snapshot = 4 * ONE * ACC_SCALE;
+    let old = migrate::OldNearSeat {
+        tokens: c.tokens,
+        metadata: c.metadata,
+        club: c.club,
+        gate: c.gate,
+        stablecoin: c.stablecoin,
+        vault_code_hash: c.vault_code_hash,
+        season_name: c.season_name,
+        season_price: c.season_price,
+        max_supply: c.max_supply,
+        config: c.config,
+        members: c.members,
+        pending_seats: c.pending_seats,
+        history: c.history,
+        matches: c.matches,
+        payments: c.payments,
+        sold_seats: c.sold_seats,
+        tickets_per_account: c.tickets_per_account,
+        tickets: c.tickets,
+        loans: c.loans,
+        check_ins: c.check_ins,
+        ticket_check_ins: c.ticket_check_ins,
+        next_match_id: c.next_match_id,
+        acc_per_share: 10 * ONE * ACC_SCALE,
+        pool_total_distributed: 30 * ONE,
+        club_balance: c.club_balance,
+        advance_fund: c.advance_fund,
+        claimable: c.claimable,
+        payout_round: c.payout_round,
+        round_settled: c.round_settled,
+        feed: c.feed,
+        feed_seq: c.feed_seq,
+        polls: c.polls,
+        votes: c.votes,
+        next_poll_id: c.next_poll_id,
+    };
+    near_sdk::env::state_write(&old);
+    drop(old);
+
+    e.call(CONTRACT, 0);
+    let mut c = NearSeat::migrate_categories();
+    assert_eq!(c.total_weight, 17);
+    assert_eq!(c.acc_per_share, 0);
+    let owed = |c: &NearSeat, s: &str| c.membership(tid(s)).unwrap().unsettled.0;
+    assert_eq!(owed(&c, "a1-1"), 10 * ONE);
+    assert_eq!(owed(&c, SEAT_A), 10 * ONE);
+    assert_eq!(owed(&c, "d1-1"), 6 * ONE);
+    assert_eq!(c.pool_total_distributed, 30 * ONE);
+
+    // From here on the split follows the weights.
+    pay(&mut c, &e, CLUB, 17 * ONE, r#"{"action":"top_up_pool"}"#);
+    assert_eq!(owed(&c, "a1-1"), 20 * ONE);
+    assert_eq!(owed(&c, SEAT_A), 14 * ONE);
+    assert_eq!(owed(&c, "d1-1"), 9 * ONE);
 }

@@ -74,7 +74,7 @@ Legend: **[AL]** = shown in the Attack Lab with a "Try it on testnet" button. Te
 | # | Threat | Attack path | Mitigation | Proving test |
 |---|---|---|---|---|
 | T16 | Late joiner claims past rewards | Mint or buy right after a big payout and claim old rewards | Reward-per-share accumulator with per-token `reward_debt` set at mint. Buying a token inherits its accrued rewards, which is the intended "money follows the token" behaviour | `unit::new_mint_gets_no_past_rewards` |
-| T17 | Rounding drains pool | Many tiny distributions round up | `acc_per_share` uses 1e24 scaling with floor division. Dust stays in pool. Invariant: Σ settled ≤ Σ distributed | `unit::accumulator_never_over_distributes` (property-style loop) |
+| T17 | Rounding drains pool | Many tiny distributions round up | `acc_per_share` counts tUSDC per unit of seat-category weight, uses 1e18 scaling with floor division, and each snapshot advances with a ceiling. Dust stays in pool. Invariant: Σ settled ≤ Σ distributed | `unit::accumulator_never_over_distributes`, `unit::weighted_pool_never_over_distributes` (property-style loops) |
 | T18 | Overflow | Large values overflow u128 math | `overflow-checks = true` in release profile, checked math in accumulator | `unit::accumulator_large_values` |
 | T19 | Club skips the members' cut | Club finalises a match without paying members | Cut is applied by the contract at `full_time`, not by a club transfer. `members_cut_bps` has a hard floor (≥ 1%) and ceiling | `sandbox::matchday::full_time_moves_cut_to_pool` |
 

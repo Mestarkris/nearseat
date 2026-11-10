@@ -28,7 +28,7 @@ Record in the browser at 1280×800, with a phone mirrored for the gate pass. Run
 
 ## Project description (about 1,250 characters)
 
-NearSeat is a season membership and ticketing platform for football clubs, demoed with the fictional Nigerian club Illia Stars United. Every season membership is an NEP-171 NFT that owns its own keyless NEAR sub-account (for example `seat-c5-12.nearseat.testnet`). That account holds the member's stablecoin balance and collects 5% of every match's ticket sales through an O(1) reward-per-share pool. It also earns when the member lends their seat for a match, holds passes, credits and attendance and goal stamps, and opens the stadium gate with a 30-second rotating NEP-413 pass.
+NearSeat is a season membership and ticketing platform for football clubs, demoed with the fictional Nigerian club Illia Stars United. Every season membership is an NEP-171 NFT that owns its own keyless NEAR sub-account (for example `seat-c5-12.nearseat.testnet`). That account holds the member's stablecoin balance and collects its share of 5% of every match's ticket sales through an O(1) pool weighted by seat category (VIP, pitchside, standard, fans' end). It also earns when the member lends their seat for a match, holds passes, credits and attendance and goal stamps, and opens the stadium gate with a 30-second rotating NEP-413 pass.
 
 The vault has zero access keys and obeys only the NFT contract, which checks the live owner on every call. Selling the NFT therefore moves the money, inventory, record and access in one transaction, and the seller is locked out. Resale is seller-proof: listing freezes the vault, and buyers pin a state nonce. A sale even works mid-payout, because payouts are owed to the token, not the person.
 

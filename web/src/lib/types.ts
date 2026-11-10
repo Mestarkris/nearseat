@@ -1,4 +1,5 @@
 // Mirrors the contract's JSON views (contracts/nearseat/src/views.rs).
+export type Category = "Vip" | "Pitchside" | "Standard" | "FansEnd";
 export type Tier = "Bronze" | "Silver" | "Gold" | "Legend";
 export type MatchStatus = "Scheduled" | "Live" | "Finished" | "Postponed";
 
@@ -36,6 +37,11 @@ export interface Membership {
   vault: string;
   owner_id: string;
   tier: Tier;
+  category: Category;
+  category_label: string;
+  share_weight: number;
+  season_price: string;
+  resale_cap: string;
   attended: number[];
   goal_stamps: { match_id: number; opponent: string; scorer: string; minute: number }[];
   vault_balance: string;
@@ -61,7 +67,8 @@ export interface Season {
   name: string; contract: string; club: string; gate: string; stablecoin: string;
   vault_code_hash: string; season_price: string; resale_cap: string; max_supply: number;
   memberships: number; pool_total_distributed: string; club_balance: string; advance_fund: string;
-  payout_round: number; round_settled: number;
+  payout_round: number; round_settled: number; total_weight: string;
+  categories: { category: Category; label: string; price_bps: number; weight: number; season_price: string; resale_cap: string; memberships: number }[];
   config: { members_cut_bps: number; lend_club_fee_bps: number; lend_cap_bps: number; resale_fee_bps: number;
     resale_cap_bps: number; max_tickets_per_account: number; tier_thresholds: [number, number, number];
     advance_cap_bps: number; expected_share_per_match: string };

@@ -191,9 +191,9 @@ impl NearSeat {
 }
 
 impl NearSeat {
-    /// Spreads `amount` equally across all memberships, O(1).
+    /// Spreads `amount` across all memberships by category weight, O(1).
     pub(crate) fn distribute_to_pool(&mut self, amount: u128) {
-        let supply = self.members.len() as u128;
+        let supply = self.total_weight;
         if amount == 0 {
             return;
         }
@@ -217,8 +217,10 @@ impl NearSeat {
             .map(|(id, _)| (*id, self.match_ref(*id).status))
             .collect();
         let m = self.member_mut(token_id);
-        let owed = (acc - m.acc_snapshot) / ACC_SCALE;
-        m.acc_snapshot += owed * ACC_SCALE;
+        let weight = Category::of_seat(&m.seat).weight();
+        let owed = (acc - m.acc_snapshot) * weight / ACC_SCALE;
+        // Round the snapshot up so repeated accruals can never pay more than the pool holds.
+        m.acc_snapshot += (owed * ACC_SCALE).div_ceil(weight);
         m.credit += owed;
         m.totals.pool_earned = U128(m.totals.pool_earned.0 + owed);
 

@@ -27,7 +27,9 @@ impl NearSeat {
             .values()
             .filter(|m| m.status == MatchStatus::Scheduled)
             .count() as u128;
-        let expected = self.config.expected_share_per_match.0 * remaining;
+        // The estimate is for a standard seat; other categories scale with their pool weight.
+        let weight = Category::of_seat(&self.member(&token_id).seat).weight();
+        let expected = self.config.expected_share_per_match.0 * remaining * weight / category::STANDARD_WEIGHT;
         let cap = expected * self.config.advance_cap_bps as u128 / BPS;
         let debt = self.member(&token_id).debt;
         U128(cap.saturating_sub(debt).min(self.advance_fund))

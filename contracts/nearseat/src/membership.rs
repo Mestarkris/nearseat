@@ -171,7 +171,10 @@ impl NearSeat {
     /// is credited to the club only after the vault exists, otherwise refunded.
     /// The contract's own NEAR pays for the vault account and its storage.
     pub(crate) fn internal_buy_new_membership(&mut self, buyer: AccountId, amount: u128, seat: String) -> Promise {
-        require!(amount == self.season_price, "send exactly the season price");
+        require!(
+            amount == Category::of_seat(&seat).price(self.season_price),
+            "send exactly the season price for this seat's category"
+        );
         self.start_vault_creation(&seat).then(
             ext_self_mint::ext(env::current_account_id())
                 .with_static_gas(GAS_FOR_ON_VAULT_CREATED)
@@ -213,6 +216,7 @@ impl NearSeat {
         }
         .emit();
 
+        self.total_weight += Category::of_seat(&seat).weight();
         self.members.insert(
             token_id.clone(),
             Member {

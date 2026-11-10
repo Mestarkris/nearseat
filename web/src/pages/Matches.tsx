@@ -1,5 +1,6 @@
 // Pick a match, pick your seat. Lime seats are lent by members: buying one pays
-// that member's seat account. Grey seats are sold by the club.
+// that member's seat account. The other free seats are sold by the club, priced
+// by category.
 import { useState } from "react";
 import { view } from "../near/rpc";
 import { useWallet } from "../near/wallet";
@@ -7,6 +8,7 @@ import { usePoll } from "../lib/usePoll";
 import { useAction } from "../lib/useAction";
 import type { Match, Season, SeatView } from "../lib/types";
 import { parseSeat, shortDate, usd } from "../lib/format";
+import { CATEGORIES, categoryOf, priceFor } from "../lib/category";
 import { StadiumMap, standName } from "../components/StadiumMap";
 import { ActionStatus } from "../components/ActionStatus";
 import { Faucet } from "../components/Faucet";
@@ -50,7 +52,7 @@ function SeatPicker({ match }: { match: Match }) {
   const a = useAction(() => { seats.refresh(); setPick(undefined); });
 
   const lent = pick?.v?.state === "lent";
-  const price = lent ? BigInt(pick!.v!.price!) : BigInt(match.ticket_price);
+  const price = lent ? BigInt(pick!.v!.price!) : pick ? priceFor(match.ticket_price, pick.seat) : 0n;
   const feeBps = BigInt(season.data?.config.lend_club_fee_bps ?? 500);
   const fee = lent ? (price * feeBps) / 10_000n : 0n;
   const s = pick ? parseSeat(pick.seat) : null;
@@ -75,12 +77,15 @@ function SeatPicker({ match }: { match: Match }) {
             </div>
           </div>
         )}
-        {!pick || !s ? <p className="mt-4 text-sm text-muted">{bought ? "Tap another seat to buy more." : "Tap a grey or lime seat on the map."}</p> : (
+        {!pick || !s ? <p className="mt-4 text-sm text-muted">{bought ? "Tap another seat to buy more." : "Tap a free seat on the map. Colour shows the category, and lime seats are lent by members."}</p> : (
           <>
             <div className="mt-4 rounded-2xl border border-line p-3">
               <div className="flex justify-between font-semibold"><span>{standName(pick.seat)} · Row {s.row} · Seat {s.number}</span><span>{usd(price)}</span></div>
               <div className="text-xs text-muted">vs {match.opponent} · {shortDate(match.kickoff_at)}</div>
-              {lent && <span className="mt-2 inline-block rounded-full bg-lime px-2 py-0.5 text-[10px] font-bold uppercase text-ink">Lent by a member</span>}
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                <span className={`rounded-full border border-current px-2 py-0.5 text-[10px] font-bold uppercase ${CATEGORIES[categoryOf(pick.seat)].text}`}>{CATEGORIES[categoryOf(pick.seat)].label}</span>
+                {lent && <span className="rounded-full bg-lime px-2 py-0.5 text-[10px] font-bold uppercase text-ink">Lent by a member</span>}
+              </div>
             </div>
             <dl className="mt-4 space-y-2 text-sm">
               {lent ? (

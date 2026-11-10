@@ -24,7 +24,10 @@ export function ClubPage() {
   if (d.loading && !d.data) return <Loading what="Loading the club's books" />;
   if (d.error && !d.data) return <ErrorBox error={d.error} retry={d.refresh} />;
   const { season, matches } = d.data!;
-  const revenue = matches.reduce((s, m) => s + BigInt(m.tickets_sold) * BigInt(m.ticket_price), 0n);
+  // Seats are priced by category, so read the takings from the contract: the
+  // escrow while a match is open, and the members' cut scaled back up once it is paid out.
+  const takings = (m: Match) => (m.status === "Finished" ? (BigInt(m.members_cut) * 10_000n) / BigInt(season.config.members_cut_bps) : BigInt(m.escrow));
+  const revenue = matches.reduce((s, m) => s + takings(m), 0n);
   const refunded = matches.reduce((s, m) => s + m.refunds_done, 0);
   const lent = matches.reduce((s, m) => s + m.seats_rented, 0);
   return (
@@ -48,7 +51,7 @@ export function ClubPage() {
                     <tr key={m.id}>
                       <td className="py-3"><div className="font-semibold">vs {m.opponent}</div><div className="text-xs text-muted">{shortDate(m.kickoff_at)}</div></td>
                       <td className="w-40 pr-4"><Progress value={m.tickets_sold} max={360} /><span className="text-xs text-muted">{m.tickets_sold} / 360</span></td>
-                      <td>{usd(BigInt(m.tickets_sold) * BigInt(m.ticket_price), 0)}</td>
+                      <td>{usd(takings(m), 0)}</td>
                       <td className="text-lime">{m.status === "Finished" ? usd(m.members_cut) : "—"}</td>
                       <td><span className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_STYLE[m.status]}`}>{m.status === "Finished" && season.round_settled < season.memberships ? "Paying out" : m.status}</span></td>
                     </tr>

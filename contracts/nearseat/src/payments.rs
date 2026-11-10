@@ -64,7 +64,7 @@ impl NearSeat {
         let kind = if self.members.contains_key(&token_id) {
             self.rent_member_seat(&buyer, amount, match_id, &token_id)
         } else {
-            self.sell_club_seat(&buyer, amount, match_id, &seat, ticket_price, big, priority_until, payment_index)
+            self.sell_club_seat(&buyer, amount, match_id, &seat, Category::of_seat(&seat).price(ticket_price), big, priority_until, payment_index)
         };
 
         self.sold_seats.insert((match_id, seat.clone()), payment_index);
@@ -129,7 +129,7 @@ impl NearSeat {
         priority_until: u64,
         payment_index: u32,
     ) -> PaymentKind {
-        require!(amount == ticket_price, "send exactly the ticket price");
+        require!(amount == ticket_price, "send exactly the ticket price for this seat's category");
         let count_key = (match_id, buyer.clone());
         let bought = self.tickets_per_account.get(&count_key).copied().unwrap_or(0);
         require!(

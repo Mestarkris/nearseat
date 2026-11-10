@@ -24,6 +24,12 @@ pub struct MembershipView {
     pub vault: AccountId,
     pub owner_id: AccountId,
     pub tier: Tier,
+    /// Where the seat is: sets its price, caps and share of the pool.
+    pub category: Category,
+    pub category_label: String,
+    pub share_weight: u32,
+    pub season_price: U128,
+    pub resale_cap: U128,
     pub attended: Vec<MatchId>,
     pub goal_stamps: Vec<GoalStamp>,
     pub vault_balance: U128,
@@ -61,6 +67,8 @@ pub struct SeasonView {
     pub advance_fund: U128,
     pub payout_round: u32,
     pub round_settled: u32,
+    pub total_weight: U128,
+    pub categories: Vec<category::CategoryView>,
 }
 
 #[near(serializers = [json])]
@@ -93,6 +101,8 @@ impl NearSeat {
             advance_fund: U128(self.advance_fund),
             payout_round: self.payout_round,
             round_settled: self.round_settled,
+            total_weight: U128(self.total_weight),
+            categories: self.categories(),
         }
     }
 
@@ -230,7 +240,7 @@ impl NearSeat {
 
     /// What `accrue` would add right now, without mutating.
     pub(crate) fn unsettled_of(&self, m: &Member) -> (u128, u128) {
-        let pool = (self.acc_per_share - m.acc_snapshot) / ACC_SCALE;
+        let pool = (self.acc_per_share - m.acc_snapshot) * Category::of_seat(&m.seat).weight() / ACC_SCALE;
         let mut finished = 0;
         let mut pending = 0;
         for (id, amount) in &m.pending_loan_income {
@@ -269,6 +279,11 @@ impl NearSeat {
             vault: m.vault.clone(),
             owner_id: self.owner_of(token_id),
             tier: self.tier_of(m),
+            category: Category::of_seat(&m.seat),
+            category_label: Category::of_seat(&m.seat).label().to_string(),
+            share_weight: Category::of_seat(&m.seat).weight() as u32,
+            season_price: U128(Category::of_seat(&m.seat).price(self.season_price)),
+            resale_cap: U128(self.resale_cap_for(token_id)),
             attended: m.attended.iter().map(|(id, _)| *id).collect(),
             goal_stamps: self.goal_stamps(m),
             vault_balance: U128(m.vault_balance),

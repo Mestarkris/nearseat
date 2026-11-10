@@ -2,6 +2,7 @@
 // renders an equivalent SVG in `nft_token` for wallets and explorers).
 import type { Membership } from "../lib/types";
 import { parseSeat, usd } from "../lib/format";
+import { CATEGORIES } from "../lib/category";
 import { Crest } from "./ui";
 
 export function MembershipCard({ m, compact = false }: { m: Membership; compact?: boolean }) {
@@ -18,7 +19,7 @@ export function MembershipCard({ m, compact = false }: { m: Membership; compact?
   return (
     <article
       className="card-glow relative overflow-hidden p-5"
-      aria-label={`Membership ${m.token_id}, ${m.tier} tier, owned by ${m.owner_id}`}
+      aria-label={`Membership ${m.token_id}, ${CATEGORIES[m.category].label} seat, ${m.tier} grade, owned by ${m.owner_id}`}
     >
       <div className="pitch absolute inset-0 opacity-[0.35]" aria-hidden />
       <svg className="absolute inset-0 size-full opacity-20" aria-hidden preserveAspectRatio="none" viewBox="0 0 100 140">
@@ -33,7 +34,10 @@ export function MembershipCard({ m, compact = false }: { m: Membership; compact?
             <div className="label">Seat</div>
           </div>
           <Crest size={compact ? 48 : 64} />
-          <span className="rounded-full bg-lime px-3 py-1 text-xs font-bold uppercase text-lime-ink">{m.tier}</span>
+          <div className="flex flex-col items-end gap-1.5">
+            <span className="rounded-full bg-lime px-3 py-1 text-xs font-bold uppercase text-lime-ink">{m.tier}</span>
+            <span className={`rounded-full border border-current px-3 py-0.5 text-xs font-bold uppercase ${CATEGORIES[m.category].text}`}>{CATEGORIES[m.category].label}</span>
+          </div>
         </div>
         <div className="mt-3 text-center font-number text-3xl tracking-wide">
           BLOCK {seat.block} · ROW {seat.row}

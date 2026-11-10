@@ -57,7 +57,7 @@ sequenceDiagram
     T->>N: ft_on_transfer
     N->>N: escrow[match 1] += 15, mint soulbound ticket
     Note over N: Club: kickoff → full_time(1)
-    N->>N: cut = 5% of escrow → acc_per_share += cut / supply
+    N->>N: cut = 5% of escrow → acc_per_share += cut / total_weight
     K->>N: settle_batch()
     N->>T: ft_transfer(vault, owed)  [credit for seat-c5-12 = 0]
     Note over T,N: transfer receipt in flight

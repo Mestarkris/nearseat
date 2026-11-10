@@ -71,6 +71,7 @@ impl NearSeat {
     pub(crate) fn membership_svg_data_uri(&self, token_id: &TokenId) -> String {
         let m = self.member(token_id);
         let tier = self.tier_of(m);
+        let category = Category::of_seat(&m.seat).label();
         let (unsettled, _) = self.unsettled_of(m);
         let stamps = self.goal_stamps(m);
         let next = self
@@ -128,12 +129,16 @@ impl NearSeat {
         };
 
         let svg = format!(
-            r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600"><defs><pattern id="p" width="40" height="600" patternUnits="userSpaceOnUse"><rect width="20" height="600" fill="{CARD}"/><rect x="20" width="20" height="600" fill="{CARD2}"/></pattern></defs><rect width="400" height="600" rx="24" fill="url(#p)" stroke="{BORDER}"/><g stroke="white" stroke-opacity="0.06" fill="none"><rect x="24" y="24" width="352" height="552" rx="8"/><line x1="24" y1="300" x2="376" y2="300"/><circle cx="200" cy="300" r="48"/></g>{crest}<text x="88" y="50" font-family="Inter Tight,Arial" font-size="14" font-weight="800" fill="white">ILLIA STARS UNITED</text><text x="88" y="70" font-family="Inter,Arial" font-size="11" fill="{MUTED}">SEASON {season} · MEMBERSHIP</text><rect x="24" y="96" width="{tw}" height="26" rx="13" fill="none" stroke="{LIME}"/><text x="{tcx}" y="114" font-family="Inter,Arial" font-size="12" font-weight="700" fill="{LIME}" text-anchor="middle">{tier}</text>{listed}<text x="24" y="232" font-family="Bebas Neue,Impact,sans-serif" font-size="120" fill="white">{seat}</text><text x="24" y="272" font-family="Inter,Arial" font-size="13" font-weight="600" fill="{LIME}">{banner}</text>{tiles}{stamp_row}<rect x="24" y="516" width="352" height="48" rx="14" fill="{BG}" stroke="{LIME}" stroke-opacity="0.5"/><text x="38" y="536" font-family="Inter,Arial" font-size="11" fill="{LIME}">OWNS ITS OWN ACCOUNT · KEYS: 0</text><text x="38" y="554" font-family="Inter,Arial" font-size="11" fill="white">{vault}</text></svg>"#,
+            r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600"><defs><pattern id="p" width="40" height="600" patternUnits="userSpaceOnUse"><rect width="20" height="600" fill="{CARD}"/><rect x="20" width="20" height="600" fill="{CARD2}"/></pattern></defs><rect width="400" height="600" rx="24" fill="url(#p)" stroke="{BORDER}"/><g stroke="white" stroke-opacity="0.06" fill="none"><rect x="24" y="24" width="352" height="552" rx="8"/><line x1="24" y1="300" x2="376" y2="300"/><circle cx="200" cy="300" r="48"/></g>{crest}<text x="88" y="50" font-family="Inter Tight,Arial" font-size="14" font-weight="800" fill="white">ILLIA STARS UNITED</text><text x="88" y="70" font-family="Inter,Arial" font-size="11" fill="{MUTED}">SEASON {season} · MEMBERSHIP</text><rect x="24" y="96" width="{tw}" height="26" rx="13" fill="none" stroke="{LIME}"/><text x="{tcx}" y="114" font-family="Inter,Arial" font-size="12" font-weight="700" fill="{LIME}" text-anchor="middle">{tier}</text><rect x="{cx}" y="96" width="{cw}" height="26" rx="13" fill="white" fill-opacity="0.1"/><text x="{ccx}" y="114" font-family="Inter,Arial" font-size="12" font-weight="700" fill="white" text-anchor="middle">{category}</text>{listed}<text x="24" y="232" font-family="Bebas Neue,Impact,sans-serif" font-size="120" fill="white">{seat}</text><text x="24" y="272" font-family="Inter,Arial" font-size="13" font-weight="600" fill="{LIME}">{banner}</text>{tiles}{stamp_row}<rect x="24" y="516" width="352" height="48" rx="14" fill="{BG}" stroke="{LIME}" stroke-opacity="0.5"/><text x="38" y="536" font-family="Inter,Arial" font-size="11" fill="{LIME}">OWNS ITS OWN ACCOUNT · KEYS: 0</text><text x="38" y="554" font-family="Inter,Arial" font-size="11" fill="white">{vault}</text></svg>"#,
             crest = crest(52, 56, 26),
             season = escape(&self.season_name),
             tw = 24 + tier.label().len() as u32 * 9,
             tcx = 24 + (24 + tier.label().len() as u32 * 9) / 2,
             tier = tier.label(),
+            cx = 56 + tier.label().len() as u32 * 9,
+            cw = 24 + category.len() as u32 * 8,
+            ccx = 56 + tier.label().len() as u32 * 9 + (24 + category.len() as u32 * 8) / 2,
+            category = escape(category),
             seat = escape(&m.seat.to_uppercase()),
             vault = escape(m.vault.as_str()),
         );

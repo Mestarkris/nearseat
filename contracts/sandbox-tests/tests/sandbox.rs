@@ -265,7 +265,7 @@ async fn full_season_on_real_tusdc() -> anyhow::Result<()> {
 
     // Two single tickets: 30 tUSDC in this match's escrow.
     w.fund(&w.carol, 1000 * ONE).await?;
-    for seat in ["a1-1", "a1-2"] {
+    for seat in ["a3-1", "a3-2"] {
         ok(w.pay(&w.carol, TICKET, json!({ "action": "buy_seat", "match_id": m, "seat": seat })).await?).await;
     }
     ok(w.call(&w.gate, "check_in", json!({ "token_id": TOKEN, "match_id": m, "holder": w.alice.id() }), 0).await?).await;
@@ -452,7 +452,7 @@ async fn postpone_refunds_every_ticket() -> anyhow::Result<()> {
     let m = w.new_match().await?;
     w.fund(&w.carol, 1000 * ONE).await?;
     w.fund(&w.bob, 1000 * ONE).await?;
-    ok(w.pay(&w.carol, TICKET, json!({ "action": "buy_seat", "match_id": m, "seat": "a1-1" })).await?).await;
+    ok(w.pay(&w.carol, TICKET, json!({ "action": "buy_seat", "match_id": m, "seat": "a3-1" })).await?).await;
     ok(w.call(&w.alice, "lend", json!({ "token_id": TOKEN, "match_id": m, "price": (20 * ONE).to_string() }), 1).await?).await;
     ok(w.pay(&w.bob, 20 * ONE, json!({ "action": "buy_seat", "match_id": m, "seat": SEAT })).await?).await;
 
@@ -524,5 +524,33 @@ async fn fan_buys_new_membership_from_club_with_tusdc() -> anyhow::Result<()> {
     failed_with(&r, "send exactly the season price");
     assert_eq!(w.balance(w.alice.id()).await?, before);
     assert!(w.view("membership", json!({ "token_id": "seat-b3-8" })).await?.is_null());
+    Ok(())
+}
+
+#[tokio::test]
+async fn vip_seat_costs_more_and_earns_a_bigger_share() -> anyhow::Result<()> {
+    let w = World::new(true).await?;
+    w.mint(SEAT, &w.alice).await?; // standard, weight 4
+    w.fund(&w.bob, 1000 * ONE).await?;
+
+    // A VIP seat is refused at the standard price and sold at 2.5x.
+    let r = w.pay(&w.bob, SEASON_PRICE, json!({ "action": "buy_new_membership", "seat": "a1-1" })).await?;
+    failed_with(&r, "send exactly the season price for this seat's category");
+    assert_eq!(w.balance(w.bob.id()).await?, 1000 * ONE);
+    let vip_price = SEASON_PRICE * 5 / 2;
+    ok(w.pay(&w.bob, vip_price, json!({ "action": "buy_new_membership", "seat": "a1-1" })).await?).await;
+    let vip = w.view("membership", json!({ "token_id": "seat-a1-1" })).await?;
+    assert_eq!(vip["category"], "Vip");
+    assert_eq!(vip["share_weight"], 10);
+    assert_eq!(u(&w.view("season", json!({})).await?["total_weight"]), 14);
+
+    // 14 tUSDC to the pool: 10 to the VIP seat's account, 4 to the standard one.
+    w.fund(&w.club, 14 * ONE).await?;
+    ok(w.pay(&w.club, 14 * ONE, json!({ "action": "top_up_pool" })).await?).await;
+    ok(w.call(&w.carol, "settle", json!({ "token_id": TOKEN }), 0).await?).await;
+    ok(w.call(&w.carol, "settle", json!({ "token_id": "seat-a1-1" }), 0).await?).await;
+    let vip_vault: AccountId = vip["vault"].as_str().unwrap().parse()?;
+    assert_eq!(w.balance(&vip_vault).await?, 10 * ONE);
+    assert_eq!(w.balance(&w.vault_id()).await?, 4 * ONE);
     Ok(())
 }

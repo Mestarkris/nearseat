@@ -102,7 +102,7 @@ function Ticker() {
 
 const TODAY = [
   ["You miss a match", "The seat sits empty and you have still paid for it.", "Lend it for that one match. The rent lands in your seat's account."],
-  ["The club sells out", "The gate takings are the club's. Your loyalty earns nothing.", "5% of every match's ticket sales is shared between the members."],
+  ["The club sells out", "The gate takings are the club's. Your loyalty earns nothing.", "5% of every match's ticket sales is shared between the members, by seat category."],
   ["You want to sell", "Paper forms, touts, or a flat no from the ticket office.", "One sale moves the seat, its balance, its history and gate access, at a capped price."],
   ["A match is postponed", "You wait, then chase the refund yourself.", "Everyone who paid for that match is refunded by the contract."],
 ];
@@ -155,7 +155,7 @@ function Proof() {
     [s ? Number(s.pool_total_distributed) / 1e6 : 0, 2, "tUSDC shared with members so far"],
     [0, 0, "keys on any seat account"],
     [21, 0, "attacks you can try yourself, all refused"],
-    [86, 0, "automated tests, including a sale in the middle of a payout"],
+    [97, 0, "automated tests, including a sale in the middle of a payout"],
   ];
   return (
     <section className="border-y border-line bg-card">
@@ -185,9 +185,9 @@ const ROADMAP: [string, string, string[]][] = [
     "Seat lending, capped resale and automatic refunds",
     "Rotating gate pass and a scanner for stewards",
     "Member voting, weighted by attendance",
+    "Seat categories: VIP, pitchside, standard and fans' end, each with its own price and share",
   ]],
   ["Next", "After the hackathon", [
-    "Seat categories: VIP, pitchside, standard and fans' end, each with its own price and share",
     "Category perks at the gate, such as lounge access",
     "Shared tickets for friends sitting together",
     "Sponsor rewards dropped straight into seat accounts",
@@ -224,6 +224,7 @@ function Roadmap() {
 const FAQ: [string, string][] = [
   ["Do I need real money to try it?", "No. NearSeat runs on NEAR's test network. You connect a free testnet wallet, press one button to get test tUSDC, and use that to buy tickets or a membership. Nothing here has real value."],
   ["What do I actually own?", "An NFT in your wallet, and through it the seat's own account. That account holds the seat's earnings, match passes and attendance record. Nobody has a key to it, the club included. The contract only moves its money when the current NFT holder asks."],
+  ["Are all seats the same?", "No. Where a seat is decides its category: VIP, Pitchside, Standard or Fans' End. A VIP seat costs 2.5 times a standard one and earns 2.5 times the share of every payout. A seat in the Fans' End costs less and earns in proportion. The grade on the card (Bronze to Legend) is separate: you earn it by turning up."],
   ["I lent my seat. How does the other person get in?", "For that one match the contract records them as the seat's holder. Their wallet shows a gate pass that changes every 30 seconds, and the steward's scanner checks it against the contract. Your own pass is paused for that match, then comes back on its own after full time."],
   ["I bought a membership from another fan. How do I get in?", "The same way the seller did. The gate asks the contract who holds the seat at the moment of the scan, and after the sale that is you. The seller's pass stops working in the same transaction."],
   ["Could a seller empty the seat's account just before I pay?", "No. Listing a membership freezes withdrawals from it. If anything about it changes after you looked, the purchase is cancelled and your payment comes straight back."],

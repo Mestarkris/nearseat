@@ -28,7 +28,7 @@ impl NearSeat {
         let owner = self.assert_owner(&token_id);
         require!(self.match_ref(match_id).status == MatchStatus::Scheduled, "match is not scheduled");
         require!((1..=72).contains(&hours_before), "hours_before must be 1..72");
-        require!(price.0 > 0 && price.0 <= self.lend_cap(match_id).0, "price is above the club's lend cap");
+        require!(price.0 > 0 && price.0 <= self.lend_cap(match_id, Some(token_id.clone())).0, "price is above the club's lend cap");
         let m = self.member_mut(&token_id);
         m.autolend_rules.retain(|r| r.match_id != match_id);
         m.autolend_rules.push(Rule { match_id, hours_before, price, owner });

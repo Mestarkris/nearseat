@@ -15,16 +15,19 @@
 //! - `market`: listing and seller-proof resale
 //! - `gate`: check-in at the stadium gate
 //! - `advance`, `autolend`, `voting`: Layer 2 features
+//! - `category`: seat categories (price and pool weight by location)
 //! - `views`, `svg`, `events`: read-only surface and the live feed
 
 mod advance;
 mod autolend;
+mod category;
 mod events;
 mod gate;
 mod lending;
 mod market;
 mod matchday;
 mod membership;
+mod migrate;
 mod money;
 mod payments;
 mod svg;
@@ -32,6 +35,7 @@ mod types;
 mod views;
 mod voting;
 
+pub use category::Category;
 pub use types::*;
 
 use near_contract_standards::non_fungible_token::metadata::NFTContractMetadata;
@@ -117,6 +121,9 @@ pub struct NearSeat {
     pub(crate) polls: IterableMap<u32, voting::Poll>,
     pub(crate) votes: LookupSet<(u32, TokenId)>,
     pub(crate) next_poll_id: u32,
+
+    /// Sum of every membership's pool weight (see `category`).
+    pub(crate) total_weight: u128,
 }
 
 #[near]
@@ -190,6 +197,7 @@ impl NearSeat {
             polls: IterableMap::new(StorageKey::Polls),
             votes: LookupSet::new(StorageKey::Votes),
             next_poll_id: 1,
+            total_weight: 0,
         }
     }
 

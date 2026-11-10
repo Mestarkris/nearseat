@@ -7,6 +7,8 @@ import type { HistoryEntry, Membership, Season } from "../lib/types";
 import { nsToDate, usd } from "../lib/format";
 import { config } from "../config";
 import { MembershipCard } from "../components/MembershipCard";
+import { GateAccess } from "../components/GateAccess";
+import { CATEGORIES, multiple } from "../lib/category";
 import { Empty, ErrorBox, Loading, Section } from "../components/ui";
 
 const KIND_LABEL: Record<string, string> = {
@@ -50,6 +52,14 @@ function History({ tokenId }: { tokenId: string }) {
       <div className="mt-6 grid gap-6 lg:grid-cols-[340px_1fr]">
         <div className="space-y-6">
           <MembershipCard m={m} compact />
+          <GateAccess m={m} />
+          <dl className="card space-y-2 p-4 text-sm">
+            <div className="flex justify-between gap-3"><dt className="text-muted">Category</dt><dd className={`font-semibold ${CATEGORIES[m.category].text}`}>{CATEGORIES[m.category].label}</dd></div>
+            <div className="flex justify-between gap-3"><dt className="text-muted">Share of every payout</dt><dd className="font-semibold">{multiple(m.category)} a standard seat</dd></div>
+            <div className="flex justify-between gap-3"><dt className="text-muted">Grade, from matches attended</dt><dd className="font-semibold">{m.tier}</dd></div>
+            <div className="flex justify-between gap-3"><dt className="text-muted">New from the club</dt><dd className="font-semibold">{usd(m.season_price, 0)} tUSDC</dd></div>
+            <div className="flex justify-between gap-3"><dt className="text-muted">Highest resale price</dt><dd className="font-semibold">{usd(m.resale_cap, 0)} tUSDC</dd></div>
+          </dl>
           <VerifyBox m={m} />
         </div>
         <div className="space-y-6">

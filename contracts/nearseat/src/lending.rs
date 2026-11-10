@@ -35,9 +35,13 @@ impl NearSeat {
         self.emit("lend_cancelled", json!({ "token_id": token_id, "match_id": match_id }));
     }
 
-    /// Highest price a member may ask for a seat at this match.
-    pub fn lend_cap(&self, match_id: MatchId) -> U128 {
-        U128(self.match_ref(match_id).ticket_price.0 * self.config.lend_cap_bps as u128 / BPS)
+    /// Highest price a member may ask for a seat at this match: a multiple of
+    /// what the club charges for a seat of the same category. Without a
+    /// `token_id` it answers for a standard seat.
+    pub fn lend_cap(&self, match_id: MatchId, token_id: Option<TokenId>) -> U128 {
+        let category = token_id.map_or(Category::Standard, |id| Category::of_seat(&self.member(&id).seat));
+        let face = category.price(self.match_ref(match_id).ticket_price.0);
+        U128(face * self.config.lend_cap_bps as u128 / BPS)
     }
 }
 
@@ -55,7 +59,7 @@ impl NearSeat {
             self.match_ref(match_id).status == MatchStatus::Scheduled,
             "loans are locked once the match kicks off"
         );
-        require!(price > 0 && price <= self.lend_cap(match_id).0, "price is above the club's lend cap");
+        require!(price > 0 && price <= self.lend_cap(match_id, Some(token_id.clone())).0, "price is above the club's lend cap");
         {
             let m = self.member(token_id);
             require!(m.listing.is_none(), "vault is frozen while listed");

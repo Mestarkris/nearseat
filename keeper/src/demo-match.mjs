@@ -36,7 +36,9 @@ for (const [i, fanId] of fans.slice(5).entries()) {
   for (let n = 1; n <= 2; n++) {
     const seat = `a${i + 1}-${n}`;
     if (taken.has(seat)) continue;
-    await pay(fanId, price, { action: "buy_seat", match_id: m.id, seat }).catch((e) => console.log("  skip", seat, e.message));
+    // Seats are priced by category (VIP, pitchside, standard, fans' end).
+    const seatPrice = await view(CONTRACT, "ticket_price_for", { match_id: m.id, seat });
+    await pay(fanId, seatPrice, { action: "buy_seat", match_id: m.id, seat }).catch((e) => console.log("  skip", seat, e.message));
     bought++;
     console.log(`  ${fanId} bought ${seat}`);
   }
