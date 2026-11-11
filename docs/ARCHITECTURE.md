@@ -111,6 +111,10 @@ sequenceDiagram
 - **web/**: React + Vite. Reads with plain RPC `view` calls every 3–5 s
   (`get_feed`, `get_match`, `membership`); writes through Wallet Selector or
   the relayer (NEP-366).
+  CSV exports (`web/src/lib/exports.ts`) are built in the browser from the
+  `history`, `payment` and `get_match` views; nothing is stored off-chain.
+  `web/src/lib/oneclick.ts` asks the NEAR Intents 1Click API for dry quotes
+  (mainnet prices, no deposit address, no funds moved).
 - **relayer/**: Express. `/relay` submits user-signed delegate actions to an
   allow-list of receivers and methods. `/members` serves the members-only page
   after an NEP-413 proof and a live `nft_token` owner check. `/gate/verify`

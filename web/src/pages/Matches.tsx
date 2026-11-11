@@ -9,6 +9,7 @@ import { useAction } from "../lib/useAction";
 import type { Match, Season, SeatView } from "../lib/types";
 import { parseSeat, shortDate, usd } from "../lib/format";
 import { CATEGORIES, categoryOf, priceFor } from "../lib/category";
+import { PayFromAnyChain } from "../components/PayFromAnyChain";
 import { StadiumMap, standName, type MapEffect } from "../components/StadiumMap";
 import { SeatPeek, useSeatPeek } from "../components/SeatPeek";
 import { useFeedEvents } from "../lib/feedEvents";
@@ -129,6 +130,7 @@ function SeatPicker({ match }: { match: Match }) {
               </div>
               <div className="flex justify-between border-t border-line pt-2 text-base font-bold"><dt>Total</dt><dd>{usd(price)} tUSDC</dd></div>
             </dl>
+            <PayFromAnyChain amount={price} what="this seat" />
             {accountId ? (
               <button className="btn-primary mt-4 w-full justify-center py-3" disabled={!!a.busy}
                 onClick={async () => {

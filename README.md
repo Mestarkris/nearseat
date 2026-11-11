@@ -23,7 +23,7 @@ Every season membership is an NEP-171 NFT that owns a keyless NEAR sub-account, 
 | Track | What NearSeat shows |
 |---|---|
 | **NFTs That Do Something** (`nfts`): what comes after the JPEG | Each NFT owns a NEAR sub-account that holds money, earns income from ticket sales and seat rentals, holds inventory (passes, credits, stamps), carries credentials (attendance, tier) and grants access (gate, members-only page). The NFT card is dynamic SVG rendered from on-chain state. |
-| **Real-World Money** (`realworld`): something a club could use tomorrow | Stablecoin (NEP-141) ticketing with per-match escrow, automatic refunds, revenue sharing settled into member accounts, capped resale with a club royalty (NEP-199), and gasless fan actions through an NEP-366 relayer. |
+| **Real-World Money** (`realworld`): something a club could use tomorrow | Stablecoin (NEP-141) ticketing with per-match escrow, automatic refunds, revenue sharing settled into member accounts, capped resale with a club royalty (NEP-199), and gasless fan actions through an NEP-366 relayer. Every payment has a status (paid, pending refund, refunded) and the books export as CSV for an accountant. Prices can be quoted live from other chains through NEAR Intents (1Click). |
 
 ## Brief checklist
 
@@ -203,6 +203,8 @@ docs/              THREAT_MODEL.md, ARCHITECTURE.md, SUBMISSION.md
 - Pay at the ground: the holder pays a club-approved vendor straight from the seat's account (`pay_vendor`). The club keeps the vendor list; nobody else can move the money.
 - The seat pays for itself: the holder sets a share of each payout aside towards next season (`set_renewal_saving`). Money set aside can't be withdrawn or spent until the switch is turned down, and stops at the season price.
 - Season statement: one shareable page per seat with everything it earned, spent and saved.
+- **Books an accountant can open.** Three CSV downloads, built in the browser from contract views. See [For the bookkeeper](#for-the-bookkeeper).
+- **Price from any chain.** On the ticket and membership screens, "Holding another token?" asks NEAR Intents (1Click API) what the price costs in SOL, BTC, ETH or USDC on another chain, live. It is a quote only on this testnet deployment (see Known limits).
 - Live matchday (kickoff, goal, full time, postpone) with an on-chain event feed polled every 4 s.
 
 **Layer 2.**
@@ -213,7 +215,29 @@ docs/              THREAT_MODEL.md, ARCHITECTURE.md, SUBMISSION.md
 - 🗺 **Roadmap: shared season ticket.** Splitting one membership into N shares isn't NEP-171 compatible without a separate share-token standard. The threats are recorded (T48–T49) so the design can take it later.
 - 🗺 **Roadmap: sponsor drops.** Tier-filtered vouchers into vaults, redeemed once at the gate (threat T50).
 
+## For the bookkeeper
+
+You don't need a wallet or any crypto knowledge to read these files. They open in Excel, Numbers or Google Sheets. Amounts are plain numbers in tUSDC (a test US dollar stablecoin, 1 tUSDC = 1 USD in this demo). Times are UTC.
+
+| File | Where to get it | One row is | Columns |
+|---|---|---|---|
+| `nearseat-club-payments-<date>.csv` | Club page, "Payments CSV" | One payment received by the club for a match | Payment reference, Match date, Match, Competition, Match status, Payment for (ticket or seat rental), Seat, Seat category, Paid by, Amount, Currency, Payment status, Club's part, Member's part, Member's seat, Check on the public ledger |
+| `nearseat-fixtures-<date>.csv` | Club page, "Fixtures CSV" | One fixture | Match date, Match, Competition, Status, Standard ticket price, Tickets sold, Seats rented from members, Members checked in, Ticket sales, Paid to members' accounts, Club fees from seat rentals, Payments taken, Payments refunded, Currency, Score |
+| `nearseat-<seat>-ledger-<date>.csv` | A seat's season statement, "Download for your accountant (CSV)" | One event in the life of one membership | Date and time, What happened, Money in, Money out, Amount for information only, Currency, Other party, Other party is, Match, Seat, Seat account, Season, Check on the public ledger |
+
+**Payment status** is one of four words:
+
+- **Paid**: the money was received and the match went ahead or is still scheduled.
+- **Pending refund**: the match was postponed and the refund is queued. It is sent automatically.
+- **Refunded**: the money went back to the payer.
+- **Refund waiting for the payer to collect**: the automatic refund could not be delivered (for example the payer closed their token account). The money is held for them, not for the club.
+
+In the seat ledger, only "Money in" and "Money out" change the seat account's balance. "Amount for information only" is for rows such as a sale price, which is paid to the seller and not to the seat account, so adding the first two columns always reconciles to the balance. The last column of every file is a link to the public ledger where the account can be checked independently.
+
 ## Known limits
+
+- **Paying from another chain is a quote, not a payment, on testnet.** NEAR Intents and the 1Click API run on mainnet only, and this deployment takes a test stablecoin. The app asks 1Click for a dry quote (no deposit address is created, no funds can move). On mainnet the flow is: the fan sends SOL, BTC or another token to the 1Click deposit address, USDC arrives in their NEAR account, and the purchase is one gasless tap. Some routes have no market maker at a given moment; the app shows that plainly and offers another token.
+- **CSV rows link to accounts, not to single transactions.** The contract keeps its own history but not transaction hashes, so "Check on the public ledger" opens the account's page on the explorer.
 
 - **Gasless relaying needs a wallet that signs NEP-366 delegate actions.** When the wallet can't, the app falls back to a normal transaction, which costs the fan a fraction of a cent of testnet NEAR. 1-yocto deposits always come from the fan's own account.
 - **The gate scanner key lives in the relayer** (the club's server). A stolen scanner key still can't admit a non-holder, because the contract re-checks, but it could record attendance for absent holders (T35). The club can rotate it with `set_gate`.

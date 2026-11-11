@@ -8,6 +8,7 @@ import type { HistoryEntry, Match, Membership, Season } from "../lib/types";
 import { nsToDate, parseSeat, usd } from "../lib/format";
 import { config } from "../config";
 import { CATEGORIES, multiple } from "../lib/category";
+import { downloadSeatLedger } from "../lib/exports";
 import { Stamps } from "../components/MembershipCard";
 import { Crest, Empty, ErrorBox, Loading, Progress } from "../components/ui";
 
@@ -43,6 +44,12 @@ function Figure({ label, value, unit, digits = 0 }: { label: string; value: numb
 
 function Statement({ m, matches, season, history }: { m: Membership; matches: Match[]; season: Season; history: HistoryEntry[] }) {
   const [copied, setCopied] = useState(false);
+  const [csv, setCsv] = useState<string>();
+  const exportCsv = async () => {
+    setCsv("Preparing the file");
+    try { const n = await downloadSeatLedger(m, matches, season); setCsv(`Downloaded ${n} rows`); }
+    catch (e) { setCsv(`Could not build the file: ${String((e as Error).message ?? e).slice(0, 120)}`); }
+  };
   const seat = parseSeat(m.seat);
   const played = matches.filter((x) => x.status === "Finished").sort((a, b) => Number(BigInt(a.kickoff_at) - BigInt(b.kickoff_at)));
   const lentFor = new Set(history.filter((e) => e.kind === "rented" && e.match_id != null).map((e) => e.match_id!));
@@ -129,8 +136,10 @@ function Statement({ m, matches, season, history }: { m: Membership; matches: Ma
       <div className="no-print mt-5 flex flex-wrap gap-2">
         <button className="btn-primary" onClick={share}>{copied ? "Link copied" : "Share this statement"}</button>
         <button className="btn-ghost" onClick={() => print()}>Print</button>
+        <button className="btn-ghost" onClick={exportCsv}>Download for your accountant (CSV)</button>
         <a className="btn-ghost" href={`#/verify/${m.token_id}`}>Check it on-chain</a>
       </div>
+      <p className="no-print mt-3 text-xs text-muted" role="status">{csv ?? "The CSV lists every entry in this seat's history with dates in UTC, money in and money out in separate columns, and a link to the seat's account on the public ledger."}</p>
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { useAction } from "../lib/useAction";
 import type { Match, Season, Vendor } from "../lib/types";
 import { matchMinute, shortDate, toRaw, usd } from "../lib/format";
 import { config } from "../config";
+import { downloadClubPayments, downloadFixtureSummary } from "../lib/exports";
 import { ActionStatus } from "../components/ActionStatus";
 import { Feed } from "../components/Feed";
 import { ErrorBox, LiveBadge, Loading, Progress, Section, Stat } from "../components/ui";
@@ -42,7 +43,7 @@ export function ClubPage() {
       </div>
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]">
         <div className="space-y-6">
-          <Section title="Fixtures">
+          <Section title="Fixtures" right={<ClubExports matches={matches} season={season} />}>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[560px] text-left text-sm">
                 <thead className="text-xs text-muted"><tr><th className="py-2">Match</th><th>Seats sold</th><th>Revenue</th><th>To members (5%)</th><th>Status</th></tr></thead>
@@ -73,6 +74,23 @@ export function ClubPage() {
           </section>
         </div>
       </div>
+    </div>
+  );
+}
+
+/** The club's books as CSV files: one row per payment, and one row per fixture. */
+function ClubExports({ matches, season }: { matches: Match[]; season: Season }) {
+  const [note, setNote] = useState<string>();
+  const payments = async () => {
+    setNote("Reading payments");
+    try { setNote(`Downloaded ${await downloadClubPayments(matches, season)} payments`); }
+    catch (e) { setNote(`Could not build the file: ${String((e as Error).message ?? e).slice(0, 100)}`); }
+  };
+  return (
+    <div className="flex flex-wrap items-center justify-end gap-2">
+      {note && <span className="text-xs text-muted" role="status">{note}</span>}
+      <button className="btn-ghost" onClick={payments}>Payments CSV</button>
+      <button className="btn-ghost" onClick={() => setNote(`Downloaded ${downloadFixtureSummary(matches, season)} fixtures`)}>Fixtures CSV</button>
     </div>
   );
 }

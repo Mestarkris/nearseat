@@ -22,6 +22,8 @@ export interface Match {
   seats_rented: number;
   members_checked_in: number;
   escrow: string;
+  /** Club fees taken from seat rentals for this match. */
+  rental_fees: string;
   members_cut: string;
   payment_count: number;
   refunds_done: number;

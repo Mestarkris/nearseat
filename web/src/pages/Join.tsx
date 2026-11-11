@@ -9,6 +9,7 @@ import { useAction } from "../lib/useAction";
 import type { Match, Membership, Season, SeatView } from "../lib/types";
 import { parseSeat, usd } from "../lib/format";
 import { CATEGORIES, CATEGORY_ORDER, categoryOf, multiple, priceFor } from "../lib/category";
+import { PayFromAnyChain } from "../components/PayFromAnyChain";
 import { StadiumMap, standName } from "../components/StadiumMap";
 import { SeatPeek, useSeatPeek } from "../components/SeatPeek";
 import { ActionStatus } from "../components/ActionStatus";
@@ -106,6 +107,7 @@ export function JoinPage() {
               </ul>
               <div className="mt-4 flex justify-between border-t border-line pt-3 text-base font-bold"><span>Season price</span><span>{usd(price)} tUSDC</span></div>
               <p className="mt-1 text-xs text-muted">{CATEGORIES[cat!].label} seats pay {multiple(cat!)} the standard price and earn {multiple(cat!)} a standard share of every payout.</p>
+              <PayFromAnyChain amount={price} what="this membership" />
               {accountId ? (
                 <button className="btn-primary mt-4 w-full justify-center py-3" disabled={!!a.busy || left <= 0}
                   onClick={async () => {
