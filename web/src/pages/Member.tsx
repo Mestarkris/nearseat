@@ -1,5 +1,6 @@
 // Member dashboard: live match, live feed, earnings, Seat account side panel,
 // and tabs for lending, advance and voting.
+import { NewHere } from "../components/NewHere";
 import { useState } from "react";
 import { view, viewAccessKeys } from "../near/rpc";
 import { useWallet, ONE_YOCTO } from "../near/wallet";
@@ -28,6 +29,7 @@ export function MemberPage({ tokenId }: { tokenId?: string }) {
     return (
       <Empty title="Connect your wallet to open your membership">
         <button className="btn-primary mt-4" onClick={signIn}>Connect wallet</button>
+        <div className="mx-auto max-w-md text-left"><NewHere /></div>
         <p className="mt-4">No wallet? <a className="text-lime" href="#/verify/seat-c5-12">View a membership publicly</a>.</p>
       </Empty>
     );

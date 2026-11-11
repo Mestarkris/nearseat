@@ -33,6 +33,8 @@ interface WalletApi {
   call: (method: string, args: object, opts?: { deposit?: string; gasTgas?: number; contractId?: string }) => Promise<unknown>;
   /** Pays NearSeat in tUSDC via ft_transfer_call. */
   payTusdc: (amountRaw: string, msg: object) => Promise<unknown>;
+  /** Several tUSDC payments behind one wallet approval (one transaction each, so one can fail alone). */
+  payTusdcMany: (items: { amountRaw: string; msg: object }[]) => Promise<unknown>;
   signMessage: (message: string, recipient: string) => Promise<SignedNep413>;
   gasless: boolean;
   setGasless: (v: boolean) => void;
@@ -132,6 +134,20 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     [call],
   );
 
+  const payTusdcMany = useCallback<WalletApi["payTusdcMany"]>(
+    async (items) => {
+      if (items.length === 1) return payTusdc(items[0].amountRaw, items[0].msg);
+      const w = await wallet();
+      return w.signAndSendTransactions({
+        transactions: items.map((it) => ({
+          receiverId: config.tusdcId,
+          actions: [actionCreators.functionCall("ft_transfer_call", { receiver_id: config.contractId, amount: it.amountRaw, msg: JSON.stringify(it.msg) }, 100n * TGAS, BigInt(ONE_YOCTO))],
+        })),
+      });
+    },
+    [wallet, payTusdc],
+  );
+
   const signMessage = useCallback<WalletApi["signMessage"]>(
     async (message, recipient) => {
       const w = await wallet();
@@ -154,11 +170,12 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       },
       call,
       payTusdc,
+      payTusdcMany,
       signMessage,
       gasless,
       setGasless,
     }),
-    [selector, modal, accountId, call, payTusdc, signMessage, gasless],
+    [selector, modal, accountId, call, payTusdc, payTusdcMany, signMessage, gasless],
   );
 
   return <Ctx.Provider value={api}>{children}</Ctx.Provider>;

@@ -23,6 +23,7 @@ export function describe(event: string, d: Data): { title: string; sub?: string 
     case "ticket_sold": return { title: `Ticket sold · seat ${a("seat").toUpperCase()}`, sub: `${money("price")} by ${a("buyer")}` };
     case "seat_rented": return { title: `${a("token_id")} rented`, sub: `${a("renter")} paid ${money("price")}` };
     case "seat_lent": return { title: `${a("token_id")} offered for match ${a("match_id")}`, sub: money("price") };
+    case "lend_cancelled": return { title: `${a("token_id")} taken back by its holder`, sub: `No longer offered for match ${a("match_id")}` };
     case "season_autolend_set": return { title: `${a("token_id")} will be lent for every missed match`, sub: `Offered ${a("hours_before")}h before kickoff if the holder has not checked in` };
     case "season_autolend_cleared": return { title: `${a("token_id")} season lending turned off`, sub: "" };
     case "season_autolend_skip": return { title: `${a("token_id")} ${d.skip ? "kept by its holder" : "released to the season rule"}`, sub: `match ${a("match_id")}` };

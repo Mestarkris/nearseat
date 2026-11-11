@@ -14,6 +14,7 @@ import { StadiumMap, standName } from "../components/StadiumMap";
 import { SeatPeek, useSeatPeek } from "../components/SeatPeek";
 import { ActionStatus } from "../components/ActionStatus";
 import { Faucet } from "../components/Faucet";
+import { NewHere } from "../components/NewHere";
 import { ErrorBox, Loading } from "../components/ui";
 import { config } from "../config";
 
@@ -117,6 +118,7 @@ export function JoinPage() {
                   Buy membership
                 </button>
               ) : <button className="btn-primary mt-4 w-full justify-center py-3" onClick={signIn}>Connect wallet to buy</button>}
+            {!accountId && <NewHere />}
               <ActionStatus a={a} />
               <p className="mt-3 text-center text-xs text-muted">If the seat's account can't be created, the payment is refunded automatically.</p>
             </>

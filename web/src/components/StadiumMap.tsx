@@ -48,7 +48,7 @@ const LABEL: Record<State, string> = {
 };
 
 function Block({ code, name, seats, picked, onPick, onMember, readOnly, vertical, far }: {
-  code: string; name: string; seats: Map<string, SeatView>; picked?: string;
+  code: string; name: string; seats: Map<string, SeatView>; picked?: string | string[];
   onPick: (seat: string, view?: SeatView) => void; vertical?: boolean;
   onMember?: (tokenId: string, el: HTMLElement) => void; readOnly?: boolean;
   /** Stand is drawn above or left of the pitch, so its row 1 goes last. */
@@ -72,7 +72,7 @@ function Block({ code, name, seats, picked, onPick, onMember, readOnly, vertical
             // A member's seat opens its membership card where the page allows it.
             const tokenId = v && v.state !== "sold" ? v.token_id ?? `seat-${id}` : undefined;
             const opens = !buyable && !!onMember && !!tokenId;
-            const isPicked = picked === id;
+            const isPicked = Array.isArray(picked) ? picked.includes(id) : picked === id;
             return (
               <button
                 key={id}
@@ -94,7 +94,7 @@ function Block({ code, name, seats, picked, onPick, onMember, readOnly, vertical
 }
 
 export function StadiumMap({ seats, picked, onPick, onMember, readOnly, effect }: {
-  seats: SeatView[]; picked?: string; onPick: (seat: string, view?: SeatView) => void;
+  seats: SeatView[]; picked?: string | string[]; onPick: (seat: string, view?: SeatView) => void;
   /** Given, member seats become buttons that open that membership. */
   onMember?: (tokenId: string, el: HTMLElement) => void;
   /** Nothing is on sale (a finished match): free seats can't be picked. */

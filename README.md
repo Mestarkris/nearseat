@@ -72,6 +72,9 @@ npm run dev             # → http://localhost:5173
 | **Connect wallet** (Meteor, HOT or MyNearWallet on testnet) → **Join**, then **Get 250 test tUSDC** | Free test tokens in your wallet |
 | On **Join**, tap a grey seat → **Buy membership** (150 to 500 tUSDC, by seat category) | The contract creates `seat-<your seat>.nearseat.testnet` with **zero keys** and mints the membership NFT to you. **My membership** opens your new seat account |
 | Tap a grey seat, press **Buy ticket** | The seat turns dark; the live feed shows `Ticket sold`; the fixture's members' pool grows by 5% |
+| Tap up to four seats, press **Buy 4 tickets** | One wallet approval pays for all of them; each seat becomes its own ticket NFT. A fifth seat is refused: one wallet holds at most 4 tickets per match |
+| Open **Matches** with a wallet that holds a membership | A note says your membership already gets you in, so tickets are only for guests |
+| Press the sun or moon button in the header | The site switches between the light (beige and white) look and the dark one, and remembers the choice |
 | Tap a **lime** seat (lent by a member), buy it | The ticket slip shows the money going to that member's seat account, minus a 5% club fee |
 | **Attack Lab** → **Try it on testnet** on any card | A real transaction is sent and the contract refuses it, e.g. *"vault only obeys its parent contract"* |
 
@@ -192,6 +195,7 @@ docs/              THREAT_MODEL.md, ARCHITECTURE.md, SUBMISSION.md
 - **Seat categories.** VIP (2.5x), Pitchside (1.5x), Standard (1x) and Fans' End (0.75x), derived from the seat id, never stored. The category sets the membership price, the single-ticket price, the lend and resale caps, the advance cap and the seat's weight in the members' pool (10 / 6 / 4 / 3).
 - Members' pool: an O(1) reward-per-weight accumulator with settlement into vaults and rollback callbacks.
 - Single-match tickets (soulbound NEP-171) with per-match escrow, sold from a 360-seat map.
+- **Several seats in one checkout.** A fan picks up to 4 seats for a match (`max_tickets_per_account`, set by the club) and approves once. Each seat is its own payment, so if one was just taken that payment alone is refunded and the app says which seats came through. A member does not need a ticket: the membership is the pass.
 - Automatic refunds on postponement (permissionless batches; failures parked in `claimable`).
 - Seat lending for one match, with a price cap and club fee.
 - Seller-proof resale: freeze, nonce, NEP-199 royalty and price cap.
@@ -239,6 +243,9 @@ In the seat ledger, only "Money in" and "Money out" change the seat account's ba
 - **Paying from another chain is a quote, not a payment, on testnet.** NEAR Intents and the 1Click API run on mainnet only, and this deployment takes a test stablecoin. The app asks 1Click for a dry quote (no deposit address is created, no funds can move). On mainnet the flow is: the fan sends SOL, BTC or another token to the 1Click deposit address, USDC arrives in their NEAR account, and the purchase is one gasless tap. Some routes have no market maker at a given moment; the app shows that plainly and offers another token.
 - **CSV rows link to accounts, not to single transactions.** The contract keeps its own history but not transaction hashes, so "Check on the public ledger" opens the account's page on the explorer.
 
+- **Guest tickets stay with the buyer.** Single tickets are non-transferable, so a fan who buys four holds four gate passes in one wallet and brings the guests in. Assigning a ticket to a guest's own wallet is on the roadmap.
+- **Paying for several seats at once is not gasless.** The relayer carries one payment at a time, so a basket of two or more seats is sent as normal transactions (well under a cent of testnet NEAR).
+- **The NFT picture keeps the dark club colours** in both site themes, because it is drawn by the contract.
 - **Gasless relaying needs a wallet that signs NEP-366 delegate actions.** When the wallet can't, the app falls back to a normal transaction, which costs the fan a fraction of a cent of testnet NEAR. 1-yocto deposits always come from the fan's own account.
 - **The gate scanner key lives in the relayer** (the club's server). A stolen scanner key still can't admit a non-holder, because the contract re-checks, but it could record attendance for absent holders (T35). The club can rotate it with `set_gate`.
 - **Sybil touts** across many accounts are only limited per account (T24).
