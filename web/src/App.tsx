@@ -1,3 +1,4 @@
+import { ThemeToggle } from "./components/ThemeToggle";
 import { useEffect, useState, type ReactNode } from "react";
 import { useWallet } from "./near/wallet";
 import { config } from "./config";
@@ -65,13 +66,16 @@ function Nav({ route }: { route: string }) {
             </a>
           ))}
         </nav>
-        {accountId ? (
-          <WalletMenu accountId={accountId} />
-        ) : (
-          <button className="btn-primary ml-auto lg:ml-0" onClick={signIn} disabled={!ready}>
-            Connect wallet
-          </button>
-        )}
+        <div className="ml-auto flex items-center gap-2 lg:ml-0">
+          <ThemeToggle />
+          {accountId ? (
+            <WalletMenu accountId={accountId} />
+          ) : (
+            <button className="btn-primary" onClick={signIn} disabled={!ready}>
+              Connect wallet
+            </button>
+          )}
+        </div>
       </div>
       <nav className="no-scrollbar flex gap-1 overflow-x-auto px-4 pb-2 lg:hidden" aria-label="Main (mobile)">
         {NAV.map(([href, label]) => (

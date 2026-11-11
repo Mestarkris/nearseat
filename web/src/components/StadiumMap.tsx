@@ -138,7 +138,7 @@ export function StadiumMap({ seats, picked, onPick, onMember, readOnly, effect }
       );
       flight.onfinish = () => {
         coin.remove();
-        seat.animate([{ transform: "scale(1)" }, { transform: "scale(1.9)", boxShadow: "0 0 0 3px #9b2545" }, { transform: "scale(1)" }], { duration: 520, easing: "ease-out" });
+        seat.animate([{ transform: "scale(1)" }, { transform: "scale(1.9)", boxShadow: "0 0 0 3px var(--color-lime)" }, { transform: "scale(1)" }], { duration: 520, easing: "ease-out" });
       };
     });
     return () => coins.forEach((coin) => coin.remove());

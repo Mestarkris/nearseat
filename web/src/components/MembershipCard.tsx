@@ -22,11 +22,11 @@ export function MembershipCard({ m, compact = false }: { m: Membership; compact?
       className="card-glow relative overflow-hidden p-5"
       aria-label={`Membership ${m.token_id}, ${CATEGORIES[m.category].label} seat, ${m.tier} grade, owned by ${m.owner_id}`}
     >
-      <div className="pitch absolute inset-0 opacity-[0.07]" aria-hidden />
+      <div className="pitch absolute inset-0 opacity-[var(--card-texture)]" aria-hidden />
       <svg className="absolute inset-0 size-full opacity-20" aria-hidden preserveAspectRatio="none" viewBox="0 0 100 140">
-        <rect x="4" y="4" width="92" height="132" fill="none" stroke="#9b2545" strokeWidth="0.4" />
-        <line x1="4" y1="70" x2="96" y2="70" stroke="#9b2545" strokeWidth="0.4" />
-        <circle cx="50" cy="70" r="12" fill="none" stroke="#9b2545" strokeWidth="0.4" />
+        <rect x="4" y="4" width="92" height="132" fill="none" stroke="var(--color-lime)" strokeWidth="0.4" />
+        <line x1="4" y1="70" x2="96" y2="70" stroke="var(--color-lime)" strokeWidth="0.4" />
+        <circle cx="50" cy="70" r="12" fill="none" stroke="var(--color-lime)" strokeWidth="0.4" />
       </svg>
       <div className="relative">
         <div className="flex items-start justify-between">

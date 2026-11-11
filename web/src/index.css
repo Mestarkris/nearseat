@@ -18,6 +18,11 @@
   --color-sky: #2c5f9e;
   --color-danger: #b3261e;
   --color-warn: #8a5a00;
+  /* Seat categories on the stadium map. */
+  --color-vip: #b07a00;
+  --color-pitchside: #c2607c;
+  --color-standard: #93868a;
+  --color-fans: #3d7f89;
 
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Inter Tight", "Inter", ui-sans-serif, system-ui, sans-serif;
@@ -25,6 +30,34 @@
 
   --radius-card: 24px;
 }
+
+/* Dark mode: the same roles, on the club's night colours. Chosen with the
+   switch in the header and remembered on the device. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-ink: #140d10;
+  --color-card: #1c1317;
+  --color-card-2: #241920;
+  --color-line: #3a2a31;
+  --color-fg: #ffffff;
+  --color-muted: #a8999d;
+  --color-lime: #ead9b5;
+  --color-lime-ink: #140d10;
+  --color-wine-ink: #f5ead2;
+  --color-sky: #7ea6d6;
+  --color-danger: #ee7262;
+  --color-warn: #e3b45c;
+  --color-vip: #d8a94a;
+  --color-pitchside: #c98a9b;
+  --color-standard: #6e6266;
+  --color-fans: #7fa3a8;
+  --glow-top: #2b121b;
+  --glow-line: #7d2a41;
+  --seat-empty: #2a1f24;
+  --seat-sold: #6e6266;
+  --card-texture: .35;
+}
+:root { --glow-top: #fbf1e4; --glow-line: rgb(155 37 69 / .45); --seat-empty: #e8dcc5; --seat-sold: #b7a68b; --card-texture: .07; }
 
 @layer base {
   html { color-scheme: light; -webkit-text-size-adjust: 100%; }
@@ -49,8 +82,8 @@
 @utility card { @apply bg-card border border-line rounded-[var(--radius-card)]; }
 @utility card-glow {
   @apply rounded-[var(--radius-card)];
-  background: linear-gradient(180deg, #fbf1e4 0%, var(--color-card) 55%);
-  border: 1px solid rgb(155 37 69 / .45);
+  background: linear-gradient(180deg, var(--glow-top) 0%, var(--color-card) 55%);
+  border: 1px solid var(--glow-line);
   box-shadow: 0 18px 40px -24px rgb(155 37 69 / 0.4);
 }
 @utility pill { @apply inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors; }
@@ -105,8 +138,8 @@
 .marquee:hover .marquee-track { animation-play-state: paused; }
 
 /* Seat story: one stage, four states driven by data-step. */
-.story-seat { fill: #e8dcc5; transition: fill .5s ease; transition-delay: var(--d, 0ms); }
-.story[data-filled="true"] .story-seat[data-sold] { fill: #b7a68b; }
+.story-seat { fill: var(--seat-empty); transition: fill .5s ease; transition-delay: var(--d, 0ms); }
+.story[data-filled="true"] .story-seat[data-sold] { fill: var(--seat-sold); }
 @keyframes coin { 0% { transform: translate(0, 0); opacity: 0; } 12% { opacity: 1; } 80% { opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)); opacity: 0; } }
 .story-coin { opacity: 0; }
 .story[data-step="1"] .story-coin { animation: coin 2.4s cubic-bezier(.5,0,.3,1) infinite; animation-delay: var(--d, 0ms); }
