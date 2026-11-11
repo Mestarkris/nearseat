@@ -48,6 +48,7 @@ export function describe(event: string, d: Data): { title: string; sub?: string 
     case "vendor_set": return { title: d.name ? `Vendor approved · ${a("name")}` : "Vendor removed", sub: a("account_id") };
     case "renewal_saving_set": return { title: `${a("token_id")} renewal saving`, sub: Number(d.bps) > 0 ? `${Number(d.bps) / 100}% of each payout set aside` : "Switched off" };
     case "match_created": return { title: `Fixture added · v ${a("opponent")}` };
+    case "match_renamed": return { title: `Fixture ${a("match_id")} is now v ${a("opponent")}` };
     case "delisted": return { title: `${a("token_id")} taken off the market`, sub: "Withdrawals and lending are open again" };
     case "membership_bought": return { title: `Membership bought from the club · ${a("token_id")}`, sub: `${money("price")} by ${a("buyer")}` };
     case "vault_create_failed": return { title: `Seat ${a("seat").toUpperCase()} could not be set up`, sub: d.refunded ? `Payment returned to ${a("refunded")}` : "Nothing was charged" };

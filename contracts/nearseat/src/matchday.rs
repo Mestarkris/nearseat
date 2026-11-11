@@ -77,6 +77,32 @@ impl NearSeat {
         id
     }
 
+    /// Club-only. Corrects the opponent's name on a fixture. Changes no money, seat or
+    /// status. Tickets already sold for the fixture get the new name in their title.
+    pub fn rename_match(&mut self, match_id: MatchId, opponent: String) {
+        self.assert_club();
+        require!(!opponent.is_empty() && opponent.len() <= 40, "opponent name must be 1..40 chars");
+        let count = {
+            let m = self.match_mut(match_id);
+            m.opponent = opponent.clone();
+            m.payment_count
+        };
+        for i in 0..count {
+            let seat = match self.payments.get(&(match_id, i)).map(|p| &p.kind) {
+                Some(PaymentKind::Ticket { seat, .. }) => seat.clone(),
+                _ => continue,
+            };
+            let ticket_id = format!("t{match_id}-{seat}");
+            if let Some(by_id) = self.tokens.token_metadata_by_id.as_mut() {
+                if let Some(mut meta) = by_id.get(&ticket_id) {
+                    meta.title = Some(format!("Illia Stars United v {opponent} · Seat {}", seat.to_uppercase()));
+                    by_id.insert(&ticket_id, &meta);
+                }
+            }
+        }
+        self.emit("match_renamed", json!({ "match_id": match_id, "opponent": opponent }));
+    }
+
     /// Club-only. Locks new loans and sales; the match minute counts from now.
     pub fn kickoff(&mut self, match_id: MatchId) {
         self.assert_club();

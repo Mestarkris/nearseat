@@ -51,8 +51,8 @@ const kickoffAt = BigInt(Date.now() + 30 * 60_000) * 1_000_000n;
 // Pass a fixture id to carry on with one an earlier, interrupted run created.
 const resume = process.argv[2] ? Number(process.argv[2]) : undefined;
 const id = resume ?? await step("create_match", () =>
-  call(club, CONTRACT, "create_match", { opponent: "Ikoyi Wanderers", competition: "Club check", kickoff_at: String(kickoffAt), ticket_price: String(10n * ONE) }));
-check(typeof id === "number", `${resume ? "using" : "create_match →"} fixture ${id} v Ikoyi Wanderers`);
+  call(club, CONTRACT, "create_match", { opponent: "Haseeb Wanderers", competition: "Club check", kickoff_at: String(kickoffAt), ticket_price: String(10n * ONE) }));
+check(typeof id === "number", `${resume ? "using" : "create_match →"} fixture ${id} v Haseeb Wanderers`);
 if (typeof id !== "number") process.exit(1);
 await settle(() => match(id).catch(() => undefined), (x) => x !== undefined);
 
@@ -80,7 +80,7 @@ check(refused, "non-club kickoff is refused by the contract");
 await step("kickoff", () => call(club, CONTRACT, "kickoff", { match_id: id }));
 check((await settle(() => match(id), (x) => x.status === "Live")).status === "Live", "kickoff → Live");
 await step("home goal", () => call(club, CONTRACT, "goal", { match_id: id, side: "Home", scorer: "Okafor" }));
-await step("away goal", () => call(club, CONTRACT, "goal", { match_id: id, side: "Away", scorer: "Ikoyi Wanderers" }));
+await step("away goal", () => call(club, CONTRACT, "goal", { match_id: id, side: "Away", scorer: "Haseeb Wanderers" }));
 const live = await settle(() => match(id), (x) => x.home_goals === 1 && x.away_goals === 1);
 check(live.home_goals === 1 && live.away_goals === 1, `goals recorded → ${live.home_goals}–${live.away_goals}`);
 const stamps = (await settle(() => view(CONTRACT, "membership", { token_id: memberToken }), (v) => v.goal_stamps.some((g) => g.match_id === id))).goal_stamps.filter((g) => g.match_id === id);
@@ -116,7 +116,7 @@ await step("top_up_pool", () =>
 check(BigInt((await settle(() => view(CONTRACT, "season"), (x) => BigInt(x.pool_total_distributed) === poolBefore + 10n * ONE)).pool_total_distributed) === poolBefore + 10n * ONE, "top_up_pool → +10 tUSDC to the members' pool");
 
 const pollsBefore = (await view(CONTRACT, "get_polls")).length;
-await step("create_poll", () => call(club, CONTRACT, "create_poll", { question: "Man of the match v Ikoyi?", options: ["Okafor", "Adewale"], duration_hours: 48 }));
+await step("create_poll", () => call(club, CONTRACT, "create_poll", { question: "Man of the match v Haseeb?", options: ["Okafor", "Adewale"], duration_hours: 48 }));
 check((await settle(() => view(CONTRACT, "get_polls"), (p) => p.length === pollsBefore + 1)).length === pollsBefore + 1, "create_poll → new poll open");
 
 const clubBal = BigInt((await view(CONTRACT, "season")).club_balance);

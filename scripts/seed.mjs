@@ -33,9 +33,9 @@ const existing = await view(CONTRACT, "get_matches");
 const now = BigInt(Date.now()) * 1_000_000n;
 const DAY = 86_400_000_000_000n;
 const fixtures = [
-  { opponent: "Harbour City FC", kickoff_at: now + DAY / 24n, ticket_price: 10n * ONE },
-  { opponent: "Lagoon Athletic", kickoff_at: now + 7n * DAY, ticket_price: 10n * ONE },
-  { opponent: "Eko Rangers", kickoff_at: now + 14n * DAY, ticket_price: 12n * ONE, big_match: true, priority_hours: 48 },
+  { opponent: "Stepan City FC", kickoff_at: now + DAY / 24n, ticket_price: 10n * ONE },
+  { opponent: "Eddy Athletic", kickoff_at: now + 7n * DAY, ticket_price: 10n * ONE },
+  { opponent: "Avichal Rangers", kickoff_at: now + 14n * DAY, ticket_price: 12n * ONE, big_match: true, priority_hours: 48 },
 ];
 for (const f of fixtures) {
   if (existing.some((m) => m.opponent === f.opponent)) {
@@ -68,6 +68,6 @@ await soft(call(club, CONTRACT, "settle_batch", { limit: 8 }, { gas: 300n * TGAS
 
 step("Poll");
 if ((await view(CONTRACT, "get_polls")).length === 0) {
-  await soft(call(club, CONTRACT, "create_poll", { question: "Which kit for the Eko Rangers derby?", options: ["Lime home", "Black away", "Retro 1996"], duration_hours: 24 * 14 }), "kit poll");
+  await soft(call(club, CONTRACT, "create_poll", { question: "Which kit for the Avichal Rangers derby?", options: ["Lime home", "Black away", "Retro 1996"], duration_hours: 24 * 14 }), "kit poll");
 }
 console.log("\nSeeded. Start the app: npm run dev   ·   Run a live match: npm run demo");

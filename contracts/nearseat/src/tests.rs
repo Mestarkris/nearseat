@@ -1308,3 +1308,29 @@ fn season_rule_does_not_fire_while_the_seat_is_for_sale() {
     keeper(&e);
     c.execute_season_autolend(tid(SEAT_A), m);
 }
+
+// ---------- fixture rename ----------
+
+#[test]
+fn club_renames_a_fixture_and_nothing_else_changes() {
+    let (mut c, e) = setup();
+    e.call(CLUB, 0);
+    let m = c.create_match("Lagos City".into(), "League".into(), U64(e.now + 5 * HOUR), U128(15 * ONE), None, None);
+    let before = c.get_match(m).unwrap();
+    c.rename_match(m, "Eddy Athletic".into());
+    let after = c.get_match(m).unwrap();
+    assert_eq!(after.opponent, "Eddy Athletic");
+    assert_eq!(after.ticket_price, before.ticket_price);
+    assert_eq!(after.kickoff_at, before.kickoff_at);
+    assert_eq!(after.status, before.status);
+}
+
+#[test]
+#[should_panic(expected = "only the club can do this")]
+fn outsider_cannot_rename_a_fixture() {
+    let (mut c, e) = setup();
+    e.call(CLUB, 0);
+    let m = c.create_match("Lagos City".into(), "League".into(), U64(e.now + 5 * HOUR), U128(15 * ONE), None, None);
+    e.call(ALICE, 0);
+    c.rename_match(m, "Anything".into());
+}

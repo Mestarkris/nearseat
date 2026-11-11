@@ -192,7 +192,7 @@ impl World {
                 &self.club,
                 "create_match",
                 json!({
-                    "opponent": "Harbour City FC",
+                    "opponent": "Stepan City FC",
                     "competition": "League",
                     "kickoff_at": (now + HOUR_NS).to_string(),
                     "ticket_price": TICKET.to_string(),

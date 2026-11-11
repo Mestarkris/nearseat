@@ -2,7 +2,7 @@
 // Adds one fixture from the club account, so the ticket page always has a
 // match that has not kicked off yet. Skips a fixture that already exists.
 //
-//   node scripts/add-fixture.mjs "Makoko Mariners" 2026-11-19T19:00:00Z [price in tUSDC, default 10]
+//   node scripts/add-fixture.mjs "Mert Mariners" 2026-11-19T19:00:00Z [price in tUSDC, default 10]
 import { account, call, env, loadEnv, view } from "@nearseat/shared/node";
 
 loadEnv();

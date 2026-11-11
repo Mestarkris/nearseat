@@ -90,7 +90,7 @@ npm run dev             # → http://localhost:5173
 | Do | See |
 |---|---|
 | `npm run deploy` | Sub-accounts `tusdc`, `club`, `gate`, `relayer`, `fan01..fan10`; the vault deployed as a **global contract by hash**; NearSeat deployed on `<you>.testnet`; `.env` filled in |
-| `MY_ACCOUNT=<your wallet>.testnet npm run seed` | 10 memberships (each with a keyless vault), 3 fixtures (Harbour City FC, Lagoon Athletic, Eko Rangers), funded fans, 50 tUSDC in the members' pool, a kit poll |
+| `MY_ACCOUNT=<your wallet>.testnet npm run seed` | 10 memberships (each with a keyless vault), 3 fixtures (Stepan City FC, Eddy Athletic, Avichal Rangers), funded fans, 50 tUSDC in the members' pool, a kit poll |
 | `npm run verify` | ✅ for every vault: `keys=0`, `global_code=<hash>` = your local build |
 | `npm run relayer` (one terminal) and `npm run keeper` (another) | Relayer on `:8787` (gasless relay, members-only API, gate scanning); keeper settling payouts, refunds and auto-lend. In production both run without a server: the relayer as Vercel functions under `/api`, the keeper as a GitHub Actions cron |
 | `npm run dev`, open **My membership** with `MY_ACCOUNT`'s wallet | Your card, balance, inventory and the live match card |
@@ -196,6 +196,7 @@ docs/              THREAT_MODEL.md, ARCHITECTURE.md, SUBMISSION.md
 - Members' pool: an O(1) reward-per-weight accumulator with settlement into vaults and rollback callbacks.
 - Single-match tickets (soulbound NEP-171) with per-match escrow, sold from a 360-seat map.
 - **Several seats in one checkout.** A fan picks up to 4 seats for a match (`max_tickets_per_account`, set by the club) and approves once. Each seat is its own payment, so if one was just taken that payment alone is refunded and the app says which seats came through. A member does not need a ticket: the membership is the pass.
+- The club can correct a fixture's opponent name (`rename_match`). It changes no money, seat or status, and sold tickets pick up the new title.
 - Automatic refunds on postponement (permissionless batches; failures parked in `claimable`).
 - Seat lending for one match, with a price cap and club fee.
 - Seller-proof resale: freeze, nonce, NEP-199 royalty and price cap.
