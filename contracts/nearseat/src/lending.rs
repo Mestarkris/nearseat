@@ -32,6 +32,8 @@ impl NearSeat {
         );
         self.loans.remove(&key);
         self.member_mut(&token_id).open_offers.retain(|id| *id != match_id);
+        // Taking the seat back means the holder is coming: the season rule must not lend it again.
+        self.mark_skipped(&token_id, match_id, true);
         self.emit("lend_cancelled", json!({ "token_id": token_id, "match_id": match_id }));
     }
 

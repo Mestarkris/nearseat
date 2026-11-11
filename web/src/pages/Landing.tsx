@@ -157,7 +157,7 @@ function Proof() {
     [s ? Number(s.pool_total_distributed) / 1e6 : 0, 2, "tUSDC shared with members so far"],
     [0, 0, "keys on any seat account"],
     [21, 0, "attacks you can try yourself, all refused"],
-    [112, 0, "automated tests, including a sale in the middle of a payout"],
+    [123, 0, "automated tests, including a sale in the middle of a payout"],
   ];
   return (
     <section className="border-y border-line bg-card">

@@ -23,6 +23,10 @@ export function describe(event: string, d: Data): { title: string; sub?: string 
     case "ticket_sold": return { title: `Ticket sold · seat ${a("seat").toUpperCase()}`, sub: `${money("price")} by ${a("buyer")}` };
     case "seat_rented": return { title: `${a("token_id")} rented`, sub: `${a("renter")} paid ${money("price")}` };
     case "seat_lent": return { title: `${a("token_id")} offered for match ${a("match_id")}`, sub: money("price") };
+    case "season_autolend_set": return { title: `${a("token_id")} will be lent for every missed match`, sub: `Offered ${a("hours_before")}h before kickoff if the holder has not checked in` };
+    case "season_autolend_cleared": return { title: `${a("token_id")} season lending turned off`, sub: "" };
+    case "season_autolend_skip": return { title: `${a("token_id")} ${d.skip ? "kept by its holder" : "released to the season rule"}`, sub: `match ${a("match_id")}` };
+    case "autolend_executed": return { title: `${a("token_id")} offered automatically`, sub: `match ${a("match_id")} · ${money("price")}` };
     case "settled": return { title: `Payout landed in ${a("token_id")}`, sub: money("amount") };
     case "settle_failed": return { title: `Payout to ${a("token_id")} bounced`, sub: "Restored to the membership; will retry" };
     case "withdrawn": return { title: `Withdrawal from ${a("token_id")}`, sub: `${money("amount")} to ${a("to")}` };

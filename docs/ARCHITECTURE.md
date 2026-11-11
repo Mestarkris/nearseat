@@ -30,7 +30,9 @@ settlement, withdrawals, callbacks), `payments` (`ft_on_transfer` router),
 `events`, `kiosk` (club-approved vendors, payments from the seat, renewal
 saving), and Layer 2 `advance`, `autolend`, `voting`. The vendor list and the
 per-seat saving records live under their own storage prefixes, outside the
-root struct, so adding them needed no state migration.
+root struct, so adding them needed no state migration. The season lending rule
+(`set_season_autolend`: one rule per seat, price stored as a share of the
+ticket price) is stored the same way.
 
 ## How control passes on transfer
 
@@ -114,4 +116,5 @@ sequenceDiagram
   after an NEP-413 proof and a live `nft_token` owner check. `/gate/verify`
   verifies gate-pass QR payloads.
 - **keeper/**: Node script. `settle_batch`, `process_refunds`,
-  `execute_autolend`, and `demo-match` for the seeded end-to-end run.
+  `execute_autolend`, `execute_season_autolend` (from the `season_autolend_due`
+  view), and `demo-match` for the seeded end-to-end run.

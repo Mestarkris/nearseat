@@ -103,7 +103,7 @@ function Dashboard({ tokenId }: { tokenId: string }) {
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]">
         <div className="space-y-6">
           {tab === "overview" && <Overview m={m} live={live} next={next} season={season} isHolder={isHolder} />}
-          {tab === "lending" && <Lending m={m} matches={matches} isHolder={isHolder} refresh={data.refresh} />}
+          {tab === "lending" && <Lending m={m} matches={matches} season={season} isHolder={isHolder} refresh={data.refresh} />}
           {tab === "spend" && <Spend m={m} isHolder={isHolder} refresh={data.refresh} />}
           {tab === "advance" && <Advance m={m} isHolder={isHolder} refresh={data.refresh} />}
           {tab === "vote" && <Vote m={m} isHolder={isHolder} />}
@@ -146,7 +146,7 @@ function Overview({ m, live, next, season, isHolder }: { m: Membership; live?: M
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
             <div className="rounded-2xl border border-lime/60 p-3 text-center"><div className="text-xs text-muted">Your share today</div><div className="font-bold text-lime">+{usd(shareToday)} tUSDC</div></div>
             <div className="rounded-2xl border border-lime/60 p-3 text-center"><div className="text-xs text-muted">Next home game</div><div className="font-bold">{next ? `v ${next.opponent}` : "—"}</div></div>
-            <div className="rounded-2xl border border-lime/60 p-3 text-center"><div className="text-xs text-muted">Auto-lend rule</div><div className="font-bold">{rule ? `On · ${rule.hours_before}h before` : "Off"}</div></div>
+            <div className="rounded-2xl border border-lime/60 p-3 text-center"><div className="text-xs text-muted">Auto-lend rule</div><div className="font-bold">{rule ? `On · ${rule.hours_before}h before` : m.season_autolend ? `Every match · ${m.season_autolend.hours_before}h before` : "Off"}</div></div>
           </div>
         </section>
       ) : (
@@ -352,14 +352,76 @@ function Spend({ m, isHolder, refresh }: { m: Membership; isHolder: boolean; ref
   );
 }
 
-function Lending({ m, matches, isHolder, refresh }: { m: Membership; matches: Match[]; isHolder: boolean; refresh: () => void }) {
+const RULE_HOURS = [3, 12, 24, 48, 72];
+
+/** One rule for the whole season: any match the holder has not checked in for is offered automatically. */
+function SeasonRule({ m, capBps, isHolder, refresh }: { m: Membership; capBps: number; isHolder: boolean; refresh: () => void }) {
+  const { call } = useWallet();
+  const a = useAction(refresh);
+  const rule = m.season_autolend;
+  const [hours, setHours] = useState(rule?.hours_before ?? 24);
+  const [bps, setBps] = useState(Math.min(rule?.price_bps ?? 10_000, capBps));
+  const prices = [5_000, 7_500, 10_000, 12_500, 15_000].filter((b) => b <= capBps);
+  const pick = (on: boolean) => `rounded-full border px-3 py-1.5 text-sm transition-colors ${on ? "border-lime bg-wine text-wine-ink" : "border-line text-muted hover:text-white"}`;
+  if (!isHolder && !rule) return null;
+  return (
+    <Section title="Lend every match I miss" right={<span className={`chip ${rule ? "border-lime text-lime" : ""}`}>{rule ? "On" : "Off"}</span>}>
+      <p className="text-sm text-muted">
+        Set this once. Before each home match, if you have not checked in, your seat is offered to other fans at the price you choose. Check in, or keep a match below, and the seat stays yours. The rule ends if the membership changes hands.
+      </p>
+      {rule && (
+        <p className="mt-3 text-sm">
+          Now: offered <b>{rule.hours_before} hours</b> before kickoff at <b>{rule.price_bps / 100}%</b> of the ticket price for your seat.
+        </p>
+      )}
+      {isHolder && (
+        <>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div>
+              <div className="mb-2 text-xs text-muted">Offer the seat this long before kickoff</div>
+              <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Hours before kickoff">
+                {RULE_HOURS.map((h) => <button key={h} type="button" role="radio" aria-checked={h === hours} className={pick(h === hours)} onClick={() => setHours(h)}>{h}h</button>)}
+              </div>
+            </div>
+            <div>
+              <div className="mb-2 text-xs text-muted">Price, as a share of the ticket price</div>
+              <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Price as a share of the ticket price">
+                {prices.map((b) => <button key={b} type="button" role="radio" aria-checked={b === bps} className={pick(b === bps)} onClick={() => setBps(b)}>{b / 100}%</button>)}
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button className="btn-primary" disabled={!!a.busy || !!m.listing || (!!rule && rule.hours_before === hours && rule.price_bps === bps)}
+              onClick={() => a.run("Saving rule", () => call("set_season_autolend", { token_id: m.token_id, hours_before: hours, price_bps: bps }, { deposit: ONE_YOCTO }), `Your seat will be offered ${hours}h before any match you miss`)}>
+              {rule ? "Save changes" : "Turn on"}
+            </button>
+            {rule && (
+              <button className="btn-ghost" disabled={!!a.busy}
+                onClick={() => a.run("Turning off", () => call("clear_season_autolend", { token_id: m.token_id }, { deposit: ONE_YOCTO }), "Season lending turned off")}>
+                Turn off
+              </button>
+            )}
+          </div>
+          {m.listing && <p className="mt-2 text-xs text-warn">The membership is listed for sale, so its lending rules are paused.</p>}
+        </>
+      )}
+      <ActionStatus a={a} />
+    </Section>
+  );
+}
+
+function Lending({ m, matches, season, isHolder, refresh }: { m: Membership; matches: Match[]; season: Season; isHolder: boolean; refresh: () => void }) {
   const { call } = useWallet();
   const a = useAction(refresh);
   const [price, setPrice] = useState<Record<number, string>>({});
   const [to, setTo] = useState<Record<number, string>>({});
   const upcoming = matches.filter((x) => x.status === "Scheduled");
-  if (!upcoming.length) return <Empty title="No upcoming matches to lend for" />;
+  const seasonRule = m.season_autolend;
+  const ruleCard = <SeasonRule m={m} capBps={season.config.lend_cap_bps} isHolder={isHolder} refresh={refresh} />;
+  if (!upcoming.length) return <>{ruleCard}<Empty title="No upcoming matches to lend for" /></>;
   return (
+    <>
+    {ruleCard}
     <Section title="Lend your seat for one match">
       <p className="mb-4 text-sm text-muted">The renter gets the gate pass for that match only. You earn the price minus a 5% club fee, paid into your seat account at full time. Prices are capped at 1.5× what the club charges for a seat of your category.</p>
       <ul className="space-y-4">
@@ -386,7 +448,22 @@ function Lending({ m, matches, isHolder, refresh }: { m: Membership; matches: Ma
               {isHolder && loan && "Offered" in loan && (
                 <button className="btn-ghost mt-3" disabled={!!a.busy} onClick={() => a.run("Cancelling", () => call("cancel_lend", { token_id: m.token_id, match_id: x.id }, { deposit: ONE_YOCTO }))}>Cancel offer</button>
               )}
-              {isHolder && !loan && (
+              {isHolder && !loan && !rule && seasonRule && (
+                <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+                  {seasonRule.skip.includes(x.id) ? (
+                    <>
+                      <span className="chip border-lime text-lime">You are keeping this one</span>
+                      <button className="btn-ghost" disabled={!!a.busy} onClick={() => a.run("Releasing", () => call("skip_autolend", { token_id: m.token_id, match_id: x.id, skip: false }, { deposit: ONE_YOCTO }), "Your season rule covers this match again")}>Let the rule lend it</button>
+                    </>
+                  ) : (
+                    <>
+                      <span className="chip">Season rule: offered {seasonRule.hours_before}h before at {usd((face * BigInt(Math.min(seasonRule.price_bps, season.config.lend_cap_bps))) / 10_000n)}</span>
+                      <button className="btn-ghost" disabled={!!a.busy} onClick={() => a.run("Keeping the seat", () => call("skip_autolend", { token_id: m.token_id, match_id: x.id, skip: true }, { deposit: ONE_YOCTO }), "The seat stays yours for this match")}>I'm coming to this one</button>
+                    </>
+                  )}
+                </div>
+              )}
+              {isHolder && !loan && (!seasonRule || rule) && (
                 <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
                   <span className="text-muted">Auto-lend:</span>
                   {rule ? (
@@ -407,6 +484,7 @@ function Lending({ m, matches, isHolder, refresh }: { m: Membership; matches: Ma
       </ul>
       <ActionStatus a={a} />
     </Section>
+    </>
   );
 }
 

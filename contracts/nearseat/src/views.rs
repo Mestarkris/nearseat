@@ -53,6 +53,8 @@ pub struct MembershipView {
     pub totals: MemberTotals,
     pub loans: Vec<LoanView>,
     pub autolend_rules: Vec<autolend::Rule>,
+    /// The set-once rule that lends the seat for every match the holder misses.
+    pub season_autolend: Option<autolend::SeasonRule>,
     pub history_len: u32,
 }
 
@@ -310,6 +312,7 @@ impl NearSeat {
             totals: m.totals.clone(),
             loans,
             autolend_rules: m.autolend_rules.clone(),
+            season_autolend: autolend::season_rule(token_id),
             history_len: m.history_len,
         }
     }

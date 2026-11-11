@@ -123,7 +123,7 @@ export function WhitepaperPage() {
 
           <S id="security" n={++n} title="Security model">
             <p>The threat model was written before any code. It lists 58 ways a seller, a past owner, a borrower, a tout, the club's own staff or an outsider might try to cheat, and what stops each one.</p>
-            <p>The contracts are covered by 112 automated tests, including a sale that lands in the middle of a payout and failures injected into every callback. Twenty-one of the attacks are also wired into the <a className="text-lime" href="#/lab">Attack Lab</a>, where anyone can attempt them against the live contract and watch them be refused.</p>
+            <p>The contracts are covered by 123 automated tests, including a sale that lands in the middle of a payout and failures injected into every callback. Twenty-one of the attacks are also wired into the <a className="text-lime" href="#/lab">Attack Lab</a>, where anyone can attempt them against the live contract and watch them be refused.</p>
             <p>The <a className="text-lime" href="#/verify/seat-c5-12">Verify page</a> checks a seat without a wallet: zero keys on its account, the code hash, the current owner, and every past holder and payout.</p>
             <p className="no-print">Read the full <a className="text-lime" href={`${REPO}/blob/main/docs/THREAT_MODEL.md`} target="_blank" rel="noreferrer">threat model</a> and <a className="text-lime" href={`${REPO}/blob/main/docs/ARCHITECTURE.md`} target="_blank" rel="noreferrer">architecture diagrams</a>.</p>
           </S>

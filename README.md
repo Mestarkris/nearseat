@@ -91,6 +91,7 @@ npm run dev             # → http://localhost:5173
 | `npm run verify` | ✅ for every vault: `keys=0`, `global_code=<hash>` = your local build |
 | `npm run relayer` (one terminal) and `npm run keeper` (another) | Relayer on `:8787` (gasless relay, members-only API, gate scanning); keeper settling payouts, refunds and auto-lend. In production both run without a server: the relayer as Vercel functions under `/api`, the keeper as a GitHub Actions cron |
 | `npm run dev`, open **My membership** with `MY_ACCOUNT`'s wallet | Your card, balance, inventory and the live match card |
+| `npm run season-rule` | The season lending rule checked on the live contract: set, due list, keep one match, release it, permissionless execution. Ends with **Season auto-lend rule valid ✔** |
 | `npm run club-check` | Every club action run once on a new fixture and checked on-chain: fixture, ticket sale, check-in, non-club refused, kickoff, goals, full time, payout round, pool top-up, poll, club withdrawal. Ends with **All club actions valid ✔** |
 | `npm run demo` | A full match, live: tickets sold → a member lends a seat → check-ins → kickoff → goals → full time → payout bar fills as each vault is settled |
 | **Pass** on your phone, **Scan** on another device | Green *Welcome in*, and attendance recorded on-chain. A screenshot shown 30 s later turns red |
@@ -125,7 +126,7 @@ npm run dev             # → http://localhost:5173
 | Taking an advance, then selling or gifting | Plain transfer is blocked while an advance is open. A sale repays it from the price first, in the same receipt. |
 | Voting again via the buyer | Votes are keyed by `(poll, token)`. |
 
-The full analysis (64 threats, mitigations and tests) is in [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md). Diagrams are in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+The full analysis (67 threats, mitigations and tests) is in [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md). Diagrams are in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ---
 
@@ -161,7 +162,7 @@ Builds are deterministic for a given toolchain. `rust-toolchain.toml` pins Rust 
 
 | Command | What it proves |
 |---|---|
-| `npm run test:unit` | **76** NearSeat unit tests + 4 vault + 3 tUSDC. Includes: paying a club-approved vendor from the seat (unapproved, listed, over-limit and failed payments), renewal saving (set aside, capped at the season price, cleared on sale), seat categories (prices, weighted split that never over-distributes, per-category caps, migration from the equal-split layout), sale mid-payout, failed-callback rollback (settle, withdraw, refunds), wrong nonce, old owner locked out, renter locked out after full time, price caps (lend + resale), goal stamps only for checked-in members, advance repaid on sale, double vote blocked, auto-lend cleared on sale, admin bounds |
+| `npm run test:unit` | **87** NearSeat unit tests + 4 vault + 3 tUSDC. Includes: the season lending rule (waits for its window, never lends a checked-in holder's seat, cleared on sale, price follows the cap), paying a club-approved vendor from the seat (unapproved, listed, over-limit and failed payments), renewal saving (set aside, capped at the season price, cleared on sale), seat categories (prices, weighted split that never over-distributes, per-category caps, migration from the equal-split layout), sale mid-payout, failed-callback rollback (settle, withdraw, refunds), wrong nonce, old owner locked out, renter locked out after full time, price caps (lend + resale), goal stamps only for checked-in members, advance repaid on sale, double vote blocked, auto-lend cleared on sale, admin bounds |
 | `npm run test:sandbox` | **15** end-to-end tests with real receipts, including: a seat paying a vendor in real tUSDC while its renewal savings stay locked; a VIP seat costing more and earning a bigger share; a fan buying a new membership from the club with tUSDC; vault keyless + global code hash + parent-only; full season on real tUSDC; **sale mid-payout with interleaved receipts**; failed settlement and withdrawal callbacks with a failing token; wrong nonce refunds buyer; renter + old owner locked out; goal stamps; postponement refunds; advance repaid on sale; double vote blocked |
 | `npm run test:js` | Gate pass (fresh OK, screenshot > 30 s rejected, old owner rejected, forged cert rejected), members-only replay and non-holder rejection, relayer allow-list and rate limits |
 
@@ -206,6 +207,7 @@ docs/              THREAT_MODEL.md, ARCHITECTURE.md, SUBMISSION.md
 
 **Layer 2.**
 - ✅ **Auto-lend rules.** The keeper triggers them and the contract re-checks every condition. Rules are cleared on sale.
+- ✅ **Lend every match I miss.** One rule for the whole season: before each home match, a seat whose holder has not checked in is offered at a share of the ticket price. It covers fixtures created after the rule was set. The holder can keep any single match, and taking a seat back stops the rule for that match.
 - ✅ **Advance on future earnings.** Capped; repaid first from every payout and from a sale; withdrawals and transfers blocked while open; recovered at season end.
 - ✅ **Member voting.** Weight is attendance snapshotted at poll start; one vote per membership per poll.
 - 🗺 **Roadmap: shared season ticket.** Splitting one membership into N shares isn't NEP-171 compatible without a separate share-token standard. The threats are recorded (T48–T49) so the design can take it later.

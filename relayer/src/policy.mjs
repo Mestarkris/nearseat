@@ -4,7 +4,7 @@
 export const ALLOWED_METHODS = new Set([
   // nearseat
   "withdraw", "lend", "cancel_lend", "list", "delist", "claim", "borrow", "vote",
-  "set_autolend", "clear_autolend", "settle", "nft_transfer",
+  "set_autolend", "clear_autolend", "set_season_autolend", "clear_season_autolend", "skip_autolend", "settle", "nft_transfer",
   // tusdc
   "ft_transfer_call", "storage_deposit", "faucet",
 ]);

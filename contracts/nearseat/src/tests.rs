@@ -1149,3 +1149,162 @@ fn only_the_holder_can_change_renewal_saving() {
     e.call(BOB, 1);
     c.set_renewal_saving(tid(SEAT_A), 5_000);
 }
+
+// ---------- season auto-lend rule (set once, every match) ----------
+
+fn season_rule(c: &mut NearSeat, e: &Env, hours: u32, bps: u16) {
+    e.call(ALICE, 1);
+    c.set_season_autolend(tid(SEAT_A), hours, bps);
+}
+
+fn keeper(e: &Env) {
+    e.call(CAROL, 0);
+}
+
+#[test]
+fn season_rule_lends_matches_created_after_it_was_set() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    season_rule(&mut c, &e, 2, 10_000);
+    let first = new_match(&mut c, &e); // kicks off in 1 hour: inside the 2-hour window
+    let second = new_match(&mut c, &e);
+    let due = c.season_autolend_due(None);
+    assert_eq!(due.len(), 2, "both fixtures are due, though the rule was set before either existed");
+    keeper(&e);
+    c.execute_season_autolend(tid(SEAT_A), first);
+    let face = Category::of_seat(SEAT_A).price(15 * ONE);
+    assert!(matches!(c.loan_of(tid(SEAT_A), first), Some(Loan::Offered { price, .. }) if price.0 == face));
+    let due = c.season_autolend_due(None);
+    assert_eq!((due.len(), due[0].match_id), (1, second), "a seat already on offer is no longer due");
+}
+
+#[test]
+#[should_panic(expected = "too early: the rule's window hasn't started")]
+fn season_rule_waits_for_its_window() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    season_rule(&mut c, &e, 1, 10_000);
+    club(&e);
+    let m = c.create_match("Lagos City".into(), "League".into(), U64(e.now + 5 * HOUR), U128(15 * ONE), None, None);
+    assert!(c.season_autolend_due(None).is_empty());
+    keeper(&e);
+    c.execute_season_autolend(tid(SEAT_A), m);
+}
+
+#[test]
+#[should_panic(expected = "you already checked in for this match")]
+fn season_rule_never_lends_a_seat_whose_holder_is_inside() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    season_rule(&mut c, &e, 2, 10_000);
+    let m = new_match(&mut c, &e);
+    e.call(GATE, 0);
+    c.check_in(tid(SEAT_A), m, a(ALICE));
+    assert!(c.season_autolend_due(None).is_empty());
+    keeper(&e);
+    c.execute_season_autolend(tid(SEAT_A), m);
+}
+
+#[test]
+#[should_panic(expected = "the holder is keeping the seat for this match")]
+fn taking_the_seat_back_stops_the_rule_for_that_match() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    season_rule(&mut c, &e, 2, 10_000);
+    let m = new_match(&mut c, &e);
+    keeper(&e);
+    c.execute_season_autolend(tid(SEAT_A), m);
+    e.call(ALICE, 1);
+    c.cancel_lend(tid(SEAT_A), m); // "I'm coming after all"
+    assert!(c.season_autolend_due(None).is_empty());
+    keeper(&e);
+    c.execute_season_autolend(tid(SEAT_A), m);
+}
+
+#[test]
+fn holder_can_keep_one_match_and_release_it_again() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    season_rule(&mut c, &e, 2, 10_000);
+    let m = new_match(&mut c, &e);
+    e.call(ALICE, 1);
+    c.skip_autolend(tid(SEAT_A), m, true);
+    assert!(c.season_autolend_due(None).is_empty());
+    assert_eq!(c.season_autolend(tid(SEAT_A)).unwrap().skip, vec![m]);
+    c.skip_autolend(tid(SEAT_A), m, false);
+    assert_eq!(c.season_autolend_due(None).len(), 1);
+}
+
+#[test]
+#[should_panic(expected = "no season rule on this seat")]
+fn season_rule_is_cleared_when_the_seat_changes_hands() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    season_rule(&mut c, &e, 2, 10_000);
+    let m = new_match(&mut c, &e);
+    e.call(ALICE, 1);
+    c.nft_transfer(a(BOB), tid(SEAT_A), None, None);
+    assert!(c.membership(tid(SEAT_A)).unwrap().season_autolend.is_none());
+    assert!(c.season_autolend_due(None).is_empty());
+    keeper(&e);
+    c.execute_season_autolend(tid(SEAT_A), m);
+}
+
+#[test]
+#[should_panic(expected = "only the current holder can do this")]
+fn only_the_holder_can_set_a_season_rule() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    e.call(BOB, 1);
+    c.set_season_autolend(tid(SEAT_A), 2, 10_000);
+}
+
+#[test]
+#[should_panic(expected = "price must be between 10% of the ticket price and the club's lend cap")]
+fn season_rule_price_cannot_exceed_the_lend_cap() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    season_rule(&mut c, &e, 2, 15_001);
+}
+
+#[test]
+fn season_rule_price_follows_a_lowered_cap() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    season_rule(&mut c, &e, 2, 15_000);
+    club(&e);
+    let mut cfg = c.season().config;
+    cfg.lend_cap_bps = 10_000;
+    c.set_config(cfg);
+    let m = new_match(&mut c, &e);
+    keeper(&e);
+    c.execute_season_autolend(tid(SEAT_A), m);
+    let face = Category::of_seat(SEAT_A).price(15 * ONE);
+    assert!(matches!(c.loan_of(tid(SEAT_A), m), Some(Loan::Offered { price, .. }) if price.0 == face));
+}
+
+#[test]
+#[should_panic(expected = "this match has its own rule")]
+fn a_rule_for_one_match_takes_priority_over_the_season_rule() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    season_rule(&mut c, &e, 2, 10_000);
+    let m = new_match(&mut c, &e);
+    e.call(ALICE, 1);
+    c.set_autolend(tid(SEAT_A), m, 1, U128(5 * ONE));
+    keeper(&e);
+    c.execute_season_autolend(tid(SEAT_A), m);
+}
+
+#[test]
+#[should_panic(expected = "vault is frozen while listed")]
+fn season_rule_does_not_fire_while_the_seat_is_for_sale() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    season_rule(&mut c, &e, 2, 10_000);
+    let m = new_match(&mut c, &e);
+    list(&mut c, &e, 100 * ONE);
+    assert!(c.season_autolend_due(None).is_empty());
+    keeper(&e);
+    c.execute_season_autolend(tid(SEAT_A), m);
+}

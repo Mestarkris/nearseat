@@ -60,6 +60,8 @@ export interface Membership {
   };
   loans: { match_id: number; loan: Loan }[];
   autolend_rules: { match_id: number; hours_before: number; price: string; owner: string }[];
+  /** "Lend every match I miss": price is a share of the ticket price, in basis points. */
+  season_autolend: { hours_before: number; price_bps: number; owner: string; skip: number[] } | null;
   history_len: number;
   /** Share of each payout set aside for renewal, in basis points (0 = off). */
   renewal_bps: number;

@@ -48,6 +48,11 @@ export async function tick() {
       if (now >= opensAt) await tryCall("execute_autolend", { token_id: mem.token_id, match_id: rule.match_id }, 50n * TGAS);
     }
   }
+
+  // Season rules ("lend every match I miss"): the contract lists exactly the seats that are due.
+  for (const due of await view(CONTRACT, "season_autolend_due", { limit: 20 })) {
+    await tryCall("execute_season_autolend", due, 50n * TGAS);
+  }
 }
 
 if (import.meta.url === `file://${process.argv[1]}` && process.argv.includes("--once")) {
