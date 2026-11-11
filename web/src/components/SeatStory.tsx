@@ -86,18 +86,18 @@ function Stage({ step }: { step: number }) {
               style={{ "--d": `${(i * 37) % 600}ms` } as CSSProperties} />
           );
         })}
-        <rect className="story-ring" x={seatX(OURS.c)} y={seatY(OURS.r, OURS.c)} width="22" height="17" rx="5" fill="none" stroke="#ead9b5" strokeWidth="1.5" />
-        <rect x={seatX(OURS.c)} y={seatY(OURS.r, OURS.c)} width="22" height="17" rx="5" fill="#ead9b5" />
+        <rect className="story-ring" x={seatX(OURS.c)} y={seatY(OURS.r, OURS.c)} width="22" height="17" rx="5" fill="none" stroke="#9b2545" strokeWidth="1.5" />
+        <rect x={seatX(OURS.c)} y={seatY(OURS.r, OURS.c)} width="22" height="17" rx="5" fill="#9b2545" />
         {COIN_SEATS.map(({ r, c, i }, n) => {
           const x = seatX(c) + 11, y = seatY(r, c) + 8;
-          return <circle key={i} className="story-coin" cx={x} cy={y} r="4" fill="#ead9b5"
+          return <circle key={i} className="story-coin" cx={x} cy={y} r="4" fill="#9b2545"
             style={{ "--tx": `${200 - x}px`, "--ty": `${196 - y}px`, "--d": `${n * 260}ms` } as CSSProperties} />;
         })}
       </svg>
 
       <div className="rounded-2xl border border-lime/50 bg-ink p-4">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-sm text-white/80">The account owned by seat C5-12</span>
+          <span className="text-sm text-fg/80">The account owned by seat C5-12</span>
           <span className="chip shrink-0 text-lime">0 keys</span>
         </div>
         <div className="mono mt-1 truncate text-xs text-muted">seat-c5-12.nearseat.testnet</div>
@@ -171,7 +171,7 @@ export function SeatStory() {
         </div>
         <div className="mt-4 min-h-44">
           <h3 className="text-2xl font-bold">{STEPS[step].title}</h3>
-          <p className="mt-2 text-white/75">{STEPS[step].body}</p>
+          <p className="mt-2 text-fg/75">{STEPS[step].body}</p>
         </div>
       </div>
     );
@@ -185,7 +185,7 @@ export function SeatStory() {
             className={`flex min-h-[78vh] flex-col justify-center transition-opacity duration-500 ${i === step ? "opacity-100" : "opacity-30"}`}>
             <div className="font-number text-7xl leading-none text-lime">{i + 1}</div>
             <h3 className="mt-3 text-4xl font-extrabold">{s.title}</h3>
-            <p className="mt-4 max-w-md text-lg text-white/75">{s.body}</p>
+            <p className="mt-4 max-w-md text-lg text-fg/75">{s.body}</p>
           </li>
         ))}
       </ol>

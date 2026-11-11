@@ -37,7 +37,7 @@ function Figure({ label, value, unit, digits = 0 }: { label: string; value: numb
       <dd className="font-number text-5xl leading-none tabular-nums sm:text-6xl">
         {v.toFixed(digits)}{unit && <span className="ml-1.5 font-sans text-sm font-medium text-muted">{unit}</span>}
       </dd>
-      <dt className="mt-1 text-sm text-white/70">{label}</dt>
+      <dt className="mt-1 text-sm text-fg/70">{label}</dt>
     </div>
   );
 }
@@ -71,13 +71,13 @@ function Statement({ m, matches, season, history }: { m: Membership; matches: Ma
           <div className="pitch absolute inset-0 opacity-30" aria-hidden />
           <div className="relative">
             <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3"><Crest size={44} /><div><div className="font-display font-bold">Illia Stars United</div><div className="text-sm text-white/70">Season statement, {season.name}</div></div></div>
+              <div className="flex items-center gap-3"><Crest size={44} /><div><div className="font-display font-bold">Illia Stars United</div><div className="text-sm text-fg/70">Season statement, {season.name}</div></div></div>
               <span className={`shrink-0 rounded-full border border-current px-3 py-1 text-xs font-bold ${CATEGORIES[m.category].text}`}>{CATEGORIES[m.category].label}</span>
             </div>
             <h1 className="mt-7 font-number text-6xl leading-[0.9] tracking-wide sm:text-8xl">
               {seat.stand} stand<br /><span className="text-lime">Row {seat.row}, seat {seat.number}</span>
             </h1>
-            <p className="mt-4 text-sm text-white/80">Held by <span className="mono break-all text-white">{m.owner_id}</span>. {m.tier} grade, {multiple(m.category)} share of every payout.</p>
+            <p className="mt-4 text-sm text-fg/80">Held by <span className="mono break-all text-fg">{m.owner_id}</span>. {m.tier} grade, {multiple(m.category)} share of every payout.</p>
           </div>
         </header>
 
@@ -99,7 +99,7 @@ function Statement({ m, matches, season, history }: { m: Membership; matches: Ma
           <div className="mt-8 rounded-2xl border border-lime/50 bg-ink p-4">
             <div className="font-display text-lg font-bold">This seat has earned {pct >= 100 ? "all" : `${pct.toFixed(pct < 10 ? 1 : 0)}%`} of next season's price</div>
             <div className="mt-3"><Progress value={Number(earned)} max={Number(price)} label={`${usd(earned)} of ${usd(price, 0)} tUSDC`} right={`${usd(m.vault_balance)} in the seat now`} /></div>
-            {BigInt(m.renewal_saved) > 0n && <p className="mt-2 text-sm text-white/80">{usd(m.renewal_saved)} tUSDC is set aside for renewal ({m.renewal_bps / 100}% of each payout).</p>}
+            {BigInt(m.renewal_saved) > 0n && <p className="mt-2 text-sm text-fg/80">{usd(m.renewal_saved)} tUSDC is set aside for renewal ({m.renewal_bps / 100}% of each payout).</p>}
           </div>
 
           {m.goal_stamps.length > 0 && (
@@ -117,7 +117,7 @@ function Statement({ m, matches, season, history }: { m: Membership; matches: Ma
                 const goals = m.goal_stamps.filter((g) => g.match_id === x.id).length;
                 return (
                   <li key={x.id} className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-0.5 py-3">
-                    <span className="font-semibold">v {x.opponent} <span className="ml-1 font-number text-lg text-white/80">{x.home_goals}–{x.away_goals}</span></span>
+                    <span className="font-semibold">v {x.opponent} <span className="ml-1 font-number text-lg text-fg/80">{x.home_goals}–{x.away_goals}</span></span>
                     <span className={`text-right font-semibold ${there ? "text-lime" : lentFor.has(x.id) ? "text-sky" : "text-muted"}`}>{there ? "In the seat" : lentFor.has(x.id) ? "Lent out" : "Not checked in"}</span>
                     <span className="text-xs text-muted">{nsToDate(x.kickoff_at).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}</span>
                     <span className="text-right text-xs text-muted">{goals > 0 ? `${goals} goal ${goals === 1 ? "stamp" : "stamps"}` : ""}</span>
@@ -129,7 +129,7 @@ function Statement({ m, matches, season, history }: { m: Membership; matches: Ma
         </div>
 
         <footer className="border-t border-line px-5 py-4 text-xs text-muted sm:px-9">
-          Read from <span className="mono text-white/80">{config.contractId}</span> on {new Date().toLocaleString()}. The seat's own account is <span className="mono break-all text-white/80">{m.vault}</span>.
+          Read from <span className="mono text-fg/80">{config.contractId}</span> on {new Date().toLocaleString()}. The seat's own account is <span className="mono break-all text-fg/80">{m.vault}</span>.
         </footer>
       </article>
 

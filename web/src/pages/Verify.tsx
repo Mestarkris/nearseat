@@ -48,7 +48,7 @@ function History({ tokenId }: { tokenId: string }) {
   return (
     <div>
       <h1 className="text-3xl font-extrabold sm:text-5xl">{m.token_id} · public history</h1>
-      <p className="mt-2 text-white/70">What it earned, what it paid out, and who held it. No wallet needed.</p>
+      <p className="mt-2 text-fg/70">What it earned, what it paid out, and who held it. No wallet needed.</p>
       <a className="btn-ghost mt-4" href={`#/statement/${m.token_id}`}>Season statement</a>
       <div className="mt-6 grid gap-6 lg:grid-cols-[340px_1fr]">
         <div className="space-y-6">

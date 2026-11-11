@@ -1,19 +1,23 @@
 @import "tailwindcss";
 
-/* NearSeat design tokens. `lime` is the light accent (beige) for text and outlines; `wine` is the burgundy used for filled buttons and highlights. */
+/* NearSeat design tokens. Beige and white, with burgundy for filled buttons and highlights. */
 @theme {
-  --color-ink: #140d10;
-  --color-card: #1c1317;
-  --color-card-2: #241920;
-  --color-line: #3a2a31;
-  --color-muted: #a8999d;
-  --color-lime: #ead9b5;
-  --color-lime-ink: #140d10;
+  /* Light theme: a beige page, white cards, near-black burgundy text.
+     Names are roles kept from the first (dark) design: `ink` is the page,
+     `fg` is the text, `lime` is the accent for text and outlines. */
+  --color-ink: #f3ead8;
+  --color-card: #ffffff;
+  --color-card-2: #faf5ea;
+  --color-line: #e1d4ba;
+  --color-fg: #24151a;
+  --color-muted: #6e5f64;
+  --color-lime: #8a1f3d;
+  --color-lime-ink: #ffffff;
   --color-wine: #9b2545;
-  --color-wine-ink: #f5ead2;
-  --color-sky: #7ea6d6;
-  --color-danger: #ee7262;
-  --color-warn: #e3b45c;
+  --color-wine-ink: #fbf3e2;
+  --color-sky: #2c5f9e;
+  --color-danger: #b3261e;
+  --color-warn: #8a5a00;
 
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Inter Tight", "Inter", ui-sans-serif, system-ui, sans-serif;
@@ -23,9 +27,9 @@
 }
 
 @layer base {
-  html { color-scheme: dark; -webkit-text-size-adjust: 100%; }
+  html { color-scheme: light; -webkit-text-size-adjust: 100%; }
   body {
-    @apply bg-ink text-white font-sans antialiased;
+    @apply bg-ink text-fg font-sans antialiased;
     min-height: 100dvh;
     -webkit-tap-highlight-color: transparent;
   }
@@ -45,9 +49,9 @@
 @utility card { @apply bg-card border border-line rounded-[var(--radius-card)]; }
 @utility card-glow {
   @apply rounded-[var(--radius-card)];
-  background: linear-gradient(180deg, #2b121b 0%, var(--color-card) 55%);
-  border: 1px solid #7d2a41;
-  box-shadow: 0 16px 40px -20px rgb(155 37 69 / 0.45);
+  background: linear-gradient(180deg, #fbf1e4 0%, var(--color-card) 55%);
+  border: 1px solid rgb(155 37 69 / .45);
+  box-shadow: 0 18px 40px -24px rgb(155 37 69 / 0.4);
 }
 @utility pill { @apply inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors; }
 @utility btn-primary {
@@ -62,10 +66,11 @@
   &:disabled { animation: none; box-shadow: none; }
 }
 @utility btn-ghost {
-  @apply pill border border-line text-white hover:bg-card-2 disabled:opacity-50;
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / .05), 0 0 12px -5px rgb(234 217 181 / .14);
+  @apply pill border border-line text-fg hover:bg-card-2 disabled:opacity-50;
+  background-color: var(--color-card);
+  box-shadow: 0 1px 2px rgb(36 21 26 / .06);
   transition: box-shadow .2s ease, border-color .2s ease, background-color .2s ease;
-  &:hover:not(:disabled) { border-color: rgb(234 217 181 / .35); box-shadow: inset 0 1px 0 rgb(255 255 255 / .07), 0 0 16px -4px rgb(234 217 181 / .26); }
+  &:hover:not(:disabled) { border-color: rgb(155 37 69 / .45); box-shadow: 0 2px 8px -2px rgb(155 37 69 / .2); }
   &:disabled { box-shadow: none; }
 }
 @utility btn-danger { @apply pill border border-warn/60 text-warn hover:bg-warn/10 disabled:opacity-50; }
@@ -100,8 +105,8 @@
 .marquee:hover .marquee-track { animation-play-state: paused; }
 
 /* Seat story: one stage, four states driven by data-step. */
-.story-seat { fill: #2a1f24; transition: fill .5s ease; transition-delay: var(--d, 0ms); }
-.story[data-filled="true"] .story-seat[data-sold] { fill: #6e6266; }
+.story-seat { fill: #e8dcc5; transition: fill .5s ease; transition-delay: var(--d, 0ms); }
+.story[data-filled="true"] .story-seat[data-sold] { fill: #b7a68b; }
 @keyframes coin { 0% { transform: translate(0, 0); opacity: 0; } 12% { opacity: 1; } 80% { opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)); opacity: 0; } }
 .story-coin { opacity: 0; }
 .story[data-step="1"] .story-coin { animation: coin 2.4s cubic-bezier(.5,0,.3,1) infinite; animation-delay: var(--d, 0ms); }
@@ -133,7 +138,7 @@ details.faq[open] .faq-plus { transform: rotate(45deg); }
 @keyframes seat-wave { 0%, 100% { transform: none; filter: none; } 40% { transform: scale(1.75); filter: brightness(2); } }
 .map-wave .seat { animation: seat-wave .5s ease-out var(--wd, 0ms) both; }
 /* Full time: coins leave the centre circle for every member's seat. */
-.payout-coin { position: absolute; left: 0; top: 0; border-radius: 9999px; background: var(--color-lime); box-shadow: 0 0 10px rgb(234 217 181 / .7); pointer-events: none; opacity: 0; }
+.payout-coin { position: absolute; left: 0; top: 0; border-radius: 9999px; background: var(--color-lime); box-shadow: 0 0 10px rgb(155 37 69 / .5); pointer-events: none; opacity: 0; }
 /* Goal stamp, pressed onto the card like ink. */
 .stamp { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 9999px; border: 1.5px solid currentColor; outline: 1px solid currentColor; outline-offset: -4px; font-size: 10px; font-weight: 800; line-height: 1; color: var(--color-lime); opacity: .9; transform: rotate(var(--r, -8deg)); }
 @keyframes stamp-press { 0% { opacity: 0; transform: rotate(-24deg) scale(2.6); } 55% { opacity: 1; transform: rotate(var(--r, -8deg)) scale(.86); } 100% { opacity: .9; transform: rotate(var(--r, -8deg)) scale(1); } }

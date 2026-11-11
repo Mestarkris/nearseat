@@ -44,7 +44,7 @@ export function MembersOnlyPage() {
   return (
     <div className="mx-auto max-w-2xl">
       <h1 className="text-4xl font-extrabold">Members only</h1>
-      <p className="mt-2 text-white/70">Opens only for the current holder. Your wallet signs a one-time message; the server checks it and the live owner on-chain on every visit.</p>
+      <p className="mt-2 text-fg/70">Opens only for the current holder. Your wallet signs a one-time message; the server checks it and the live owner on-chain on every visit.</p>
       <div className="mt-4 flex gap-2">
         <input className="input" value={token} onChange={(e) => setTokenId(e.target.value)} aria-label="Membership to prove" />
         <button className="btn-primary" onClick={open} disabled={busy}>{busy ? "Checking…" : "Open"}</button>

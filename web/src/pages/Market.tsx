@@ -22,7 +22,7 @@ export function MarketPage() {
   return (
     <div>
       <h1 className="text-4xl font-extrabold sm:text-5xl">Membership market</h1>
-      <p className="mt-2 max-w-3xl text-white/70">
+      <p className="mt-2 max-w-3xl text-fg/70">
         Buy a season membership second-hand. You get the seat, its account balance, remaining passes, attendance record and gate access in one transaction.
         Every listing is capped at {d.data!.season.config.resale_cap_bps / 100}% of what a seat of its category costs from the club, so touts can't gouge.
       </p>

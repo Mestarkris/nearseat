@@ -26,7 +26,7 @@ export function Landing({ section }: { section?: string }) {
       <section id="how" className={`${wrap} scroll-mt-24 py-20 sm:py-28`}>
         <Reveal>
           <h2 className="max-w-3xl text-4xl font-extrabold sm:text-6xl">One seat, followed through a season</h2>
-          <p className="mt-4 max-w-2xl text-lg text-white/70">Scroll to follow seat C5-12 from the day it is bought to the day it is sold.</p>
+          <p className="mt-4 max-w-2xl text-lg text-fg/70">Scroll to follow seat C5-12 from the day it is bought to the day it is sold.</p>
         </Reveal>
         <div className="mt-10 lg:mt-0"><SeatStory /></div>
       </section>
@@ -58,14 +58,14 @@ function Hero() {
           <span className="rise-line"><span>Your seat</span></span>
           <span className="rise-line"><span style={{ "--d": "110ms" } as CSSProperties}>now <span className="text-lime">earns.</span></span></span>
         </h1>
-        <p className="hero-fade mt-6 max-w-xl text-lg text-white/80">
+        <p className="hero-fade mt-6 max-w-xl text-lg text-fg/80">
           A season membership that owns a real NEAR account. It collects a share of every ticket the club sells,
           can be lent for a match you'll miss, and opens the gate. Sell it, and everything inside goes to the buyer.
         </p>
         <div className="hero-fade mt-8 flex flex-wrap items-center gap-3">
           <a href="#/join" className="btn-primary px-6 py-3 text-base">Become a member</a>
           <a href="#/how" className="btn-ghost px-6 py-3 text-base">See how it works</a>
-          <a href="#/whitepaper" className="px-3 py-3 text-sm text-white/70 underline decoration-line underline-offset-4 hover:text-white">Read the whitepaper</a>
+          <a href="#/whitepaper" className="px-3 py-3 text-sm text-fg/70 underline decoration-line underline-offset-4 hover:text-fg">Read the whitepaper</a>
         </div>
       </div>
       <div className="hero-settle mx-auto w-full max-w-sm" onPointerMove={tilt} onPointerLeave={level}>
@@ -91,7 +91,7 @@ function Ticker() {
   });
   if (items.length < 3) return null;
   const run = (hidden: boolean) => items.map((it) => (
-    <span key={`${hidden}${it.key}`} aria-hidden={hidden} className="flex items-center gap-3 whitespace-nowrap px-6 text-sm text-white/70">
+    <span key={`${hidden}${it.key}`} aria-hidden={hidden} className="flex items-center gap-3 whitespace-nowrap px-6 text-sm text-fg/70">
       <span className="size-1.5 rounded-full bg-wine" />{it.text}
     </span>
   ));
@@ -125,8 +125,8 @@ function Problem() {
           <Reveal key={when} delay={i * 70}>
             <div className="grid gap-x-6 gap-y-2 border-t border-line py-6 md:grid-cols-[1fr_1.3fr_1.3fr]">
               <h3 className="text-xl font-bold">{when}</h3>
-              <p className="text-white/50 line-through decoration-white/25">{now}</p>
-              <p className="text-white/90">{then}</p>
+              <p className="text-fg/50 line-through decoration-fg/25">{now}</p>
+              <p className="text-fg/90">{then}</p>
             </div>
           </Reveal>
         ))}
@@ -142,7 +142,7 @@ function Score({ value, digits = 0, label, run, delay }: { value: number; digits
   return (
     <div className="px-5 py-6 sm:px-6">
       <div className="font-number text-6xl leading-none text-lime tabular-nums sm:text-7xl">{v.toFixed(digits)}</div>
-      <div className="mt-2 text-sm text-white/70">{label}</div>
+      <div className="mt-2 text-sm text-fg/70">{label}</div>
     </div>
   );
 }
@@ -164,7 +164,7 @@ function Proof() {
       <div className={`${wrap} py-20 sm:py-28`}>
         <Reveal>
           <h2 className="max-w-3xl text-4xl font-extrabold sm:text-6xl">Don't take our word for it</h2>
-          <p className="mt-4 max-w-2xl text-lg text-white/70">
+          <p className="mt-4 max-w-2xl text-lg text-fg/70">
             These numbers are read from the contract as this page loads. Every seat account, payout and past holder is public, and you can check any of it without a wallet.
           </p>
         </Reveal>
@@ -215,7 +215,7 @@ function Roadmap() {
               <h3 className="text-2xl font-bold">{stage}</h3>
             </div>
             <p className="mt-1 text-sm text-muted">{when}</p>
-            <ul className="mt-4 space-y-3 text-white/80">
+            <ul className="mt-4 space-y-3 text-fg/80">
               {items.map((it) => <li key={it}>{it}</li>)}
             </ul>
           </Reveal>
@@ -242,7 +242,7 @@ function Faq() {
       <div className={`${wrap} grid gap-10 py-20 sm:py-28 lg:grid-cols-[1fr_1.6fr]`}>
         <Reveal>
           <h2 className="text-4xl font-extrabold sm:text-6xl">Questions fans ask</h2>
-          <p className="mt-4 text-white/70">More detail is in the <a className="text-lime" href="#/whitepaper">whitepaper</a>.</p>
+          <p className="mt-4 text-fg/70">More detail is in the <a className="text-lime" href="#/whitepaper">whitepaper</a>.</p>
         </Reveal>
         <Reveal delay={100}>
           {FAQ.map(([q, a]) => (
@@ -251,7 +251,7 @@ function Faq() {
                 {q}
                 <svg className="faq-plus shrink-0 text-lime" width="20" height="20" viewBox="0 0 20 20" aria-hidden><path d="M10 3v14M3 10h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
               </summary>
-              <p className="mt-3 max-w-2xl text-white/75">{a}</p>
+              <p className="mt-3 max-w-2xl text-fg/75">{a}</p>
             </details>
           ))}
         </Reveal>
@@ -268,7 +268,7 @@ function JoinCta() {
           <h2 className="font-number text-6xl font-normal leading-[0.9] tracking-normal sm:text-8xl">Pick your seat.</h2>
           <p className="mt-4 max-w-xl text-lg font-medium">Choose a free seat in Stars Arena, pay the season price in test tUSDC, and watch its account appear on chain.</p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <a href="#/join" className="pill bg-ink px-6 py-3 text-base font-semibold text-white hover:bg-card">Become a member</a>
+            <a href="#/join" className="pill bg-ink px-6 py-3 text-base font-semibold text-fg hover:bg-card">Become a member</a>
             <a href="#/matches" className="pill border border-ink/40 px-6 py-3 text-base font-semibold hover:bg-ink/10">Buy a single match ticket</a>
           </div>
         </div>

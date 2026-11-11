@@ -32,7 +32,7 @@ function S({ id, n, title, children }: { id: string; n: number; title: string; c
       <h2 className="flex items-baseline gap-4 text-2xl font-extrabold sm:text-3xl">
         <span className="font-number text-3xl font-normal text-lime sm:text-4xl">{n}</span>{title}
       </h2>
-      <div className="mt-4 space-y-4 text-[17px] leading-relaxed text-white/80">{children}</div>
+      <div className="mt-4 space-y-4 text-[17px] leading-relaxed text-fg/80">{children}</div>
     </section>
   );
 }
@@ -60,7 +60,7 @@ export function WhitepaperPage() {
       <aside className="no-print hidden lg:block">
         <nav className="sticky top-24 space-y-1 text-sm" aria-label="Whitepaper sections">
           {SECTIONS.map(([id, title], i) => (
-            <button key={id} onClick={() => go(id)} className="flex w-full gap-3 rounded-lg px-2 py-1.5 text-left text-muted hover:bg-card hover:text-white">
+            <button key={id} onClick={() => go(id)} className="flex w-full gap-3 rounded-lg px-2 py-1.5 text-left text-muted hover:bg-card hover:text-fg">
               <span className="w-4 text-lime">{i + 1}</span>{title}
             </button>
           ))}
@@ -134,7 +134,7 @@ export function WhitepaperPage() {
               <dl className="overflow-hidden rounded-2xl border border-line text-base">
                 {params.map(([k, v]) => (
                   <div key={k} className="flex flex-wrap justify-between gap-x-6 gap-y-1 border-b border-line px-4 py-3 last:border-b-0">
-                    <dt className="text-white/70">{k}</dt><dd className="font-semibold text-white">{v}</dd>
+                    <dt className="text-fg/70">{k}</dt><dd className="font-semibold text-fg">{v}</dd>
                   </div>
                 ))}
               </dl>
@@ -149,9 +149,9 @@ export function WhitepaperPage() {
           </S>
 
           <S id="roadmap" n={++n} title="Roadmap">
-            <p><b className="text-white">Live now:</b> everything described above, including seat categories with their own prices and share of earnings.</p>
-            <p><b className="text-white">Next:</b> category perks at the gate such as lounge access, shared tickets for groups, and sponsor rewards paid straight into seat accounts.</p>
-            <p><b className="text-white">Later:</b> an independent audit, a mainnet launch with a regulated stablecoin alongside a real club, and support for several clubs and seasons on the same contracts.</p>
+            <p><b className="text-fg">Live now:</b> everything described above, including seat categories with their own prices and share of earnings.</p>
+            <p><b className="text-fg">Next:</b> category perks at the gate such as lounge access, shared tickets for groups, and sponsor rewards paid straight into seat accounts.</p>
+            <p><b className="text-fg">Later:</b> an independent audit, a mainnet launch with a regulated stablecoin alongside a real club, and support for several clubs and seasons on the same contracts.</p>
           </S>
         </div>
       </article>

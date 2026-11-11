@@ -16,7 +16,7 @@ import { ErrorBox, LiveBadge, Loading, Progress, Section, Stat } from "../compon
 const STATUS_STYLE: Record<string, string> = {
   Scheduled: "bg-sky/20 text-sky",
   Live: "bg-wine text-ink",
-  Finished: "bg-white/10 text-white",
+  Finished: "bg-fg/10 text-fg",
   Postponed: "bg-warn/20 text-warn",
 };
 
@@ -34,7 +34,7 @@ export function ClubPage() {
   return (
     <div>
       <h1 className="text-4xl font-extrabold sm:text-5xl">Illia Stars United · Club dashboard</h1>
-      <p className="mt-2 text-white/70">Ticket sales, member payouts and refunds, settled in stablecoins with no spreadsheets.</p>
+      <p className="mt-2 text-fg/70">Ticket sales, member payouts and refunds, settled in stablecoins with no spreadsheets.</p>
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Ticket revenue this season" value={`${usd(revenue, 0)} tUSDC`} sub={`${matches.length} fixtures`} />
         <Stat label="Paid to member accounts" value={usd(season.pool_total_distributed, 0)} sub={`${season.memberships} memberships`} />

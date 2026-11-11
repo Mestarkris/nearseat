@@ -59,7 +59,7 @@ function Nav({ route }: { route: string }) {
               key={href}
               href={`#/${href}`}
               aria-current={route === href ? "page" : undefined}
-              className={`rounded-full px-4 py-1.5 text-sm ${route === href ? "bg-card-2 text-white" : "text-muted hover:text-white"}`}
+              className={`rounded-full px-4 py-1.5 text-sm ${route === href ? "bg-card-2 text-fg" : "text-muted hover:text-fg"}`}
             >
               {label}
             </a>
@@ -79,7 +79,7 @@ function Nav({ route }: { route: string }) {
             key={href}
             href={`#/${href}`}
             aria-current={route === href ? "page" : undefined}
-            className={`shrink-0 rounded-full px-3 py-1.5 text-sm ${route === href ? "bg-card-2 text-white" : "text-muted"}`}
+            className={`shrink-0 rounded-full px-3 py-1.5 text-sm ${route === href ? "bg-card-2 text-fg" : "text-muted"}`}
           >
             {label}
           </a>

@@ -57,7 +57,7 @@ export function JoinPage() {
   return (
     <div>
       <h1 className="text-4xl font-extrabold sm:text-5xl">Become a season member</h1>
-      <p className="mt-2 max-w-3xl text-white/70">
+      <p className="mt-2 max-w-3xl text-fg/70">
         Pick your seat for the {season.name} season. Your membership is an NFT that owns its own NEAR account: it earns from every match and
         moves with the NFT if you ever sell. {left > 0 ? `${left} memberships left.` : "Sold out."}
       </p>
@@ -74,7 +74,7 @@ export function JoinPage() {
           {bought && !pick && (
             <div className="mt-4 rounded-2xl border border-lime/60 bg-wine/10 p-4" role="status">
               <div className="font-semibold text-lime">✓ Welcome, member! seat-{bought} is yours.</div>
-              <p className="mt-1 text-sm text-white/80">Its own account <span className="mono">seat-{bought}.{config.contractId}</span> was just created, with zero keys.</p>
+              <p className="mt-1 text-sm text-fg/80">Its own account <span className="mono">seat-{bought}.{config.contractId}</span> was just created, with zero keys.</p>
               <a className="btn-primary mt-3" href={`#/member/seat-${bought}`}>Open my membership</a>
             </div>
           )}
@@ -102,7 +102,7 @@ export function JoinPage() {
                 <div className="flex items-start justify-between gap-2 font-semibold"><span>{standName(pick)} · Row {s.row} · Seat {s.number}</span><span className={`shrink-0 rounded-full border border-current px-2 py-0.5 text-[11px] font-bold uppercase ${CATEGORIES[cat!].text}`}>{CATEGORIES[cat!].label}</span></div>
                 <div className="mono text-xs text-muted">seat-{pick}.{config.contractId}</div>
               </div>
-              <ul className="mt-4 space-y-2 text-sm text-white/80">
+              <ul className="mt-4 space-y-2 text-sm text-fg/80">
                 {PERKS.map((p) => <li key={p} className="flex gap-2"><span className="text-lime">✓</span>{p}</li>)}
               </ul>
               <div className="mt-4 flex justify-between border-t border-line pt-3 text-base font-bold"><span>Season price</span><span>{usd(price)} tUSDC</span></div>

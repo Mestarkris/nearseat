@@ -38,7 +38,7 @@ export function PayFromAnyChain({ amount, what }: { amount: bigint; what: string
           <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Token to pay with">
             {PAY_ASSETS.map((x) => (
               <button key={x.id} type="button" role="radio" aria-checked={x.id === asset.id} onClick={() => setAsset(x)}
-                className={`rounded-full border px-2.5 py-1 text-xs transition-colors ${x.id === asset.id ? "border-lime bg-wine text-wine-ink" : "border-line text-muted hover:text-white"}`}>
+                className={`rounded-full border px-2.5 py-1 text-xs transition-colors ${x.id === asset.id ? "border-lime bg-wine text-wine-ink" : "border-line text-muted hover:text-fg"}`}>
                 {x.symbol}<span className="opacity-70"> on {x.chain}</span>
               </button>
             ))}
@@ -60,7 +60,7 @@ export function PayFromAnyChain({ amount, what }: { amount: bigint; what: string
           </div>
           <p className="mt-2 text-xs text-muted">
             A live quote from NEAR Intents (1Click API), which runs on mainnet. This demo is on testnet and takes a test stablecoin, so the payment itself can't be sent from here. On mainnet the USDC lands in your NEAR account and the purchase is one gasless tap.{" "}
-            <button type="button" className="underline hover:text-white" onClick={() => { setState(undefined); setTick(tick + 1); }}>Refresh the price</button>
+            <button type="button" className="underline hover:text-fg" onClick={() => { setState(undefined); setTick(tick + 1); }}>Refresh the price</button>
           </p>
         </div>
       )}

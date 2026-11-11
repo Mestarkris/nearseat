@@ -86,7 +86,7 @@ export function AttackLabPage() {
   return (
     <div>
       <h1 className="text-4xl font-extrabold sm:text-5xl">Attack Lab</h1>
-      <p className="mt-2 max-w-3xl text-white/70">
+      <p className="mt-2 max-w-3xl text-fg/70">
         {ATTACKS.length} attacks against NearSeat, each with the mitigation and the test that proves it. Where a browser wallet can attempt it, press
         <b> Try it on testnet</b>: the transaction is really sent, and you see the contract refuse it. Full model: <code>docs/THREAT_MODEL.md</code>.
       </p>
@@ -100,8 +100,8 @@ export function AttackLabPage() {
             <article key={a.id} className="card p-5">
               <div className="flex items-center justify-between gap-2"><span className="chip">{a.actor}</span><span className="mono text-xs text-muted">{a.id}</span></div>
               <h2 className="mt-3 text-lg font-bold">{a.title}</h2>
-              <p className="mt-1 text-sm text-white/80"><b className="text-danger">Attack:</b> {a.path}</p>
-              <p className="mt-1 text-sm text-white/80"><b className="text-lime">Mitigation:</b> {a.fix}</p>
+              <p className="mt-1 text-sm text-fg/80"><b className="text-danger">Attack:</b> {a.path}</p>
+              <p className="mt-1 text-sm text-fg/80"><b className="text-lime">Mitigation:</b> {a.fix}</p>
               <ul className="mt-2 space-y-0.5 text-xs text-muted">{a.tests.map((t) => <li key={t} className="mono break-all">✓ {t}</li>)}</ul>
               {a.attempt && <button className="btn-ghost mt-3" disabled={r?.state === "busy"} onClick={() => go(a)}>Try it on testnet</button>}
               {r && (

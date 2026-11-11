@@ -22,8 +22,8 @@ const COLOR: Record<State, string> = {
   lent: "bg-wine hover:brightness-110",
   member: "bg-sky/80",
   member_in: "bg-sky",
-  sold: "bg-[#2a1f24]",
-  rented: "bg-[#2a1f24]",
+  sold: "bg-line",
+  rented: "bg-line",
 };
 
 /** Something that just happened on the pitch. A new `id` plays it again. */
@@ -83,7 +83,7 @@ function Block({ code, name, seats, picked, onPick, onMember, readOnly, vertical
                 aria-pressed={opens ? undefined : isPicked}
                 data-member={tokenId ? categoryOf(id) : undefined}
                 style={{ "--wd": `${Math.round(lap(code, n) * 1500 + r * 25)}ms` } as CSSProperties}
-                className={`seat size-[14px] rounded-[3px] sm:size-4 ${opens ? "hover:ring-2 hover:ring-white/70 " : ""}${isPicked ? "bg-white ring-2 ring-lime" : state === "available" ? `${CATEGORIES[categoryOf(id)].swatch} ${COLOR.available}` : COLOR[state]}`}
+                className={`seat size-[14px] rounded-[3px] sm:size-4 ${opens ? "hover:ring-2 hover:ring-fg/70 " : ""}${isPicked ? "bg-fg ring-2 ring-lime" : state === "available" ? `${CATEGORIES[categoryOf(id)].swatch} ${COLOR.available}` : COLOR[state]}`}
               />
             );
           }),
@@ -138,7 +138,7 @@ export function StadiumMap({ seats, picked, onPick, onMember, readOnly, effect }
       );
       flight.onfinish = () => {
         coin.remove();
-        seat.animate([{ transform: "scale(1)" }, { transform: "scale(1.9)", boxShadow: "0 0 0 3px #ead9b5" }, { transform: "scale(1)" }], { duration: 520, easing: "ease-out" });
+        seat.animate([{ transform: "scale(1)" }, { transform: "scale(1.9)", boxShadow: "0 0 0 3px #9b2545" }, { transform: "scale(1)" }], { duration: 520, easing: "ease-out" });
       };
     });
     return () => coins.forEach((coin) => coin.remove());
@@ -153,11 +153,11 @@ export function StadiumMap({ seats, picked, onPick, onMember, readOnly, effect }
         <Block {...n} {...block} far />
         <div className="flex items-center gap-3">
           <Block {...w} {...block} vertical far />
-          <div className="relative h-[240px] w-[260px] overflow-hidden rounded-xl border border-white/20 sm:w-[340px]" aria-hidden>
+          <div className="relative h-[240px] w-[260px] overflow-hidden rounded-xl border border-fg/20 sm:w-[340px]" aria-hidden>
             <div className="pitch absolute inset-0" />
-            <div className="absolute inset-3 rounded border border-white/40" />
-            <div className="absolute inset-y-3 left-1/2 border-l border-white/40" />
-            <div ref={pitch} className="absolute left-1/2 top-1/2 size-14 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/40" />
+            <div className="absolute inset-3 rounded border border-fg/40" />
+            <div className="absolute inset-y-3 left-1/2 border-l border-fg/40" />
+            <div ref={pitch} className="absolute left-1/2 top-1/2 size-14 -translate-x-1/2 -translate-y-1/2 rounded-full border border-fg/40" />
           </div>
           <Block {...e} {...block} vertical />
         </div>
@@ -165,12 +165,12 @@ export function StadiumMap({ seats, picked, onPick, onMember, readOnly, effect }
       </div>
       <ul className="mt-3 flex flex-wrap justify-center gap-4 text-xs text-muted">
         {CATEGORY_ORDER.map((c) => (
-          <li key={c} className="flex items-center gap-2"><span className={`size-3 rounded-sm ${CATEGORIES[c].swatch}`} />{CATEGORIES[c].label} <span className="text-white/50">{multiple(c)}</span></li>
+          <li key={c} className="flex items-center gap-2"><span className={`size-3 rounded-sm ${CATEGORIES[c].swatch}`} />{CATEGORIES[c].label} <span className="text-fg/50">{multiple(c)}</span></li>
         ))}
         {(["lent", "member_in", "sold"] as State[]).map((st) => (
           <li key={st} className="flex items-center gap-2"><span className={`size-3 rounded-sm ${COLOR[st]}`} />{LABEL[st]}</li>
         ))}
-        <li className="flex items-center gap-2"><span className="size-3 rounded-sm bg-white" />Your pick</li>
+        <li className="flex items-center gap-2"><span className="size-3 rounded-sm bg-fg" />Your pick</li>
       </ul>
     </div>
   );

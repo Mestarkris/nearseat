@@ -93,13 +93,13 @@ function PassView({ passes, initial }: { passes: Pass[]; initial: Pass }) {
       <div className="card-glow mt-4 p-6 text-center">
         {!cert ? (
           <>
-            <p className="text-sm text-white/80">Sign once with your wallet. Your phone then shows a code that changes every 5 seconds and expires after 30, so screenshots and forwarded codes don't work.</p>
+            <p className="text-sm text-fg/80">Sign once with your wallet. Your phone then shows a code that changes every 5 seconds and expires after 30, so screenshots and forwarded codes don't work.</p>
             <button className="btn-primary mt-4" onClick={start}>Show my pass</button>
             {error && <p className="mt-3 text-sm text-danger" role="alert">{error}</p>}
           </>
         ) : (
           <>
-            {qr ? <img src={qr} alt="Rotating gate pass QR code" className="mx-auto w-64 rounded-2xl bg-white p-2" /> : <Loading />}
+            {qr ? <img src={qr} alt="Rotating gate pass QR code" className="mx-auto w-64 rounded-2xl border border-line bg-[#fff] p-2" /> : <Loading />}
             <div className="mt-3 font-display text-lg font-bold">{pass.label}</div>
             <div className="mt-1 text-sm text-muted">Refreshes in {Math.max(0, 5 - age)}s · valid 30 s · signed by {cert.accountId}</div>
             <div className="mx-auto mt-3 h-1.5 w-48 rounded-full bg-line"><div className="h-full rounded-full bg-wine transition-[width]" style={{ width: `${Math.max(0, 100 - age * 20)}%` }} /></div>

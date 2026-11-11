@@ -23,7 +23,7 @@ export function Faucet() {
   return (
     <div className="rounded-2xl border border-line p-3 text-sm">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-muted">Your tUSDC: <b className="text-white">{usd(bal.data ?? "0")}</b></span>
+        <span className="text-muted">Your tUSDC: <b className="text-fg">{usd(bal.data ?? "0")}</b></span>
         <button className="btn-ghost py-1" disabled={!!a.busy} onClick={() => a.run("Getting test tUSDC", get, "+250 tUSDC (test token, no value)")}>Get 250 test tUSDC</button>
       </div>
       <ActionStatus a={a} />

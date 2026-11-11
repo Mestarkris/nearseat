@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 export function LiveBadge({ label = "LIVE" }: { label?: string }) {
   return (
-    <span className="chip gap-2 font-semibold text-white">
+    <span className="chip gap-2 font-semibold text-fg">
       <span className="relative flex size-2">
         <span className="absolute inline-flex size-full animate-ping rounded-full bg-wine opacity-60" />
         <span className="relative inline-flex size-2 rounded-full bg-wine" />
@@ -88,10 +88,10 @@ export function Section({ title, right, children, className = "" }: { title: str
 export function Crest({ size = 40 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" role="img" aria-label="NearSeat crest">
-      <path d="M32 5 L52 13 V33 C52 46 43 54 32 59 C21 54 12 46 12 33 V13 Z" fill="none" stroke="#ead9b5" strokeWidth="3.2" strokeLinejoin="round" />
-      <polygon points="32.0,17.0 34.5,23.6 41.5,23.9 36.0,28.3 37.9,35.1 32.0,31.2 26.1,35.1 28.0,28.3 22.5,23.9 29.5,23.6" fill="#ead9b5" />
-      <path d="M21 41 Q32 48 43 41" fill="none" stroke="#ead9b5" strokeWidth="3" strokeLinecap="round" />
-      <path d="M24.5 47.5 Q32 52 39.5 47.5" fill="none" stroke="#ead9b5" strokeWidth="2.2" strokeLinecap="round" opacity="0.6" />
+      <path d="M32 5 L52 13 V33 C52 46 43 54 32 59 C21 54 12 46 12 33 V13 Z" fill="none" stroke="var(--color-lime)" strokeWidth="3.2" strokeLinejoin="round" />
+      <polygon points="32.0,17.0 34.5,23.6 41.5,23.9 36.0,28.3 37.9,35.1 32.0,31.2 26.1,35.1 28.0,28.3 22.5,23.9 29.5,23.6" fill="var(--color-lime)" />
+      <path d="M21 41 Q32 48 43 41" fill="none" stroke="var(--color-lime)" strokeWidth="3" strokeLinecap="round" />
+      <path d="M24.5 47.5 Q32 52 39.5 47.5" fill="none" stroke="var(--color-lime)" strokeWidth="2.2" strokeLinecap="round" opacity="0.6" />
     </svg>
   );
 }

@@ -34,7 +34,7 @@ export function MatchesPage() {
   return (
     <div>
       <h1 className="text-4xl font-extrabold sm:text-5xl">Pick a match, pick your seat</h1>
-      <p className="mt-2 text-white/70">5% of every ticket goes to season members. Burgundy seats are lent by members: buy one and that member's seat account gets paid.</p>
+      <p className="mt-2 text-fg/70">5% of every ticket goes to season members. Burgundy seats are lent by members: buy one and that member's seat account gets paid.</p>
       {open.length === 0 ? <div className="mt-6"><Empty title="No fixtures yet" /></div> : (
         <>
           <div className="mt-5 flex flex-wrap gap-2" role="tablist" aria-label="Fixtures">
@@ -93,7 +93,7 @@ function SeatPicker({ match }: { match: Match }) {
         {bought && !pick && (
           <div className="mt-4 rounded-2xl border border-lime/60 bg-wine/10 p-4" role="status">
             <div className="font-semibold text-lime">✓ Ticket bought: {bought.label}</div>
-            <p className="mt-1 text-sm text-white/80">It's in your wallet as an NFT and shows on your gate pass on match day.</p>
+            <p className="mt-1 text-sm text-fg/80">It's in your wallet as an NFT and shows on your gate pass on match day.</p>
             <div className="mt-3 flex flex-wrap gap-2">
               <a className="btn-primary" href={`#/pass/${bought.passId}`}>Gate pass</a>
               <a className="btn-ghost" href="#/member">My tickets</a>
@@ -175,7 +175,7 @@ function FullTime({ match, seats, payoutPlays, play }: { match: Match; seats: Se
         <div className="text-sm font-semibold">{match.opponent}</div>
       </div>
       <div className="mt-5 rounded-2xl border border-lime/50 bg-ink p-4">
-        <div className="text-sm text-white/80">Paid to members at the whistle</div>
+        <div className="text-sm text-fg/80">Paid to members at the whistle</div>
         <div className="mt-1 flex items-baseline gap-2">
           <span className="font-number text-5xl leading-none text-lime tabular-nums">{paid.toFixed(2)}</span>
           <span className="text-sm text-muted">tUSDC</span>

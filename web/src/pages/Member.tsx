@@ -84,7 +84,7 @@ function Dashboard({ tokenId }: { tokenId: string }) {
     <div>
       {live && <LiveBadge label="MATCHDAY LIVE" />}
       <h1 className="mt-3 text-3xl font-extrabold sm:text-5xl">My membership · {seatLabel(m.seat)}</h1>
-      <p className="mt-2 text-white/70">Every ticket sold today pays into your seat's account in real time.</p>
+      <p className="mt-2 text-fg/70">Every ticket sold today pays into your seat's account in real time.</p>
       {!isHolder && (
         <p className="mt-3 rounded-xl border border-warn/40 bg-warn/10 p-3 text-sm text-warn">
           You're viewing {m.token_id}, held by {m.owner_id}. Actions are disabled. Only the current holder can act.
@@ -165,7 +165,7 @@ function Overview({ m, live, next, season, isHolder }: { m: Membership; live?: M
       <Section title="Live on-chain feed" right={<span className="text-xs text-muted">Read from the contract every 4 s</span>}>
         <Feed limit={6} filter={(_it, d) => !d.token_id || d.token_id === m.token_id || d.match_id !== undefined} />
         <p className="mt-3 rounded-xl bg-ink/70 p-3 text-xs text-muted">
-          At full time: loans end, attendance is final, and your share of the members' pool pays into <span className="mono text-white">{m.vault}</span>.
+          At full time: loans end, attendance is final, and your share of the members' pool pays into <span className="mono text-fg">{m.vault}</span>.
         </p>
       </Section>
 
@@ -287,7 +287,7 @@ function Renewal({ m, isHolder, refresh }: { m: Membership; isHolder: boolean; r
           return (
             <button key={bps} role="radio" aria-checked={on} disabled={!isHolder || on || frozen || !!a.busy}
               onClick={() => a.run("Updating", () => call("set_renewal_saving", { token_id: m.token_id, bps }, { deposit: ONE_YOCTO }), bps ? `${bps / 100}% of each payout will be set aside` : "Saving switched off. Everything set aside is free to use again")}
-              className={`rounded-full border px-2 py-1.5 text-xs font-semibold disabled:cursor-default ${on ? "border-lime bg-wine text-wine-ink" : "border-line text-white enabled:hover:bg-card-2 disabled:opacity-60"}`}>
+              className={`rounded-full border px-2 py-1.5 text-xs font-semibold disabled:cursor-default ${on ? "border-lime bg-wine text-wine-ink" : "border-line text-fg enabled:hover:bg-card-2 disabled:opacity-60"}`}>
               {bps ? `${bps / 100}%` : "Off"}
             </button>
           );
@@ -362,7 +362,7 @@ function SeasonRule({ m, capBps, isHolder, refresh }: { m: Membership; capBps: n
   const [hours, setHours] = useState(rule?.hours_before ?? 24);
   const [bps, setBps] = useState(Math.min(rule?.price_bps ?? 10_000, capBps));
   const prices = [5_000, 7_500, 10_000, 12_500, 15_000].filter((b) => b <= capBps);
-  const pick = (on: boolean) => `rounded-full border px-3 py-1.5 text-sm transition-colors ${on ? "border-lime bg-wine text-wine-ink" : "border-line text-muted hover:text-white"}`;
+  const pick = (on: boolean) => `rounded-full border px-3 py-1.5 text-sm transition-colors ${on ? "border-lime bg-wine text-wine-ink" : "border-line text-muted hover:text-fg"}`;
   if (!isHolder && !rule) return null;
   return (
     <Section title="Lend every match I miss" right={<span className={`chip ${rule ? "border-lime text-lime" : ""}`}>{rule ? "On" : "Off"}</span>}>

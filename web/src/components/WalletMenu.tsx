@@ -6,7 +6,7 @@ import { view } from "../near/rpc";
 import { short } from "../lib/format";
 import type { Membership } from "../lib/types";
 
-const item = "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-white/90 hover:bg-card-2 focus-visible:bg-card-2 focus-visible:outline-none";
+const item = "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-fg/90 hover:bg-card-2 focus-visible:bg-card-2 focus-visible:outline-none";
 
 export function WalletMenu({ accountId }: { accountId: string }) {
   const { signOut } = useWallet();
@@ -48,10 +48,10 @@ export function WalletMenu({ accountId }: { accountId: string }) {
         <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden className={`transition-transform ${open ? "rotate-180" : ""}`}><path d="M1.5 3.5 5 7l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
       </button>
       {open && (
-        <div role="menu" aria-label="Wallet" className="wallet-menu absolute right-0 top-full z-40 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-2xl border border-line bg-card p-1.5 shadow-[0_24px_48px_-16px_rgb(0_0_0/.8)]">
+        <div role="menu" aria-label="Wallet" className="wallet-menu absolute right-0 top-full z-40 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-2xl border border-line bg-card p-1.5 shadow-[0_24px_48px_-16px_rgb(36_21_26/.25)]">
           <div className="px-3 pb-2 pt-2">
             <div className="text-xs text-muted">Connected wallet</div>
-            <div className="mono mt-0.5 break-all text-sm text-white">{accountId}</div>
+            <div className="mono mt-0.5 break-all text-sm text-fg">{accountId}</div>
           </div>
           <div className="border-t border-line pt-1.5">
             <a role="menuitem" href="#/member" className={item}>My membership</a>

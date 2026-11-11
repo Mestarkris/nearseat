@@ -53,7 +53,7 @@ export function SeatPeek({ tokenId, known, onClose }: { tokenId: string; known?:
         <div style={{ viewTransitionName: NAME }} className="min-h-[430px] rounded-[var(--radius-card)]">
           {m ? <MembershipCard m={m} compact /> : <div className="card grid min-h-[430px] place-items-center"><Loading what="Reading the seat" /></div>}
         </div>
-        {m && <p className="mt-3 truncate text-center text-sm text-muted">Held by <span className="text-white">{m.owner_id}</span></p>}
+        {m && <p className="mt-3 truncate text-center text-sm text-muted">Held by <span className="text-fg">{m.owner_id}</span></p>}
         <div className="mt-3 grid grid-cols-3 gap-2">
           <a className="btn-ghost justify-center px-2" href={`#/verify/${tokenId}`}>History</a>
           <a className="btn-ghost justify-center px-2" href={`#/statement/${tokenId}`}>Statement</a>
