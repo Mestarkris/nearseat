@@ -1,4 +1,4 @@
-// Pick a match, pick your seat. Lime seats are lent by members: buying one pays
+// Pick a match, pick your seat. Green seats are lent by members: buying one pays
 // that member's seat account. The other free seats are sold by the club, priced
 // by category.
 import { useEffect, useState } from "react";
@@ -33,7 +33,7 @@ export function MatchesPage() {
   return (
     <div>
       <h1 className="text-4xl font-extrabold sm:text-5xl">Pick a match, pick your seat</h1>
-      <p className="mt-2 text-white/70">5% of every ticket goes to season members. Lime seats are lent by members: buy one and that member's seat account gets paid.</p>
+      <p className="mt-2 text-white/70">5% of every ticket goes to season members. Green seats are lent by members: buy one and that member's seat account gets paid.</p>
       {open.length === 0 ? <div className="mt-6"><Empty title="No fixtures yet" /></div> : (
         <>
           <div className="mt-5 flex flex-wrap gap-2" role="tablist" aria-label="Fixtures">
@@ -99,7 +99,7 @@ function SeatPicker({ match }: { match: Match }) {
             </div>
           </div>
         )}
-        {!pick || !s ? <p className="mt-4 text-sm text-muted">{bought ? "Tap another seat to buy more." : "Tap a free seat on the map. Colour shows the category, and lime seats are lent by members."}</p> : (
+        {!pick || !s ? <p className="mt-4 text-sm text-muted">{bought ? "Tap another seat to buy more." : "Tap a free seat on the map. Colour shows the category, and green seats are lent by members."}</p> : (
           <>
             <div className="mt-4 rounded-2xl border border-line p-3">
               <div className="flex justify-between font-semibold"><span>{standName(pick.seat)} · Row {s.row} · Seat {s.number}</span><span>{usd(price)}</span></div>
