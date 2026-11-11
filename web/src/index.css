@@ -141,3 +141,7 @@ details.faq[open] .faq-plus { transform: rotate(45deg); }
 @keyframes seal-ping { 0% { transform: scale(1); opacity: .8; } 100% { transform: scale(3.2); opacity: 0; } }
 .seal-dot { position: absolute; right: 9%; top: 9%; width: 11%; height: 11%; min-width: 9px; min-height: 9px; border-radius: 9999px; background: #f5ead2; border: 2px solid var(--color-ink); box-shadow: 0 0 10px 2px rgb(245 234 210 / .8); animation: seal-blink 1.4s ease-in-out infinite; }
 .seal-dot > span { position: absolute; inset: -2px; border-radius: 9999px; background: #f5ead2; animation: seal-ping 1.4s ease-out infinite; }
+
+/* Wallet menu drops in from the pill it belongs to. */
+@keyframes menu-in { from { opacity: 0; transform: translateY(-6px) scale(.98); } to { opacity: 1; transform: none; } }
+.wallet-menu { transform-origin: top right; animation: menu-in .16s cubic-bezier(.2,.8,.2,1); }

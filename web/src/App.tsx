@@ -1,7 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useWallet } from "./near/wallet";
 import { config } from "./config";
-import { short } from "./lib/format";
 import { Logo } from "./components/ui";
 import { Landing } from "./pages/Landing";
 import { MemberPage } from "./pages/Member";
@@ -16,6 +15,7 @@ import { AttackLabPage } from "./pages/AttackLab";
 import { JoinPage } from "./pages/Join";
 import { WhitepaperPage } from "./pages/Whitepaper";
 import { StatementPage } from "./pages/Statement";
+import { WalletMenu } from "./components/WalletMenu";
 import { Footer } from "./components/Footer";
 
 /** Tiny hash router: works on any static host (GitHub Pages, Vercel). */
@@ -46,7 +46,7 @@ const NAV = [
 const LANDING_PARTS = ["", "how", "roadmap", "faq"];
 
 function Nav({ route }: { route: string }) {
-  const { accountId, signIn, signOut, ready } = useWallet();
+  const { accountId, signIn, ready } = useWallet();
   return (
     <header className="sticky top-0 z-30 border-b border-line/60 bg-ink/85 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
@@ -66,9 +66,7 @@ function Nav({ route }: { route: string }) {
           ))}
         </nav>
         {accountId ? (
-          <button className="btn-ghost ml-auto lg:ml-0" onClick={signOut} title="Sign out">
-            {short(accountId, 20)}
-          </button>
+          <WalletMenu accountId={accountId} />
         ) : (
           <button className="btn-primary ml-auto lg:ml-0" onClick={signIn} disabled={!ready}>
             Connect wallet
