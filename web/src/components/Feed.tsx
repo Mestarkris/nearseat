@@ -48,7 +48,17 @@ export function describe(event: string, d: Data): { title: string; sub?: string 
     case "vendor_set": return { title: d.name ? `Vendor approved · ${a("name")}` : "Vendor removed", sub: a("account_id") };
     case "renewal_saving_set": return { title: `${a("token_id")} renewal saving`, sub: Number(d.bps) > 0 ? `${Number(d.bps) / 100}% of each payout set aside` : "Switched off" };
     case "match_created": return { title: `Fixture added · v ${a("opponent")}` };
-    default: return { title: event.replaceAll("_", " ") };
+    case "delisted": return { title: `${a("token_id")} taken off the market`, sub: "Withdrawals and lending are open again" };
+    case "membership_bought": return { title: `Membership bought from the club · ${a("token_id")}`, sub: `${money("price")} by ${a("buyer")}` };
+    case "vault_create_failed": return { title: `Seat ${a("seat").toUpperCase()} could not be set up`, sub: d.refunded ? `Payment returned to ${a("refunded")}` : "Nothing was charged" };
+    case "withdraw_started": return { title: `${a("token_id")} is paying out to its holder`, sub: `${money("amount")} to ${a("to")}` };
+    case "ticket_check_in": return { title: `Check-in · ticket ${a("ticket_id")}`, sub: a("holder") };
+    case "autolend_cleared": return { title: `${a("token_id")} lending rule removed`, sub: `match ${a("match_id")}` };
+    case "poll_created": return { title: "New members' vote", sub: a("question") };
+    case "advance_fund_topped_up": return { title: "Club added to the advance fund", sub: money("amount") };
+    case "config_updated": return { title: "Club updated the season rules" };
+    case "gate_rotated": return { title: "Club changed the gate scanner account", sub: a("gate") };
+    default: { const t = event.replaceAll("_", " "); return { title: t.charAt(0).toUpperCase() + t.slice(1) }; }
   }
 }
 
