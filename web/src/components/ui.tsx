@@ -5,8 +5,8 @@ export function LiveBadge({ label = "LIVE" }: { label?: string }) {
   return (
     <span className="chip gap-2 font-semibold text-white">
       <span className="relative flex size-2">
-        <span className="absolute inline-flex size-full animate-ping rounded-full bg-lime opacity-60" />
-        <span className="relative inline-flex size-2 rounded-full bg-lime" />
+        <span className="absolute inline-flex size-full animate-ping rounded-full bg-wine opacity-60" />
+        <span className="relative inline-flex size-2 rounded-full bg-wine" />
       </span>
       {label}
     </span>
@@ -14,7 +14,7 @@ export function LiveBadge({ label = "LIVE" }: { label?: string }) {
 }
 
 export function TierBadge({ tier }: { tier: string }) {
-  return <span className="rounded-full bg-lime px-3 py-1 text-xs font-bold uppercase text-lime-ink">{tier}</span>;
+  return <span className="rounded-full bg-wine px-3 py-1 text-xs font-bold uppercase text-wine-ink">{tier}</span>;
 }
 
 export function Progress({ value, max, label, right }: { value: number; max: number; label?: string; right?: ReactNode }) {
@@ -28,7 +28,7 @@ export function Progress({ value, max, label, right }: { value: number; max: num
         </div>
       )}
       <div className="h-1.5 rounded-full bg-line" role="progressbar" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100} aria-label={label}>
-        <div className="h-full rounded-full bg-lime transition-[width] duration-700" style={{ width: `${pct}%` }} />
+        <div className="h-full rounded-full bg-wine transition-[width] duration-700" style={{ width: `${pct}%` }} />
       </div>
     </div>
   );
@@ -88,10 +88,10 @@ export function Section({ title, right, children, className = "" }: { title: str
 export function Crest({ size = 40 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" role="img" aria-label="NearSeat crest">
-      <path d="M32 5 L52 13 V33 C52 46 43 54 32 59 C21 54 12 46 12 33 V13 Z" fill="none" stroke="#9fe870" strokeWidth="3.2" strokeLinejoin="round" />
-      <polygon points="32.0,17.0 34.5,23.6 41.5,23.9 36.0,28.3 37.9,35.1 32.0,31.2 26.1,35.1 28.0,28.3 22.5,23.9 29.5,23.6" fill="#9fe870" />
-      <path d="M21 41 Q32 48 43 41" fill="none" stroke="#9fe870" strokeWidth="3" strokeLinecap="round" />
-      <path d="M24.5 47.5 Q32 52 39.5 47.5" fill="none" stroke="#9fe870" strokeWidth="2.2" strokeLinecap="round" opacity="0.6" />
+      <path d="M32 5 L52 13 V33 C52 46 43 54 32 59 C21 54 12 46 12 33 V13 Z" fill="none" stroke="#ead9b5" strokeWidth="3.2" strokeLinejoin="round" />
+      <polygon points="32.0,17.0 34.5,23.6 41.5,23.9 36.0,28.3 37.9,35.1 32.0,31.2 26.1,35.1 28.0,28.3 22.5,23.9 29.5,23.6" fill="#ead9b5" />
+      <path d="M21 41 Q32 48 43 41" fill="none" stroke="#ead9b5" strokeWidth="3" strokeLinecap="round" />
+      <path d="M24.5 47.5 Q32 52 39.5 47.5" fill="none" stroke="#ead9b5" strokeWidth="2.2" strokeLinecap="round" opacity="0.6" />
     </svg>
   );
 }

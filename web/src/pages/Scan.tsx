@@ -74,7 +74,7 @@ export function ScanPage() {
       <div aria-live="assertive" className="mt-4">
         {busy && <p className="text-muted">Checking on-chain…</p>}
         {result && (result.ok ? (
-          <div className="rounded-2xl bg-lime p-4 text-ink"><div className="text-2xl font-extrabold">✓ Welcome in</div><div className="text-sm">{result.holder} · {result.tokenId} · match {result.matchId} · attendance recorded</div></div>
+          <div className="rounded-2xl bg-wine p-4 text-ink"><div className="text-2xl font-extrabold">✓ Welcome in</div><div className="text-sm">{result.holder} · {result.tokenId} · match {result.matchId} · attendance recorded</div></div>
         ) : (
           <div className="rounded-2xl bg-danger/20 p-4 text-danger"><div className="text-2xl font-extrabold">✗ Refused</div><div className="text-sm">{result.error}</div></div>
         ))}

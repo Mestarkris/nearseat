@@ -36,7 +36,7 @@ export function MembershipCard({ m, compact = false }: { m: Membership; compact?
           </div>
           <Crest size={compact ? 48 : 64} />
           <div className="flex flex-col items-end gap-1.5">
-            <span className="rounded-full bg-lime px-3 py-1 text-xs font-bold uppercase text-lime-ink">{m.tier}</span>
+            <span className="rounded-full bg-wine px-3 py-1 text-xs font-bold uppercase text-wine-ink">{m.tier}</span>
             <span className={`rounded-full border border-current px-3 py-0.5 text-xs font-bold uppercase ${CATEGORIES[m.category].text}`}>{CATEGORIES[m.category].label}</span>
           </div>
         </div>
@@ -79,7 +79,7 @@ export function Stamps({ m, className = "" }: { m: Membership; className?: strin
   return (
     <div className={`flex flex-wrap items-center gap-1.5 ${className}`} aria-label="Attendance and goal stamps">
       {m.attended.map((id) => (
-        <span key={`a${id}`} className="size-3 rounded-full bg-lime" title={`Attended match ${id}`} />
+        <span key={`a${id}`} className="size-3 rounded-full bg-wine" title={`Attended match ${id}`} />
       ))}
       {m.goal_stamps.map((g, i) => (
         <span key={`g${i}`} role="img" aria-label={`Goal stamp: ${g.scorer} ${g.minute}' v ${g.opponent}`} title={`${g.scorer} ${g.minute}' v ${g.opponent}`}

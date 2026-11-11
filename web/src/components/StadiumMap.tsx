@@ -19,11 +19,11 @@ type State = SeatView["state"] | "available";
 
 const COLOR: Record<State, string> = {
   available: "hover:brightness-125",
-  lent: "bg-lime hover:brightness-110",
+  lent: "bg-wine hover:brightness-110",
   member: "bg-sky/80",
   member_in: "bg-sky",
-  sold: "bg-[#1a222d]",
-  rented: "bg-[#1a222d]",
+  sold: "bg-[#2a1f24]",
+  rented: "bg-[#2a1f24]",
 };
 
 /** Something that just happened on the pitch. A new `id` plays it again. */
@@ -138,7 +138,7 @@ export function StadiumMap({ seats, picked, onPick, onMember, readOnly, effect }
       );
       flight.onfinish = () => {
         coin.remove();
-        seat.animate([{ transform: "scale(1)" }, { transform: "scale(1.9)", boxShadow: "0 0 0 3px #9fe870" }, { transform: "scale(1)" }], { duration: 520, easing: "ease-out" });
+        seat.animate([{ transform: "scale(1)" }, { transform: "scale(1.9)", boxShadow: "0 0 0 3px #ead9b5" }, { transform: "scale(1)" }], { duration: 520, easing: "ease-out" });
       };
     });
     return () => coins.forEach((coin) => coin.remove());

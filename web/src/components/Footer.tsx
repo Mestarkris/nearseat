@@ -77,7 +77,7 @@ export function Footer() {
           ))}
           <div>
             <h2 className="flex items-center gap-2 font-display text-sm font-bold text-white">
-              <span className="size-2 rounded-full bg-lime" />On NEAR {config.network}
+              <span className="size-2 rounded-full bg-wine" />On NEAR {config.network}
             </h2>
             <div className="mt-4 space-y-2">
               <Copy label="Contract" value={config.contractId} />

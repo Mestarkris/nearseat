@@ -4,9 +4,9 @@ export type Category = "Vip" | "Pitchside" | "Standard" | "FansEnd";
 
 export const CATEGORIES: Record<Category, { label: string; where: string; bps: bigint; weight: number; swatch: string; text: string }> = {
   Vip: { label: "VIP", where: "North Stand, rows 1 and 2", bps: 25_000n, weight: 10, swatch: "bg-[#d8a94a]", text: "text-[#d8a94a]" },
-  Pitchside: { label: "Pitchside", where: "East and South Stands, rows 1 and 2", bps: 15_000n, weight: 6, swatch: "bg-[#9d93d9]", text: "text-[#9d93d9]" },
-  Standard: { label: "Standard", where: "Rows 3 to 6 of the North, East and South Stands", bps: 10_000n, weight: 4, swatch: "bg-[#5c6878]", text: "text-white/80" },
-  FansEnd: { label: "Fans' End", where: "West Stand, behind the goal", bps: 7_500n, weight: 3, swatch: "bg-[#d98670]", text: "text-[#d98670]" },
+  Pitchside: { label: "Pitchside", where: "East and South Stands, rows 1 and 2", bps: 15_000n, weight: 6, swatch: "bg-[#c98a9b]", text: "text-[#c98a9b]" },
+  Standard: { label: "Standard", where: "Rows 3 to 6 of the North, East and South Stands", bps: 10_000n, weight: 4, swatch: "bg-[#6e6266]", text: "text-white/80" },
+  FansEnd: { label: "Fans' End", where: "West Stand, behind the goal", bps: 7_500n, weight: 3, swatch: "bg-[#7fa3a8]", text: "text-[#7fa3a8]" },
 };
 export const CATEGORY_ORDER: Category[] = ["Vip", "Pitchside", "Standard", "FansEnd"];
 

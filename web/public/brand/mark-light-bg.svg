@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><title>NearSeat</title>
-<path d="M32 5 L52 13 V33 C52 46 43 54 32 59 C21 54 12 46 12 33 V13 Z" fill="none" stroke="#4F6B00" stroke-width="3.2" stroke-linejoin="round"/>
-<polygon points="32.0,17.0 34.5,23.6 41.5,23.9 36.0,28.3 37.9,35.1 32.0,31.2 26.1,35.1 28.0,28.3 22.5,23.9 29.5,23.6" fill="#4F6B00"/>
-<path d="M21 41 Q32 48 43 41" fill="none" stroke="#4F6B00" stroke-width="3" stroke-linecap="round"/>
-<path d="M24.5 47.5 Q32 52 39.5 47.5" fill="none" stroke="#4F6B00" stroke-width="2.2" stroke-linecap="round" opacity="0.6"/>
+<path d="M32 5 L52 13 V33 C52 46 43 54 32 59 C21 54 12 46 12 33 V13 Z" fill="none" stroke="#7a1c36" stroke-width="3.2" stroke-linejoin="round"/>
+<polygon points="32.0,17.0 34.5,23.6 41.5,23.9 36.0,28.3 37.9,35.1 32.0,31.2 26.1,35.1 28.0,28.3 22.5,23.9 29.5,23.6" fill="#7a1c36"/>
+<path d="M21 41 Q32 48 43 41" fill="none" stroke="#7a1c36" stroke-width="3" stroke-linecap="round"/>
+<path d="M24.5 47.5 Q32 52 39.5 47.5" fill="none" stroke="#7a1c36" stroke-width="2.2" stroke-linecap="round" opacity="0.6"/>
 </svg>

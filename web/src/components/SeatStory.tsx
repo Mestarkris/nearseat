@@ -86,11 +86,11 @@ function Stage({ step }: { step: number }) {
               style={{ "--d": `${(i * 37) % 600}ms` } as CSSProperties} />
           );
         })}
-        <rect className="story-ring" x={seatX(OURS.c)} y={seatY(OURS.r, OURS.c)} width="22" height="17" rx="5" fill="none" stroke="#9fe870" strokeWidth="1.5" />
-        <rect x={seatX(OURS.c)} y={seatY(OURS.r, OURS.c)} width="22" height="17" rx="5" fill="#9fe870" />
+        <rect className="story-ring" x={seatX(OURS.c)} y={seatY(OURS.r, OURS.c)} width="22" height="17" rx="5" fill="none" stroke="#ead9b5" strokeWidth="1.5" />
+        <rect x={seatX(OURS.c)} y={seatY(OURS.r, OURS.c)} width="22" height="17" rx="5" fill="#ead9b5" />
         {COIN_SEATS.map(({ r, c, i }, n) => {
           const x = seatX(c) + 11, y = seatY(r, c) + 8;
-          return <circle key={i} className="story-coin" cx={x} cy={y} r="4" fill="#9fe870"
+          return <circle key={i} className="story-coin" cx={x} cy={y} r="4" fill="#ead9b5"
             style={{ "--tx": `${200 - x}px`, "--ty": `${196 - y}px`, "--d": `${n * 260}ms` } as CSSProperties} />;
         })}
       </svg>
@@ -110,7 +110,7 @@ function Stage({ step }: { step: number }) {
 
       <div className="relative mt-3 grid grid-cols-2 gap-3">
         <div className="story-token absolute left-0 top-0 z-10 w-[calc(50%-6px)] p-2">
-          <div className="flex items-center gap-2 rounded-xl bg-lime px-2 py-1 text-lime-ink">
+          <div className="flex items-center gap-2 rounded-xl bg-wine px-2 py-1 text-wine-ink">
             <span className="rounded-md bg-ink p-0.5"><Crest size={18} /></span>
             <span className="truncate text-xs font-bold">Membership NFT</span>
           </div>
@@ -164,7 +164,7 @@ export function SeatStory() {
           {STEPS.map((s, i) => (
             <button key={s.title} role="tab" aria-selected={i === step} aria-label={`Step ${i + 1}: ${s.title}`}
               onClick={() => { setTouched(true); setStep(i); }}
-              className={`h-10 flex-1 rounded-full border font-number text-xl transition-colors ${i === step ? "border-lime bg-lime text-lime-ink" : "border-line text-muted"}`}>
+              className={`h-10 flex-1 rounded-full border font-number text-xl transition-colors ${i === step ? "border-lime bg-wine text-wine-ink" : "border-line text-muted"}`}>
               {i + 1}
             </button>
           ))}

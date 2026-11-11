@@ -71,7 +71,7 @@ export function JoinPage() {
         <aside className="card-glow h-fit p-5 lg:sticky lg:top-24" aria-label="Membership slip">
           <h2 className="text-lg font-bold">Season membership</h2>
           {bought && !pick && (
-            <div className="mt-4 rounded-2xl border border-lime/60 bg-lime/10 p-4" role="status">
+            <div className="mt-4 rounded-2xl border border-lime/60 bg-wine/10 p-4" role="status">
               <div className="font-semibold text-lime">✓ Welcome, member! seat-{bought} is yours.</div>
               <p className="mt-1 text-sm text-white/80">Its own account <span className="mono">seat-{bought}.{config.contractId}</span> was just created, with zero keys.</p>
               <a className="btn-primary mt-3" href={`#/member/seat-${bought}`}>Open my membership</a>

@@ -1,15 +1,17 @@
 @import "tailwindcss";
 
-/* NearSeat design tokens (from the approved mockups). */
+/* NearSeat design tokens. `lime` is the light accent (beige) for text and outlines; `wine` is the burgundy used for filled buttons and highlights. */
 @theme {
-  --color-ink: #0b1016;
-  --color-card: #111822;
-  --color-card-2: #172029;
-  --color-line: #263241;
-  --color-muted: #94a1b2;
-  --color-lime: #9fe870;
-  --color-lime-ink: #0b1016;
-  --color-sky: #6ea8e6;
+  --color-ink: #140d10;
+  --color-card: #1c1317;
+  --color-card-2: #241920;
+  --color-line: #3a2a31;
+  --color-muted: #a8999d;
+  --color-lime: #ead9b5;
+  --color-lime-ink: #140d10;
+  --color-wine: #9b2545;
+  --color-wine-ink: #f5ead2;
+  --color-sky: #7ea6d6;
   --color-danger: #ee7262;
   --color-warn: #e3b45c;
 
@@ -42,19 +44,20 @@
 /* Reusable component classes. Tailwind 4: @utility so they can @apply each other. */
 @utility card { @apply bg-card border border-line rounded-[var(--radius-card)]; }
 @utility card-glow {
-  @apply bg-card rounded-[var(--radius-card)];
-  border: 1px solid rgb(159 232 112 / 0.55);
-  box-shadow: 0 0 0 1px rgb(159 232 112 / 0.05), 0 12px 40px -16px rgb(159 232 112 / 0.22);
+  @apply rounded-[var(--radius-card)];
+  background: linear-gradient(180deg, #2b121b 0%, var(--color-card) 55%);
+  border: 1px solid #7d2a41;
+  box-shadow: 0 16px 40px -20px rgb(155 37 69 / 0.45);
 }
 @utility pill { @apply inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors; }
-@utility btn-primary { @apply pill bg-lime text-lime-ink font-semibold hover:brightness-110 disabled:opacity-50; }
+@utility btn-primary { @apply pill bg-wine text-wine-ink font-semibold hover:brightness-110 disabled:opacity-50; }
 @utility btn-ghost { @apply pill border border-line text-white hover:bg-card-2 disabled:opacity-50; }
 @utility btn-danger { @apply pill border border-warn/60 text-warn hover:bg-warn/10 disabled:opacity-50; }
 @utility chip { @apply inline-flex items-center rounded-full border border-line bg-ink/60 px-3 py-1 text-xs; }
 @utility label { @apply text-xs uppercase tracking-wider text-muted; }
 @utility input { @apply w-full rounded-2xl border border-line bg-ink px-4 py-3 text-sm placeholder:text-muted focus:border-lime focus:outline-none; }
 @utility mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-@utility pitch { background: repeating-linear-gradient(90deg, #1d3a1f 0 32px, #214523 32px 64px); }
+@utility pitch { background: repeating-linear-gradient(90deg, #1f3a2a 0 32px, #24432f 32px 64px); }
 
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
@@ -81,8 +84,8 @@
 .marquee:hover .marquee-track { animation-play-state: paused; }
 
 /* Seat story: one stage, four states driven by data-step. */
-.story-seat { fill: #1a222d; transition: fill .5s ease; transition-delay: var(--d, 0ms); }
-.story[data-filled="true"] .story-seat[data-sold] { fill: #566273; }
+.story-seat { fill: #2a1f24; transition: fill .5s ease; transition-delay: var(--d, 0ms); }
+.story[data-filled="true"] .story-seat[data-sold] { fill: #6e6266; }
 @keyframes coin { 0% { transform: translate(0, 0); opacity: 0; } 12% { opacity: 1; } 80% { opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)); opacity: 0; } }
 .story-coin { opacity: 0; }
 .story[data-step="1"] .story-coin { animation: coin 2.4s cubic-bezier(.5,0,.3,1) infinite; animation-delay: var(--d, 0ms); }
@@ -114,7 +117,7 @@ details.faq[open] .faq-plus { transform: rotate(45deg); }
 @keyframes seat-wave { 0%, 100% { transform: none; filter: none; } 40% { transform: scale(1.75); filter: brightness(2); } }
 .map-wave .seat { animation: seat-wave .5s ease-out var(--wd, 0ms) both; }
 /* Full time: coins leave the centre circle for every member's seat. */
-.payout-coin { position: absolute; left: 0; top: 0; border-radius: 9999px; background: var(--color-lime); box-shadow: 0 0 10px rgb(159 232 112 / .7); pointer-events: none; opacity: 0; }
+.payout-coin { position: absolute; left: 0; top: 0; border-radius: 9999px; background: var(--color-lime); box-shadow: 0 0 10px rgb(234 217 181 / .7); pointer-events: none; opacity: 0; }
 /* Goal stamp, pressed onto the card like ink. */
 .stamp { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 9999px; border: 1.5px solid currentColor; outline: 1px solid currentColor; outline-offset: -4px; font-size: 10px; font-weight: 800; line-height: 1; color: var(--color-lime); opacity: .9; transform: rotate(var(--r, -8deg)); }
 @keyframes stamp-press { 0% { opacity: 0; transform: rotate(-24deg) scale(2.6); } 55% { opacity: 1; transform: rotate(var(--r, -8deg)) scale(.86); } 100% { opacity: .9; transform: rotate(var(--r, -8deg)) scale(1); } }

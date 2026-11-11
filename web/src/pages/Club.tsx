@@ -14,7 +14,7 @@ import { ErrorBox, LiveBadge, Loading, Progress, Section, Stat } from "../compon
 
 const STATUS_STYLE: Record<string, string> = {
   Scheduled: "bg-sky/20 text-sky",
-  Live: "bg-lime text-ink",
+  Live: "bg-wine text-ink",
   Finished: "bg-white/10 text-white",
   Postponed: "bg-warn/20 text-warn",
 };
@@ -146,7 +146,7 @@ function Payout({ season, refresh }: { season: Season; refresh: () => void }) {
   const done = season.round_settled >= season.memberships;
   return (
     <section className="card-glow p-5">
-      <span className="chip gap-2 font-semibold">{done ? "PAYOUT COMPLETE" : <><span className="size-2 rounded-full bg-lime" /> PAYOUT RUNNING</>}</span>
+      <span className="chip gap-2 font-semibold">{done ? "PAYOUT COMPLETE" : <><span className="size-2 rounded-full bg-wine" /> PAYOUT RUNNING</>}</span>
       <h2 className="mt-3 text-xl font-bold">Round {season.payout_round} to members</h2>
       <div className="mt-3"><Progress label="Seat accounts settled" value={season.round_settled} max={season.memberships} right={`${season.round_settled} of ${season.memberships}`} /></div>
       <p className="mt-3 rounded-xl bg-ink/70 p-3 text-xs text-muted">If a membership changes hands during this payout, its share still lands in the seat account, so the new holder receives it.</p>
@@ -196,7 +196,7 @@ function ClubTools({ season, refresh }: { season: Season; refresh: () => void })
         <input className="input" type="datetime-local" aria-label="Kickoff date and time" value={when} onChange={(e) => setWhen(e.target.value)} />
         <div className="flex gap-2">
           <input className="input" inputMode="decimal" aria-label="Ticket price in tUSDC" placeholder="Ticket price" value={price} onChange={(e) => setPrice(e.target.value)} />
-          <label className="flex shrink-0 items-center gap-2 text-sm"><input type="checkbox" className="accent-lime" checked={big} onChange={(e) => setBig(e.target.checked)} />Big match</label>
+          <label className="flex shrink-0 items-center gap-2 text-sm"><input type="checkbox" className="accent-wine" checked={big} onChange={(e) => setBig(e.target.checked)} />Big match</label>
         </div>
         {fixtureError && (opp || when) ? <p className="text-xs text-warn">{fixtureError}</p> : null}
         <button className="btn-primary justify-center" disabled={!!fixtureError || !!a.busy}

@@ -1,4 +1,4 @@
-// Pick a match, pick your seat. Green seats are lent by members: buying one pays
+// Pick a match, pick your seat. Burgundy seats are lent by members: buying one pays
 // that member's seat account. The other free seats are sold by the club, priced
 // by category.
 import { useEffect, useState } from "react";
@@ -33,13 +33,13 @@ export function MatchesPage() {
   return (
     <div>
       <h1 className="text-4xl font-extrabold sm:text-5xl">Pick a match, pick your seat</h1>
-      <p className="mt-2 text-white/70">5% of every ticket goes to season members. Green seats are lent by members: buy one and that member's seat account gets paid.</p>
+      <p className="mt-2 text-white/70">5% of every ticket goes to season members. Burgundy seats are lent by members: buy one and that member's seat account gets paid.</p>
       {open.length === 0 ? <div className="mt-6"><Empty title="No fixtures yet" /></div> : (
         <>
           <div className="mt-5 flex flex-wrap gap-2" role="tablist" aria-label="Fixtures">
             {open.map((m) => (
               <button key={m.id} role="tab" aria-selected={current?.id === m.id} onClick={() => setPicked(m.id)}
-                className={`rounded-2xl px-4 py-2 text-left text-sm ${current?.id === m.id ? "bg-lime text-ink" : "border border-line"}`}>
+                className={`rounded-2xl px-4 py-2 text-left text-sm ${current?.id === m.id ? "bg-wine text-ink" : "border border-line"}`}>
                 <div className="font-semibold">vs {m.opponent}</div>
                 <div className="text-xs opacity-70">{m.status === "Finished" ? `Full time ${m.home_goals}–${m.away_goals}` : shortDate(m.kickoff_at)}{m.status === "Live" ? " · LIVE" : ""}</div>
               </button>
@@ -90,7 +90,7 @@ function SeatPicker({ match }: { match: Match }) {
       <aside className="card-glow h-fit p-5 lg:sticky lg:top-24" aria-label="Ticket slip">
         <div className="flex items-center justify-between"><h2 className="text-lg font-bold">Ticket slip</h2></div>
         {bought && !pick && (
-          <div className="mt-4 rounded-2xl border border-lime/60 bg-lime/10 p-4" role="status">
+          <div className="mt-4 rounded-2xl border border-lime/60 bg-wine/10 p-4" role="status">
             <div className="font-semibold text-lime">✓ Ticket bought: {bought.label}</div>
             <p className="mt-1 text-sm text-white/80">It's in your wallet as an NFT and shows on your gate pass on match day.</p>
             <div className="mt-3 flex flex-wrap gap-2">
@@ -99,14 +99,14 @@ function SeatPicker({ match }: { match: Match }) {
             </div>
           </div>
         )}
-        {!pick || !s ? <p className="mt-4 text-sm text-muted">{bought ? "Tap another seat to buy more." : "Tap a free seat on the map. Colour shows the category, and green seats are lent by members."}</p> : (
+        {!pick || !s ? <p className="mt-4 text-sm text-muted">{bought ? "Tap another seat to buy more." : "Tap a free seat on the map. Colour shows the category, and burgundy seats are lent by members."}</p> : (
           <>
             <div className="mt-4 rounded-2xl border border-line p-3">
               <div className="flex justify-between font-semibold"><span>{standName(pick.seat)} · Row {s.row} · Seat {s.number}</span><span>{usd(price)}</span></div>
               <div className="text-xs text-muted">vs {match.opponent} · {shortDate(match.kickoff_at)}</div>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 <span className={`rounded-full border border-current px-2 py-0.5 text-[10px] font-bold uppercase ${CATEGORIES[categoryOf(pick.seat)].text}`}>{CATEGORIES[categoryOf(pick.seat)].label}</span>
-                {lent && <span className="rounded-full bg-lime px-2 py-0.5 text-[10px] font-bold uppercase text-ink">Lent by a member</span>}
+                {lent && <span className="rounded-full bg-wine px-2 py-0.5 text-[10px] font-bold uppercase text-ink">Lent by a member</span>}
               </div>
             </div>
             <dl className="mt-4 space-y-2 text-sm">
@@ -122,7 +122,7 @@ function SeatPicker({ match }: { match: Match }) {
                 <dt className="text-muted">Network fee</dt>
                 <dd>
                   <label className="flex cursor-pointer items-center gap-2 text-xs">
-                    <input type="checkbox" checked={gasless} onChange={(e) => setGasless(e.target.checked)} className="accent-lime" />
+                    <input type="checkbox" checked={gasless} onChange={(e) => setGasless(e.target.checked)} className="accent-wine" />
                     <span className={gasless ? "text-lime" : "text-muted"}>{gasless ? "Gasless via relayer*" : "< 0.001 NEAR from your wallet"}</span>
                   </label>
                 </dd>

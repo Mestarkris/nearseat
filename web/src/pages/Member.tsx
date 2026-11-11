@@ -96,7 +96,7 @@ function Dashboard({ tokenId }: { tokenId: string }) {
             {label}
           </button>
         ))}
-        <a className="btn-ghost" href={`#/verify/${m.token_id}`}>History <span className="rounded-full bg-lime px-2 text-xs font-bold text-ink">{m.history_len}</span></a>
+        <a className="btn-ghost" href={`#/verify/${m.token_id}`}>History <span className="rounded-full bg-wine px-2 text-xs font-bold text-ink">{m.history_len}</span></a>
         <a className="btn-ghost" href={`#/statement/${m.token_id}`}>Season statement</a>
       </div>
 
@@ -187,7 +187,7 @@ function Earnings({ tokenId, historyLen }: { tokenId: string; historyLen: number
             return (
               <div key={i} className="flex flex-1 flex-col items-center justify-end gap-1">
                 <span className="text-xs text-muted">{usd(v, 1)}</span>
-                <div className="w-full max-w-10 rounded-lg bg-lime" style={{ height: `${Math.max(6, Number((v * 100n) / max))}%` }} />
+                <div className="w-full max-w-10 rounded-lg bg-wine" style={{ height: `${Math.max(6, Number((v * 100n) / max))}%` }} />
                 <span className="text-[10px] text-muted">P{i + 1}</span>
               </div>
             );
@@ -287,7 +287,7 @@ function Renewal({ m, isHolder, refresh }: { m: Membership; isHolder: boolean; r
           return (
             <button key={bps} role="radio" aria-checked={on} disabled={!isHolder || on || frozen || !!a.busy}
               onClick={() => a.run("Updating", () => call("set_renewal_saving", { token_id: m.token_id, bps }, { deposit: ONE_YOCTO }), bps ? `${bps / 100}% of each payout will be set aside` : "Saving switched off. Everything set aside is free to use again")}
-              className={`rounded-full border px-2 py-1.5 text-xs font-semibold disabled:cursor-default ${on ? "border-lime bg-lime text-lime-ink" : "border-line text-white enabled:hover:bg-card-2 disabled:opacity-60"}`}>
+              className={`rounded-full border px-2 py-1.5 text-xs font-semibold disabled:cursor-default ${on ? "border-lime bg-wine text-wine-ink" : "border-line text-white enabled:hover:bg-card-2 disabled:opacity-60"}`}>
               {bps ? `${bps / 100}%` : "Off"}
             </button>
           );
@@ -328,7 +328,7 @@ function Spend({ m, isHolder, refresh }: { m: Membership; isHolder: boolean; ref
           <div className="mt-4 grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Vendor">
             {list.map((v) => (
               <button key={v.account_id} role="radio" aria-checked={vendor?.account_id === v.account_id} onClick={() => setTo(v.account_id)}
-                className={`rounded-2xl border p-3 text-left ${vendor?.account_id === v.account_id ? "border-lime bg-lime/10" : "border-line hover:bg-card-2"}`}>
+                className={`rounded-2xl border p-3 text-left ${vendor?.account_id === v.account_id ? "border-lime bg-wine/10" : "border-line hover:bg-card-2"}`}>
                 <div className="font-semibold">{v.name}</div>
                 <div className="mono truncate text-xs text-muted">{v.account_id}</div>
               </button>

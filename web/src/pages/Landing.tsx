@@ -90,7 +90,7 @@ function Ticker() {
   if (items.length < 3) return null;
   const run = (hidden: boolean) => items.map((it) => (
     <span key={`${hidden}${it.key}`} aria-hidden={hidden} className="flex items-center gap-3 whitespace-nowrap px-6 text-sm text-white/70">
-      <span className="size-1.5 rounded-full bg-lime" />{it.text}
+      <span className="size-1.5 rounded-full bg-wine" />{it.text}
     </span>
   ));
   return (
@@ -209,7 +209,7 @@ function Roadmap() {
         {ROADMAP.map(([stage, when, items], i) => (
           <Reveal key={stage} delay={i * 120} className="lg:border-l lg:border-line lg:pl-8 lg:pr-6">
             <div className="flex items-center gap-3">
-              <span className={`size-3 rounded-full ${i === 0 ? "bg-lime" : "border border-muted"}`} />
+              <span className={`size-3 rounded-full ${i === 0 ? "bg-wine" : "border border-muted"}`} />
               <h3 className="text-2xl font-bold">{stage}</h3>
             </div>
             <p className="mt-1 text-sm text-muted">{when}</p>
@@ -262,7 +262,7 @@ function JoinCta() {
   return (
     <section className={`${wrap} pb-24`}>
       <Reveal>
-        <div className="rounded-[32px] bg-lime px-6 py-14 text-lime-ink sm:px-14 sm:py-20">
+        <div className="rounded-[32px] bg-wine px-6 py-14 text-wine-ink sm:px-14 sm:py-20">
           <h2 className="font-number text-6xl font-normal leading-[0.9] tracking-normal sm:text-8xl">Pick your seat.</h2>
           <p className="mt-4 max-w-xl text-lg font-medium">Choose a free seat in Stars Arena, pay the season price in test tUSDC, and watch its account appear on chain.</p>
           <div className="mt-8 flex flex-wrap gap-3">

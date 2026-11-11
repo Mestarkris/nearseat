@@ -75,7 +75,7 @@ function PassView({ passes, initial }: { passes: Pass[]; initial: Pass }) {
       const t = Date.now();
       signedAt.current = t;
       const payload = makePass({ cert, session, tokenId: pass.tokenId, matchId: pass.matchId, now: t });
-      setQr(await QRCode.toDataURL(payload, { margin: 1, scale: 6, errorCorrectionLevel: "L", color: { dark: "#0b1016", light: "#FFFFFF" } }));
+      setQr(await QRCode.toDataURL(payload, { margin: 1, scale: 6, errorCorrectionLevel: "L", color: { dark: "#140d10", light: "#FFFFFF" } }));
     };
     render();
     const t1 = setInterval(render, 5_000);
@@ -102,7 +102,7 @@ function PassView({ passes, initial }: { passes: Pass[]; initial: Pass }) {
             {qr ? <img src={qr} alt="Rotating gate pass QR code" className="mx-auto w-64 rounded-2xl bg-white p-2" /> : <Loading />}
             <div className="mt-3 font-display text-lg font-bold">{pass.label}</div>
             <div className="mt-1 text-sm text-muted">Refreshes in {Math.max(0, 5 - age)}s · valid 30 s · signed by {cert.accountId}</div>
-            <div className="mx-auto mt-3 h-1.5 w-48 rounded-full bg-line"><div className="h-full rounded-full bg-lime transition-[width]" style={{ width: `${Math.max(0, 100 - age * 20)}%` }} /></div>
+            <div className="mx-auto mt-3 h-1.5 w-48 rounded-full bg-line"><div className="h-full rounded-full bg-wine transition-[width]" style={{ width: `${Math.max(0, 100 - age * 20)}%` }} /></div>
           </>
         )}
       </div>
