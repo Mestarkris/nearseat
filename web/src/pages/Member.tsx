@@ -96,7 +96,7 @@ function Dashboard({ tokenId }: { tokenId: string }) {
             {label}
           </button>
         ))}
-        <a className="btn-ghost" href={`#/verify/${m.token_id}`}>History <span className="rounded-full bg-wine px-2 text-xs font-bold text-ink">{m.history_len}</span></a>
+        <a className="btn-ghost" href={`#/verify/${m.token_id}`}>History <span className="rounded-full bg-wine px-2 text-xs font-bold text-wine-ink">{m.history_len}</span></a>
         <a className="btn-ghost" href={`#/statement/${m.token_id}`}>Season statement</a>
       </div>
 

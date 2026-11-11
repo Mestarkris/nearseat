@@ -15,7 +15,7 @@ import { ErrorBox, LiveBadge, Loading, Progress, Section, Stat } from "../compon
 
 const STATUS_STYLE: Record<string, string> = {
   Scheduled: "bg-sky/20 text-sky",
-  Live: "bg-wine text-ink",
+  Live: "bg-wine text-wine-ink",
   Finished: "bg-fg/10 text-fg",
   Postponed: "bg-warn/20 text-warn",
 };

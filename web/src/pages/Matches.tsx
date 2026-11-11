@@ -40,7 +40,7 @@ export function MatchesPage() {
           <div className="mt-5 flex flex-wrap gap-2" role="tablist" aria-label="Fixtures">
             {open.map((m) => (
               <button key={m.id} role="tab" aria-selected={current?.id === m.id} onClick={() => setPicked(m.id)}
-                className={`rounded-2xl px-4 py-2 text-left text-sm ${current?.id === m.id ? "bg-wine text-ink" : "border border-line"}`}>
+                className={`rounded-2xl px-4 py-2 text-left text-sm ${current?.id === m.id ? "bg-wine text-wine-ink" : "border border-line"}`}>
                 <div className="font-semibold">vs {m.opponent}</div>
                 <div className="text-xs opacity-70">{m.status === "Finished" ? `Full time ${m.home_goals}–${m.away_goals}` : shortDate(m.kickoff_at)}{m.status === "Live" ? " · LIVE" : ""}</div>
               </button>
@@ -107,7 +107,7 @@ function SeatPicker({ match }: { match: Match }) {
               <div className="text-xs text-muted">vs {match.opponent} · {shortDate(match.kickoff_at)}</div>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 <span className={`rounded-full border border-current px-2 py-0.5 text-[10px] font-bold uppercase ${CATEGORIES[categoryOf(pick.seat)].text}`}>{CATEGORIES[categoryOf(pick.seat)].label}</span>
-                {lent && <span className="rounded-full bg-wine px-2 py-0.5 text-[10px] font-bold uppercase text-ink">Lent by a member</span>}
+                {lent && <span className="rounded-full bg-wine px-2 py-0.5 text-[10px] font-bold uppercase text-wine-ink">Lent by a member</span>}
               </div>
             </div>
             <dl className="mt-4 space-y-2 text-sm">
