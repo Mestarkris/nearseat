@@ -2,16 +2,16 @@
 
 /* NearSeat design tokens (from the approved mockups). */
 @theme {
-  --color-ink: #0a0c0f;
-  --color-card: #12161b;
-  --color-card-2: #171c22;
-  --color-line: #232a31;
-  --color-muted: #8a949e;
-  --color-lime: #b8e62b;
-  --color-lime-ink: #0a0c0f;
-  --color-sky: #5aa9ff;
-  --color-danger: #ff6b5a;
-  --color-warn: #f5b84a;
+  --color-ink: #0b1016;
+  --color-card: #111822;
+  --color-card-2: #172029;
+  --color-line: #263241;
+  --color-muted: #94a1b2;
+  --color-lime: #9fe870;
+  --color-lime-ink: #0b1016;
+  --color-sky: #6ea8e6;
+  --color-danger: #ee7262;
+  --color-warn: #e3b45c;
 
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Inter Tight", "Inter", ui-sans-serif, system-ui, sans-serif;
@@ -43,8 +43,8 @@
 @utility card { @apply bg-card border border-line rounded-[var(--radius-card)]; }
 @utility card-glow {
   @apply bg-card rounded-[var(--radius-card)];
-  border: 1.5px solid var(--color-lime);
-  box-shadow: 0 0 0 1px rgb(184 230 43 / 0.08), 0 0 48px -8px rgb(184 230 43 / 0.35);
+  border: 1px solid rgb(159 232 112 / 0.55);
+  box-shadow: 0 0 0 1px rgb(159 232 112 / 0.05), 0 12px 40px -16px rgb(159 232 112 / 0.22);
 }
 @utility pill { @apply inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors; }
 @utility btn-primary { @apply pill bg-lime text-lime-ink font-semibold hover:brightness-110 disabled:opacity-50; }
@@ -81,8 +81,8 @@
 .marquee:hover .marquee-track { animation-play-state: paused; }
 
 /* Seat story: one stage, four states driven by data-step. */
-.story-seat { fill: #1a2027; transition: fill .5s ease; transition-delay: var(--d, 0ms); }
-.story[data-filled="true"] .story-seat[data-sold] { fill: #56616c; }
+.story-seat { fill: #1a222d; transition: fill .5s ease; transition-delay: var(--d, 0ms); }
+.story[data-filled="true"] .story-seat[data-sold] { fill: #566273; }
 @keyframes coin { 0% { transform: translate(0, 0); opacity: 0; } 12% { opacity: 1; } 80% { opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)); opacity: 0; } }
 .story-coin { opacity: 0; }
 .story[data-step="1"] .story-coin { animation: coin 2.4s cubic-bezier(.5,0,.3,1) infinite; animation-delay: var(--d, 0ms); }
@@ -114,7 +114,7 @@ details.faq[open] .faq-plus { transform: rotate(45deg); }
 @keyframes seat-wave { 0%, 100% { transform: none; filter: none; } 40% { transform: scale(1.75); filter: brightness(2); } }
 .map-wave .seat { animation: seat-wave .5s ease-out var(--wd, 0ms) both; }
 /* Full time: coins leave the centre circle for every member's seat. */
-.payout-coin { position: absolute; left: 0; top: 0; border-radius: 9999px; background: var(--color-lime); box-shadow: 0 0 10px rgb(184 230 43 / .7); pointer-events: none; opacity: 0; }
+.payout-coin { position: absolute; left: 0; top: 0; border-radius: 9999px; background: var(--color-lime); box-shadow: 0 0 10px rgb(159 232 112 / .7); pointer-events: none; opacity: 0; }
 /* Goal stamp, pressed onto the card like ink. */
 .stamp { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 9999px; border: 1.5px solid currentColor; outline: 1px solid currentColor; outline-offset: -4px; font-size: 10px; font-weight: 800; line-height: 1; color: var(--color-lime); opacity: .9; transform: rotate(var(--r, -8deg)); }
 @keyframes stamp-press { 0% { opacity: 0; transform: rotate(-24deg) scale(2.6); } 55% { opacity: 1; transform: rotate(var(--r, -8deg)) scale(.86); } 100% { opacity: .9; transform: rotate(var(--r, -8deg)) scale(1); } }

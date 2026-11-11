@@ -75,7 +75,7 @@ function PassView({ passes, initial }: { passes: Pass[]; initial: Pass }) {
       const t = Date.now();
       signedAt.current = t;
       const payload = makePass({ cert, session, tokenId: pass.tokenId, matchId: pass.matchId, now: t });
-      setQr(await QRCode.toDataURL(payload, { margin: 1, scale: 6, errorCorrectionLevel: "L", color: { dark: "#0A0C0F", light: "#FFFFFF" } }));
+      setQr(await QRCode.toDataURL(payload, { margin: 1, scale: 6, errorCorrectionLevel: "L", color: { dark: "#0b1016", light: "#FFFFFF" } }));
     };
     render();
     const t1 = setInterval(render, 5_000);

@@ -86,11 +86,11 @@ function Stage({ step }: { step: number }) {
               style={{ "--d": `${(i * 37) % 600}ms` } as CSSProperties} />
           );
         })}
-        <rect className="story-ring" x={seatX(OURS.c)} y={seatY(OURS.r, OURS.c)} width="22" height="17" rx="5" fill="none" stroke="#b8e62b" strokeWidth="1.5" />
-        <rect x={seatX(OURS.c)} y={seatY(OURS.r, OURS.c)} width="22" height="17" rx="5" fill="#b8e62b" />
+        <rect className="story-ring" x={seatX(OURS.c)} y={seatY(OURS.r, OURS.c)} width="22" height="17" rx="5" fill="none" stroke="#9fe870" strokeWidth="1.5" />
+        <rect x={seatX(OURS.c)} y={seatY(OURS.r, OURS.c)} width="22" height="17" rx="5" fill="#9fe870" />
         {COIN_SEATS.map(({ r, c, i }, n) => {
           const x = seatX(c) + 11, y = seatY(r, c) + 8;
-          return <circle key={i} className="story-coin" cx={x} cy={y} r="4" fill="#b8e62b"
+          return <circle key={i} className="story-coin" cx={x} cy={y} r="4" fill="#9fe870"
             style={{ "--tx": `${200 - x}px`, "--ty": `${196 - y}px`, "--d": `${n * 260}ms` } as CSSProperties} />;
         })}
       </svg>
