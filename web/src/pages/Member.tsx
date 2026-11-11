@@ -5,7 +5,9 @@ import { view, viewAccessKeys } from "../near/rpc";
 import { useWallet, ONE_YOCTO } from "../near/wallet";
 import { usePoll } from "../lib/usePoll";
 import { useAction } from "../lib/useAction";
-import type { HistoryEntry, Match, Membership, Poll, Season } from "../lib/types";
+import type { HistoryEntry, Match, Membership, Poll, Season, Vendor } from "../lib/types";
+import { useCountUp } from "../lib/motion";
+import { Stamps } from "../components/MembershipCard";
 import { matchMinute, seatLabel, shortDate, toRaw, usd } from "../lib/format";
 import { Feed } from "../components/Feed";
 import { MyTickets } from "../components/MyTickets";
@@ -14,7 +16,7 @@ import { CATEGORIES, multiple, priceFor } from "../lib/category";
 import { GateAccess } from "../components/GateAccess";
 import { Crest, Empty, ErrorBox, LiveBadge, Loading, Progress, Section, TierBadge } from "../components/ui";
 
-type Tab = "overview" | "lending" | "advance" | "vote" | "sell";
+type Tab = "overview" | "lending" | "spend" | "advance" | "vote" | "sell";
 
 export function MemberPage({ tokenId }: { tokenId?: string }) {
   const { accountId, signIn } = useWallet();
@@ -77,7 +79,7 @@ function Dashboard({ tokenId }: { tokenId: string }) {
   const live = matches.find((x) => x.status === "Live");
   const next = matches.filter((x) => x.status === "Scheduled").sort((a, b) => Number(BigInt(a.kickoff_at) - BigInt(b.kickoff_at)))[0];
 
-  const tabs: [Tab, string][] = [["overview", "Overview"], ["lending", "Seat lending"], ["advance", "Advance"], ["vote", "Vote"], ["sell", "Sell"]];
+  const tabs: [Tab, string][] = [["overview", "Overview"], ["lending", "Seat lending"], ["spend", "Pay at the ground"], ["advance", "Advance"], ["vote", "Vote"], ["sell", "Sell"]];
   return (
     <div>
       {live && <LiveBadge label="MATCHDAY LIVE" />}
@@ -95,12 +97,14 @@ function Dashboard({ tokenId }: { tokenId: string }) {
           </button>
         ))}
         <a className="btn-ghost" href={`#/verify/${m.token_id}`}>History <span className="rounded-full bg-lime px-2 text-xs font-bold text-ink">{m.history_len}</span></a>
+        <a className="btn-ghost" href={`#/statement/${m.token_id}`}>Season statement</a>
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]">
         <div className="space-y-6">
           {tab === "overview" && <Overview m={m} live={live} next={next} season={season} isHolder={isHolder} />}
           {tab === "lending" && <Lending m={m} matches={matches} isHolder={isHolder} refresh={data.refresh} />}
+          {tab === "spend" && <Spend m={m} isHolder={isHolder} refresh={data.refresh} />}
           {tab === "advance" && <Advance m={m} isHolder={isHolder} refresh={data.refresh} />}
           {tab === "vote" && <Vote m={m} isHolder={isHolder} />}
           {tab === "sell" && <Sell m={m} season={season} isHolder={isHolder} refresh={data.refresh} />}
@@ -133,6 +137,12 @@ function Overview({ m, live, next, season, isHolder }: { m: Membership; live?: M
             <Progress label="Members' pool from today" value={Number((BigInt(live.escrow) * cutBps) / 10_000n)} max={Number(BigInt(live.ticket_price) * 360n * cutBps / 10_000n)} right={`${usd((BigInt(live.escrow) * cutBps) / 10_000n)} tUSDC`} />
             <Progress label="Your progress to Legend" value={m.attended.length} max={legend} right={`${m.attended.length} of ${legend} matches`} />
           </div>
+          {m.goal_stamps.some((g) => g.match_id === live.id) && (
+            <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-muted">
+              <span>Stamped on your card today</span>
+              <Stamps m={{ ...m, attended: [], goal_stamps: m.goal_stamps.filter((g) => g.match_id === live.id) }} />
+            </div>
+          )}
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
             <div className="rounded-2xl border border-lime/60 p-3 text-center"><div className="text-xs text-muted">Your share today</div><div className="font-bold text-lime">+{usd(shareToday)} tUSDC</div></div>
             <div className="rounded-2xl border border-lime/60 p-3 text-center"><div className="text-xs text-muted">Next home game</div><div className="font-bold">{next ? `v ${next.opponent}` : "—"}</div></div>
@@ -193,6 +203,9 @@ function SeatAccount({ m, isHolder, refresh }: { m: Membership; isHolder: boolea
   const a = useAction(refresh);
   const keys = usePoll(() => viewAccessKeys(m.vault).then((k) => k.length), [m.vault], 30_000);
   const frozen = !!m.listing || BigInt(m.debt) > 0n;
+  // The balance rolls up to its new value when a payout lands.
+  const balance = useCountUp(Number(m.vault_balance) / 1e6, true, 1200);
+  const saved = BigInt(m.renewal_saved);
   return (
     <aside className="card-glow h-fit space-y-4 p-5 lg:sticky lg:top-24" aria-label="Seat account">
       <div className="flex items-center justify-between gap-2"><h2 className="text-lg font-bold">Seat account</h2><TierBadge tier={m.tier} /></div>
@@ -204,9 +217,11 @@ function SeatAccount({ m, isHolder, refresh }: { m: Membership; isHolder: boolea
       <div className="mono text-xs text-muted">{m.vault} · keys: {keys.data ?? "…"}</div>
       <div>
         <div className="text-sm text-muted">Balance</div>
-        <div className="font-display text-5xl font-extrabold">{usd(m.vault_balance)} <span className="text-base font-semibold text-muted">tUSDC</span></div>
+        <div className="font-display text-5xl font-extrabold tabular-nums">{usd(BigInt(Math.round(balance * 1e6)))} <span className="text-base font-semibold text-muted">tUSDC</span></div>
         {BigInt(m.unsettled) > 0n && <div className="text-sm text-lime">+{usd(m.unsettled)} on its way</div>}
+        {saved > 0n && <div className="text-sm text-muted">{usd(saved)} of it is set aside for renewal</div>}
       </div>
+      <Renewal m={m} isHolder={isHolder} refresh={refresh} />
       <dl className="space-y-2 text-sm">
         {[
           ["Ticket-sales share", `+${usd(m.totals.pool_earned)}`],
@@ -230,10 +245,10 @@ function SeatAccount({ m, isHolder, refresh }: { m: Membership; isHolder: boolea
         <div className="space-y-2">
           <button
             className="btn-primary w-full justify-center py-3"
-            disabled={!!a.busy || frozen || BigInt(m.vault_balance) === 0n}
-            onClick={() => a.run("Withdrawing", () => call("withdraw", { token_id: m.token_id, amount: m.vault_balance }, { deposit: ONE_YOCTO }), `Sent ${usd(m.vault_balance)} tUSDC to ${accountId}`)}
+            disabled={!!a.busy || frozen || BigInt(m.spendable) === 0n}
+            onClick={() => a.run("Withdrawing", () => call("withdraw", { token_id: m.token_id, amount: m.spendable }, { deposit: ONE_YOCTO }), `Sent ${usd(m.spendable)} tUSDC to ${accountId}`)}
           >
-            Withdraw to {accountId}
+            Withdraw {usd(m.spendable)} to {accountId}
           </button>
           {BigInt(m.unsettled) > 0n && (
             <button className="btn-ghost w-full justify-center" disabled={!!a.busy} onClick={() => a.run("Settling", () => call("settle", { token_id: m.token_id }, { gasTgas: 60 }), "Payout settled into your seat account")}>
@@ -250,6 +265,90 @@ function SeatAccount({ m, isHolder, refresh }: { m: Membership; isHolder: boolea
       ) : null}
       <p className="text-center text-xs text-muted">Only the current holder can act. Ownership is checked on-chain on every call.</p>
     </aside>
+  );
+}
+
+/** How far the seat's own earnings go towards next season, and a switch to set part of each payout aside. */
+function Renewal({ m, isHolder, refresh }: { m: Membership; isHolder: boolean; refresh: () => void }) {
+  const { call } = useWallet();
+  const a = useAction(refresh);
+  const earned = BigInt(m.totals.pool_earned) + BigInt(m.totals.loan_income);
+  const price = BigInt(m.season_price);
+  const pct = price > 0n ? Number((earned * 1000n) / price) / 10 : 0;
+  const frozen = !!m.listing;
+  return (
+    <div className="rounded-2xl border border-line p-3">
+      <div className="text-sm font-semibold">This seat has earned {pct >= 100 ? "all" : `${pct.toFixed(pct < 10 ? 1 : 0)}%`} of next season's price</div>
+      <div className="mt-2"><Progress value={Number(earned)} max={Number(price)} label={`${usd(earned)} of ${usd(price, 0)} tUSDC`} right={BigInt(m.renewal_saved) > 0n ? `${usd(m.renewal_saved)} set aside` : undefined} /></div>
+      <div className="mt-3 text-xs text-muted" id="saving-label">Set aside from each payout</div>
+      <div className="mt-1.5 grid grid-cols-4 gap-1.5" role="radiogroup" aria-labelledby="saving-label">
+        {[0, 2500, 5000, 10000].map((bps) => {
+          const on = m.renewal_bps === bps;
+          return (
+            <button key={bps} role="radio" aria-checked={on} disabled={!isHolder || on || frozen || !!a.busy}
+              onClick={() => a.run("Updating", () => call("set_renewal_saving", { token_id: m.token_id, bps }, { deposit: ONE_YOCTO }), bps ? `${bps / 100}% of each payout will be set aside` : "Saving switched off. Everything set aside is free to use again")}
+              className={`rounded-full border px-2 py-1.5 text-xs font-semibold disabled:cursor-default ${on ? "border-lime bg-lime text-lime-ink" : "border-line text-white enabled:hover:bg-card-2 disabled:opacity-60"}`}>
+              {bps ? `${bps / 100}%` : "Off"}
+            </button>
+          );
+        })}
+      </div>
+      <p className="mt-2 text-xs text-muted">Money set aside stays in the seat's account and can't be withdrawn or spent until you choose Off. It stops at the season price.</p>
+      <ActionStatus a={a} />
+    </div>
+  );
+}
+
+/** Pay a club-approved vendor straight from the seat's account. */
+function Spend({ m, isHolder, refresh }: { m: Membership; isHolder: boolean; refresh: () => void }) {
+  const { call } = useWallet();
+  const a = useAction(refresh);
+  const vendors = usePoll(() => view<Vendor[]>("vendors"), [], 30_000);
+  const [to, setTo] = useState<string>();
+  const [amount, setAmount] = useState("");
+  const [memo, setMemo] = useState("");
+  const list = vendors.data ?? [];
+  const vendor = list.find((v) => v.account_id === to) ?? list[0];
+  const spendable = BigInt(m.spendable);
+  const raw = (() => { try { return BigInt(toRaw(amount)); } catch { return 0n; } })();
+  const blocked = m.listing ? "The seat's account is frozen while the membership is listed for sale." : BigInt(m.debt) > 0n ? "Payments are blocked until the advance is repaid." : null;
+  const problem = !amount ? null : raw <= 0n ? "Enter an amount like 4.50" : raw > spendable ? `This seat can spend up to ${usd(spendable)} tUSDC` : null;
+  return (
+    <Section title="Pay at the ground" right={<span className="text-xs text-muted">Spent so far: {usd(m.vendor_spent)} tUSDC</span>}>
+      <p className="text-sm text-muted">Pay for food and drink with what the seat has earned. The money goes from the seat's account straight to the vendor, and only to vendors the club has approved.</p>
+      <div className="mt-4 rounded-2xl bg-ink/70 p-4">
+        <div className="text-xs text-muted">This seat can spend</div>
+        <div className="font-display text-2xl font-bold">{usd(spendable)} tUSDC</div>
+        {BigInt(m.renewal_saved) > 0n && <div className="text-xs text-muted">{usd(m.renewal_saved)} more is set aside for renewal</div>}
+      </div>
+      {vendors.loading && !vendors.data ? <Loading what="Loading vendors" /> : list.length === 0 ? (
+        <p className="mt-4 text-sm text-muted">The club hasn't approved any vendors yet.</p>
+      ) : (
+        <>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Vendor">
+            {list.map((v) => (
+              <button key={v.account_id} role="radio" aria-checked={vendor?.account_id === v.account_id} onClick={() => setTo(v.account_id)}
+                className={`rounded-2xl border p-3 text-left ${vendor?.account_id === v.account_id ? "border-lime bg-lime/10" : "border-line hover:bg-card-2"}`}>
+                <div className="font-semibold">{v.name}</div>
+                <div className="mono truncate text-xs text-muted">{v.account_id}</div>
+              </button>
+            ))}
+          </div>
+          {isHolder && vendor && (
+            <div className="mt-3 grid gap-2 sm:grid-cols-[140px_1fr_auto]">
+              <input className="input" inputMode="decimal" placeholder="Amount" aria-label="Amount in tUSDC" value={amount} onChange={(e) => setAmount(e.target.value)} />
+              <input className="input" maxLength={80} placeholder="What for (optional)" aria-label="Note for the vendor" value={memo} onChange={(e) => setMemo(e.target.value)} />
+              <button className="btn-primary justify-center" disabled={!!a.busy || !!blocked || !!problem || raw <= 0n}
+                onClick={() => a.run("Paying", () => call("pay_vendor", { token_id: m.token_id, vendor_id: vendor.account_id, amount: raw.toString(), memo: memo.trim() || null }, { deposit: ONE_YOCTO, gasTgas: 100 }), `Paid ${usd(raw)} tUSDC to ${vendor.name}`).then((ok) => { if (ok) { setAmount(""); setMemo(""); } })}>
+                Pay {vendor.name}
+              </button>
+            </div>
+          )}
+          {(blocked || problem) && <p className="mt-2 text-xs text-warn">{blocked ?? problem}</p>}
+        </>
+      )}
+      <ActionStatus a={a} />
+    </Section>
   );
 }
 

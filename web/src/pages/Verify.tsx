@@ -16,7 +16,7 @@ const KIND_LABEL: Record<string, string> = {
   settled: "Payout settled into vault", withdrawn: "Withdrawn to", rented: "Seat rented by", lend_offered: "Seat offered",
   loan_refunded: "Rental refunded (postponed)", checked_in: "Checked in", listed: "Listed for sale", delisted: "Delisted",
   advance_taken: "Advance taken", advance_repaid: "Advance repaid", advance_recovered: "Advance recovered", voted: "Voted (weight)",
-  credits_spent: "Food credits spent",
+  credits_spent: "Food credits spent", paid_vendor: "Paid at the ground to",
 };
 
 export function VerifyPage({ tokenId }: { tokenId?: string }) {
@@ -49,6 +49,7 @@ function History({ tokenId }: { tokenId: string }) {
     <div>
       <h1 className="text-3xl font-extrabold sm:text-5xl">{m.token_id} · public history</h1>
       <p className="mt-2 text-white/70">What it earned, what it paid out, and who held it. No wallet needed.</p>
+      <a className="btn-ghost mt-4" href={`#/statement/${m.token_id}`}>Season statement</a>
       <div className="mt-6 grid gap-6 lg:grid-cols-[340px_1fr]">
         <div className="space-y-6">
           <MembershipCard m={m} compact />
@@ -70,6 +71,7 @@ function History({ tokenId }: { tokenId: string }) {
                 ["Settled into the vault", t.settled_into_vault], ["Withdrawn by holders", t.withdrawn],
                 ["Advances taken", t.advances_taken], ["Advances repaid", t.advances_repaid],
                 ["Rentals refunded", t.loan_refunds], ["In the vault now", m.vault_balance],
+                ["Spent at the ground", m.vendor_spent], ["Set aside for renewal", m.renewal_saved],
               ].map(([k, v]) => (
                 <div key={k} className="flex justify-between rounded-xl bg-ink/70 px-3 py-2 text-sm"><dt className="text-muted">{k}</dt><dd className="font-semibold">{usd(v)}</dd></div>
               ))}

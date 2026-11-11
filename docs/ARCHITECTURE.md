@@ -27,7 +27,10 @@ contracts/
 `nearseat` modules: `membership` (mint + NEP-171/177/178/181), `money` (pool,
 settlement, withdrawals, callbacks), `payments` (`ft_on_transfer` router),
 `matchday`, `lending`, `market` (resale + NEP-199), `gate`, `views`, `svg`,
-`events`, and Layer 2 `advance`, `autolend`, `voting`.
+`events`, `kiosk` (club-approved vendors, payments from the seat, renewal
+saving), and Layer 2 `advance`, `autolend`, `voting`. The vendor list and the
+per-seat saving records live under their own storage prefixes, outside the
+root struct, so adding them needed no state migration.
 
 ## How control passes on transfer
 

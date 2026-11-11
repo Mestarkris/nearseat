@@ -48,8 +48,8 @@ Prerequisites: Rust (the pinned toolchain installs itself via `rust-toolchain.to
 git clone https://github.com/Mestarkris/nearseat && cd nearseat
 npm install
 npm run build:contracts      # → target/near/*/*.wasm + prints code hashes
-npm run test:unit            # see: 69 Rust unit tests pass
-npm run test:sandbox         # see: 14 end-to-end tests pass on a local NEAR sandbox
+npm run test:unit            # see: 83 Rust unit tests pass
+npm run test:sandbox         # see: 15 end-to-end tests pass on a local NEAR sandbox
 npm run test:js              # see: gate pass, NEP-413 and relayer policy tests pass
 ```
 
@@ -125,7 +125,7 @@ npm run dev             # → http://localhost:5173
 | Taking an advance, then selling or gifting | Plain transfer is blocked while an advance is open. A sale repays it from the price first, in the same receipt. |
 | Voting again via the buyer | Votes are keyed by `(poll, token)`. |
 
-The full analysis (56 threats, mitigations and tests) is in [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md). Diagrams are in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+The full analysis (64 threats, mitigations and tests) is in [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md). Diagrams are in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ---
 
@@ -161,8 +161,8 @@ Builds are deterministic for a given toolchain. `rust-toolchain.toml` pins Rust 
 
 | Command | What it proves |
 |---|---|
-| `npm run test:unit` | **62** NearSeat unit tests + 4 vault + 3 tUSDC. Includes: seat categories (prices, weighted split that never over-distributes, per-category caps, migration from the equal-split layout), sale mid-payout, failed-callback rollback (settle, withdraw, refunds), wrong nonce, old owner locked out, renter locked out after full time, price caps (lend + resale), goal stamps only for checked-in members, advance repaid on sale, double vote blocked, auto-lend cleared on sale, admin bounds |
-| `npm run test:sandbox` | **14** end-to-end tests with real receipts, including: a VIP seat costing more and earning a bigger share; a fan buying a new membership from the club with tUSDC; vault keyless + global code hash + parent-only; full season on real tUSDC; **sale mid-payout with interleaved receipts**; failed settlement and withdrawal callbacks with a failing token; wrong nonce refunds buyer; renter + old owner locked out; goal stamps; postponement refunds; advance repaid on sale; double vote blocked |
+| `npm run test:unit` | **76** NearSeat unit tests + 4 vault + 3 tUSDC. Includes: paying a club-approved vendor from the seat (unapproved, listed, over-limit and failed payments), renewal saving (set aside, capped at the season price, cleared on sale), seat categories (prices, weighted split that never over-distributes, per-category caps, migration from the equal-split layout), sale mid-payout, failed-callback rollback (settle, withdraw, refunds), wrong nonce, old owner locked out, renter locked out after full time, price caps (lend + resale), goal stamps only for checked-in members, advance repaid on sale, double vote blocked, auto-lend cleared on sale, admin bounds |
+| `npm run test:sandbox` | **15** end-to-end tests with real receipts, including: a seat paying a vendor in real tUSDC while its renewal savings stay locked; a VIP seat costing more and earning a bigger share; a fan buying a new membership from the club with tUSDC; vault keyless + global code hash + parent-only; full season on real tUSDC; **sale mid-payout with interleaved receipts**; failed settlement and withdrawal callbacks with a failing token; wrong nonce refunds buyer; renter + old owner locked out; goal stamps; postponement refunds; advance repaid on sale; double vote blocked |
 | `npm run test:js` | Gate pass (fresh OK, screenshot > 30 s rejected, old owner rejected, forged cert rejected), members-only replay and non-holder rejection, relayer allow-list and rate limits |
 
 ---
@@ -199,6 +199,9 @@ docs/              THREAT_MODEL.md, ARCHITECTURE.md, SUBMISSION.md
 - Dynamic on-chain SVG card.
 - Rotating NEP-413 gate pass and scanner.
 - Members-only page, public history, Verify, and the Attack Lab (21 attacks).
+- Pay at the ground: the holder pays a club-approved vendor straight from the seat's account (`pay_vendor`). The club keeps the vendor list; nobody else can move the money.
+- The seat pays for itself: the holder sets a share of each payout aside towards next season (`set_renewal_saving`). Money set aside can't be withdrawn or spent until the switch is turned down, and stops at the season price.
+- Season statement: one shareable page per seat with everything it earned, spent and saved.
 - Live matchday (kickoff, goal, full time, postpone) with an on-chain event feed polled every 4 s.
 
 **Layer 2.**

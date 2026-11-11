@@ -37,6 +37,11 @@ export function describe(event: string, d: Data): { title: string; sub?: string 
     case "advance_taken": return { title: `Advance on ${a("token_id")}`, sub: money("amount") };
     case "advance_repaid": return { title: `Advance repaid · ${a("token_id")}`, sub: money("amount") };
     case "vote_cast": return { title: `Vote cast · poll ${a("poll_id")}`, sub: `weight ${a("weight")}` };
+    case "vendor_paid": return { title: `${a("token_id")} paid at the ground`, sub: `${money("amount")} to ${a("to")}` };
+    case "vendor_payment_started": return { title: `${a("token_id")} is paying a vendor`, sub: `${money("amount")} to ${a("to")}` };
+    case "vendor_payment_failed": return { title: `Payment from ${a("token_id")} failed`, sub: "Seat balance restored" };
+    case "vendor_set": return { title: d.name ? `Vendor approved · ${a("name")}` : "Vendor removed", sub: a("account_id") };
+    case "renewal_saving_set": return { title: `${a("token_id")} renewal saving`, sub: Number(d.bps) > 0 ? `${Number(d.bps) / 100}% of each payout set aside` : "Switched off" };
     case "match_created": return { title: `Fixture added · v ${a("opponent")}` };
     default: return { title: event.replaceAll("_", " ") };
   }

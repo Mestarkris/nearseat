@@ -23,6 +23,7 @@ mod autolend;
 mod category;
 mod events;
 mod gate;
+mod kiosk;
 mod lending;
 mod market;
 mod matchday;

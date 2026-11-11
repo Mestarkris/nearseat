@@ -1,5 +1,6 @@
 // The membership NFT card, drawn from live on-chain state (the contract also
 // renders an equivalent SVG in `nft_token` for wallets and explorers).
+import { useEffect, useRef, type CSSProperties } from "react";
 import type { Membership } from "../lib/types";
 import { parseSeat, usd } from "../lib/format";
 import { CATEGORIES } from "../lib/category";
@@ -54,21 +55,38 @@ export function MembershipCard({ m, compact = false }: { m: Membership; compact?
             </div>
           ))}
         </dl>
-        {(m.attended.length > 0 || m.goal_stamps.length > 0) && (
-          <div className="mt-3 flex flex-wrap items-center gap-1" aria-label="Attendance and goal stamps">
-            {m.attended.map((id) => (
-              <span key={`a${id}`} className="size-3 rounded-full bg-lime" title={`Attended match ${id}`} />
-            ))}
-            {m.goal_stamps.map((g, i) => (
-              <span key={`g${i}`} title={`${g.scorer} ${g.minute}' v ${g.opponent}`} className="text-sm">⚽</span>
-            ))}
-          </div>
-        )}
+        <Stamps m={m} className="mt-3" />
         <div className="mt-4 rounded-xl border border-line bg-ink/90 p-3">
           <div className="text-[11px] font-semibold uppercase tracking-wider text-lime">Owns its own account · Keys: 0</div>
           <div className="mono mt-1 truncate text-xs">{m.vault}</div>
         </div>
       </div>
     </article>
+  );
+}
+
+/** Attendance dots and goal stamps. A stamp that arrives while you watch is pressed on like ink. */
+export function Stamps({ m, className = "" }: { m: Membership; className?: string }) {
+  // Stamps already there when the card first shows don't animate.
+  const seen = useRef({ token: m.token_id, count: m.goal_stamps.length });
+  if (seen.current.token !== m.token_id) seen.current = { token: m.token_id, count: m.goal_stamps.length };
+  const before = seen.current.count;
+  useEffect(() => {
+    const t = setTimeout(() => { seen.current.count = m.goal_stamps.length; }, 700);
+    return () => clearTimeout(t);
+  }, [m.goal_stamps.length]);
+  if (m.attended.length === 0 && m.goal_stamps.length === 0) return null;
+  return (
+    <div className={`flex flex-wrap items-center gap-1.5 ${className}`} aria-label="Attendance and goal stamps">
+      {m.attended.map((id) => (
+        <span key={`a${id}`} className="size-3 rounded-full bg-lime" title={`Attended match ${id}`} />
+      ))}
+      {m.goal_stamps.map((g, i) => (
+        <span key={`g${i}`} role="img" aria-label={`Goal stamp: ${g.scorer} ${g.minute}' v ${g.opponent}`} title={`${g.scorer} ${g.minute}' v ${g.opponent}`}
+          className={`stamp ${i >= before ? "stamp-new" : ""}`} style={{ "--r": `${((i * 37) % 25) - 12}deg` } as CSSProperties}>
+          {g.minute}'
+        </span>
+      ))}
+    </div>
   );
 }

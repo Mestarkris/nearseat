@@ -33,6 +33,13 @@ pub struct MembershipView {
     pub attended: Vec<MatchId>,
     pub goal_stamps: Vec<GoalStamp>,
     pub vault_balance: U128,
+    /// Share of every payout set aside for renewal (basis points) and the amount so far.
+    pub renewal_bps: u16,
+    pub renewal_saved: U128,
+    /// Balance the holder can withdraw or spend right now.
+    pub spendable: U128,
+    /// Lifetime total paid to vendors from this seat.
+    pub vendor_spent: U128,
     /// Owed to the vault but not yet settled (pool share + finished loans).
     pub unsettled: U128,
     pub pending_loan_income: U128,
@@ -287,6 +294,10 @@ impl NearSeat {
             attended: m.attended.iter().map(|(id, _)| *id).collect(),
             goal_stamps: self.goal_stamps(m),
             vault_balance: U128(m.vault_balance),
+            renewal_bps: crate::kiosk::extras_of(token_id).save_bps,
+            renewal_saved: U128(self.saved_for_renewal(token_id)),
+            spendable: U128(self.spendable(token_id)),
+            vendor_spent: U128(crate::kiosk::extras_of(token_id).spent),
             unsettled: U128(unsettled),
             pending_loan_income: U128(pending),
             debt: U128(m.debt),

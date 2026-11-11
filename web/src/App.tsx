@@ -15,6 +15,7 @@ import { MembersOnlyPage } from "./pages/MembersOnly";
 import { AttackLabPage } from "./pages/AttackLab";
 import { JoinPage } from "./pages/Join";
 import { WhitepaperPage } from "./pages/Whitepaper";
+import { StatementPage } from "./pages/Statement";
 import { Footer } from "./components/Footer";
 
 /** Tiny hash router: works on any static host (GitHub Pages, Vercel). */
@@ -99,6 +100,7 @@ export function App() {
     case "matches": body = <MatchesPage />; break;
     case "club": body = <ClubPage />; break;
     case "verify": body = <VerifyPage tokenId={arg} />; break;
+    case "statement": body = <StatementPage tokenId={arg} />; break;
     case "pass": body = <PassPage tokenId={arg} />; break;
     case "scan": body = <ScanPage />; break;
     case "market": body = <MarketPage />; break;

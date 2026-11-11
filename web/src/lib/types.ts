@@ -61,7 +61,15 @@ export interface Membership {
   loans: { match_id: number; loan: Loan }[];
   autolend_rules: { match_id: number; hours_before: number; price: string; owner: string }[];
   history_len: number;
+  /** Share of each payout set aside for renewal, in basis points (0 = off). */
+  renewal_bps: number;
+  renewal_saved: string;
+  /** Balance minus what is set aside: what can be withdrawn or spent. */
+  spendable: string;
+  vendor_spent: string;
 }
+
+export interface Vendor { account_id: string; name: string }
 
 export interface Season {
   name: string; contract: string; club: string; gate: string; stablecoin: string;

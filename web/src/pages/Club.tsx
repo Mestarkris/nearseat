@@ -5,7 +5,7 @@ import { view } from "../near/rpc";
 import { useWallet } from "../near/wallet";
 import { usePoll } from "../lib/usePoll";
 import { useAction } from "../lib/useAction";
-import type { Match, Season } from "../lib/types";
+import type { Match, Season, Vendor } from "../lib/types";
 import { matchMinute, shortDate, toRaw, usd } from "../lib/format";
 import { config } from "../config";
 import { ActionStatus } from "../components/ActionStatus";
@@ -66,6 +66,7 @@ export function ClubPage() {
           <MatchdayControl matches={matches} refresh={d.refresh} />
           <Payout season={season} refresh={d.refresh} />
           <ClubTools season={season} refresh={d.refresh} />
+          <Vendors />
           <section className="card p-5 opacity-80">
             <h2 className="text-lg font-bold">Sponsor drop</h2>
             <p className="mt-2 text-sm text-muted">Tier-filtered vouchers sent into seat accounts. On the roadmap: not built for this submission.</p>
@@ -207,6 +208,45 @@ function ClubTools({ season, refresh }: { season: Season; refresh: () => void })
           Add fixture
         </button>
       </div>
+      <ActionStatus a={a} />
+    </section>
+  );
+}
+
+/** Who members can pay from their seat's account. The club approves and removes vendors. */
+function Vendors() {
+  const { accountId, call } = useWallet();
+  const list = usePoll(() => view<Vendor[]>("vendors"), [], 20_000);
+  const a = useAction(list.refresh);
+  const [id, setId] = useState("");
+  const [name, setName] = useState("");
+  const isClub = accountId === config.clubId;
+  const account = id.trim().toLowerCase();
+  return (
+    <section className="card p-5">
+      <h2 className="text-lg font-bold">Vendors at the ground</h2>
+      <p className="mt-1 text-sm text-muted">Members can pay these accounts straight from what their seat has earned.</p>
+      {(list.data ?? []).length === 0 ? <p className="mt-3 text-sm text-muted">{list.loading ? "Loading…" : "No vendors approved yet."}</p> : (
+        <ul className="mt-3 space-y-2 text-sm">
+          {list.data!.map((v) => (
+            <li key={v.account_id} className="flex items-center justify-between gap-2 rounded-xl bg-ink/70 px-3 py-2">
+              <span className="min-w-0"><span className="block font-semibold">{v.name}</span><span className="mono block truncate text-xs text-muted">{v.account_id}</span></span>
+              {isClub && <button className="btn-ghost shrink-0 px-3 py-1 text-xs" disabled={!!a.busy} onClick={() => a.run("Removing vendor", () => call("set_vendor", { account_id: v.account_id, name: null }), `${v.name} removed`)}>Remove</button>}
+            </li>
+          ))}
+        </ul>
+      )}
+      {isClub && (
+        <div className="mt-3 grid gap-2">
+          <input className="input" placeholder="Vendor's NEAR account" aria-label="Vendor account" value={id} onChange={(e) => setId(e.target.value)} />
+          <input className="input" maxLength={40} placeholder="Name shown to members" aria-label="Vendor name" value={name} onChange={(e) => setName(e.target.value)} />
+          <button className="btn-primary justify-center" disabled={!account || !name.trim() || !!a.busy}
+            onClick={() => a.run("Approving vendor", () => call("set_vendor", { account_id: account, name: name.trim() }), `${name.trim()} approved`).then((ok) => { if (ok) { setId(""); setName(""); } })}>
+            Approve vendor
+          </button>
+          <p className="text-xs text-muted">The vendor's account must be registered with tUSDC first, or payments to it are returned to the seat.</p>
+        </div>
+      )}
       <ActionStatus a={a} />
     </section>
   );

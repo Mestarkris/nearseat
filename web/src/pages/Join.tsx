@@ -10,6 +10,7 @@ import type { Match, Membership, Season, SeatView } from "../lib/types";
 import { parseSeat, usd } from "../lib/format";
 import { CATEGORIES, CATEGORY_ORDER, categoryOf, multiple, priceFor } from "../lib/category";
 import { StadiumMap, standName } from "../components/StadiumMap";
+import { SeatPeek, useSeatPeek } from "../components/SeatPeek";
 import { ActionStatus } from "../components/ActionStatus";
 import { Faucet } from "../components/Faucet";
 import { ErrorBox, Loading } from "../components/ui";
@@ -37,15 +38,16 @@ export function JoinPage() {
     const taken = new Map<string, SeatView>();
     for (const m of members) taken.set(m.seat, { seat: m.seat, state: "member", price: null, token_id: m.token_id, holder: m.owner_id });
     for (const map of maps) for (const s of map) if (s.state === "sold" && !taken.has(s.seat)) taken.set(s.seat, s);
-    return { season, taken: [...taken.values()] };
+    return { season, members, taken: [...taken.values()] };
   }, [], 10_000);
   const [pick, setPick] = useState<string>();
   const [bought, setBought] = useState<string>();
   const a = useAction(() => { d.refresh(); setPick(undefined); });
+  const peek = useSeatPeek();
 
   if (d.loading && !d.data) return <Loading what="Loading free seats" />;
   if (d.error && !d.data) return <ErrorBox error={d.error} retry={d.refresh} />;
-  const { season, taken } = d.data!;
+  const { season, members, taken } = d.data!;
   const left = season.max_supply - season.memberships;
   const s = pick ? parseSeat(pick) : null;
   const cat = pick ? categoryOf(pick) : null;
@@ -62,9 +64,9 @@ export function JoinPage() {
         <section className="card p-4 sm:p-6">
           <div className="mb-3 flex flex-wrap justify-between gap-x-4 text-sm">
             <span className="font-display text-lg font-bold">Stars Arena · choose a seat</span>
-            <span className="text-muted">Colour shows the category. Blue seats belong to members already.</span>
+            <span className="text-muted">Colour shows the category. Blue seats belong to members: tap one to see its card.</span>
           </div>
-          <StadiumMap seats={taken} picked={pick} onPick={(seat) => { a.clear(); setBought(undefined); setPick(seat); }} />
+          <StadiumMap seats={taken} picked={pick} onPick={(seat) => { a.clear(); setBought(undefined); setPick(seat); }} onMember={peek.open} />
         </section>
         <aside className="card-glow h-fit p-5 lg:sticky lg:top-24" aria-label="Membership slip">
           <h2 className="text-lg font-bold">Season membership</h2>
@@ -120,6 +122,7 @@ export function JoinPage() {
           <div className="mt-4"><Faucet /></div>
         </aside>
       </div>
+      {peek.tokenId && <SeatPeek tokenId={peek.tokenId} known={members.find((x) => x.token_id === peek.tokenId)} onClose={peek.close} />}
     </div>
   );
 }

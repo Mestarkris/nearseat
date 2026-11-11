@@ -155,7 +155,7 @@ function Proof() {
     [s ? Number(s.pool_total_distributed) / 1e6 : 0, 2, "tUSDC shared with members so far"],
     [0, 0, "keys on any seat account"],
     [21, 0, "attacks you can try yourself, all refused"],
-    [97, 0, "automated tests, including a sale in the middle of a payout"],
+    [112, 0, "automated tests, including a sale in the middle of a payout"],
   ];
   return (
     <section className="border-y border-line bg-card">
@@ -185,6 +185,8 @@ const ROADMAP: [string, string, string[]][] = [
     "Seat lending, capped resale and automatic refunds",
     "Rotating gate pass and a scanner for stewards",
     "Member voting, weighted by attendance",
+    "Paying club-approved vendors from the seat's account",
+    "Saving payouts towards next season, and a season statement for every seat",
     "Seat categories: VIP, pitchside, standard and fans' end, each with its own price and share",
   ]],
   ["Next", "After the hackathon", [

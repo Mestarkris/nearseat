@@ -29,7 +29,8 @@
     "seed": "node scripts/seed.mjs",
     "demo": "node keeper/src/demo-match.mjs",
     "verify": "node scripts/verify.mjs",
-    "club-check": "node scripts/club-check.mjs"
+    "club-check": "node scripts/club-check.mjs",
+    "kiosk": "node scripts/kiosk.mjs"
   },
   "allowScripts": {
     "bufferutil": false,

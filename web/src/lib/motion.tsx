@@ -2,7 +2,7 @@
 // IntersectionObserver, requestAnimationFrame and CSS do the work.
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from "react";
 
-const reduced = () => typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+export const reduced = () => typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /** True once the element has entered the viewport (stays true unless `once` is false). */
 export function useInView<T extends Element>(ref: RefObject<T | null>, { once = true, margin = "0px 0px -12% 0px" } = {}): boolean {

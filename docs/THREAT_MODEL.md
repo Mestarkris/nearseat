@@ -157,6 +157,17 @@ Legend: **[AL]** = shown in the Attack Lab with a "Try it on testnet" button. Te
 | T57 | One seat, two gate passes | Buy a season membership for a seat already sold as a single ticket for an upcoming match | Purchase refused while any Scheduled/Live match has that seat sold; club ticket sales already refuse member seats unless lent | unit `cannot_buy_membership_for_seat_sold_as_ticket`, `cannot_buy_existing_member_seat`, `concurrent_purchase_of_same_seat_rejected` |
 | T58 | Fan pays, gets nothing | Vault creation fails after the tUSDC arrived | `ft_on_transfer` returns the vault promise; its callback returns the full price as "unused" on failure, so NEP-141 refunds the buyer; the club is credited only on success | unit `failed_vault_on_purchase_refunds_buyer`; sandbox `fan_buys_new_membership_from_club_with_tusdc` (wrong price refunded) |
 
+### 4.12 Added during build: paying vendors and renewal saving
+
+| # | Threat | Attack path | Mitigation | Proving test |
+|---|---|---|---|---|
+| T59 | Seat money sent to an arbitrary account | Holder (or a phishing page) calls `pay_vendor` with any receiver, turning the seat into an untracked transfer rail | Receiver must be on the club's vendor list; anything else panics before money moves | unit `unapproved_vendor_cannot_be_paid`; live `npm run kiosk` |
+| T60 | Fake vendor | An outsider adds their own account to the vendor list | `set_vendor` is club-only | unit `outsider_cannot_approve_vendor` |
+| T61 | Club or vendor drains a seat | The club approves itself as a vendor and pulls money from members | `pay_vendor` is holder-only with 1 yocto (full-access key, never the relayer); the club can list vendors but can't start a payment | unit `only_the_holder_can_spend_from_the_seat`; live `npm run kiosk` |
+| T62 | Seller empties the seat after listing | List the membership, then spend the balance at a vendor before the buyer pays | Vendor payments are refused while the membership is listed or has an open advance, same as withdrawals | unit `vendor_payment_blocked_while_listed` |
+| T63 | Payment fails, money gone | The token transfer to the vendor fails after the balance was reduced | Balance and spending record are restored in the callback; `vendor_payment_failed` event | unit `failed_vendor_payment_restores_balance` |
+| T64 | Savings spent or inherited by mistake | Spend money set aside for renewal; or a buyer inherits the seller's saving rule | Spendable = balance − set aside, enforced on withdraw and vendor payment; saving stops at the season price; the rule and the set-aside mark are cleared on transfer so the buyer gets a plain balance | unit `set_aside_money_cannot_be_spent_at_a_vendor`, `renewal_saving_stops_at_the_season_price`, `sale_clears_renewal_saving_for_the_buyer`; sandbox `seat_pays_a_vendor_and_keeps_renewal_savings_locked` |
+
 ## 5. Residual risks we accept (stated in README)
 
 - Sybil touts across many accounts (T24) and compromised gate scanner keys (T35).
@@ -204,4 +215,5 @@ The test column above was written before the code. These are the tests that actu
 | T47 | unit `autolend_rule_cleared_on_transfer`, `autolend_rechecks_conditions` |
 | T51, T53, T54 | relayer `rejects non-allowlisted receiver`, `rejects unknown method and big deposits`, `rate limiter caps per account per minute`, `nonces are single-use`; shared `members-only request: valid once, replay rejected, non-holder rejected` |
 | T55 | unit `svg::svg_tests::escapes_markup` |
+| T59–T64 | unit `unapproved_vendor_cannot_be_paid`, `outsider_cannot_approve_vendor`, `vendor_payment_blocked_while_listed`, `failed_vendor_payment_restores_balance`, `only_the_holder_can_spend_from_the_seat`, `set_aside_money_cannot_be_spent_at_a_vendor`, `renewal_saving_stops_at_the_season_price`, `sale_clears_renewal_saving_for_the_buyer`, `only_the_holder_can_change_renewal_saving`; sandbox `seat_pays_a_vendor_and_keeps_renewal_savings_locked` |
 | T4, T35, T40, T44, T52, T56 | Not covered by an automated test: verified manually (`npm run verify`), by protocol guarantees, or by the CI secret scan. Recorded as residual or manual in §5 |

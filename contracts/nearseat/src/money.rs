@@ -39,6 +39,7 @@ pub trait SelfCallbacks {
     fn on_withdrawn(&mut self, token_id: TokenId, amount: U128, receiver_id: AccountId);
     fn on_paid_out(&mut self, receiver_id: AccountId, amount: U128, reason: String);
     fn on_club_withdrawn(&mut self, amount: U128);
+    fn on_vendor_paid(&mut self, token_id: TokenId, amount: U128, vendor_id: AccountId);
 }
 
 pub(crate) fn promise_ok() -> bool {
@@ -81,6 +82,7 @@ impl NearSeat {
             let m = self.member_mut(&token_id);
             m.vault_balance += amount.0;
             m.totals.settled_into_vault = U128(m.totals.settled_into_vault.0 + amount.0);
+            self.save_from_payout(&token_id, amount.0);
             self.record(&token_id, "settled", Some(amount.0), None, None);
             self.emit("settled", json!({ "token_id": token_id, "amount": amount }));
         } else {
@@ -97,11 +99,13 @@ impl NearSeat {
         assert_one_yocto();
         let owner = self.assert_owner(&token_id);
         let stablecoin = self.stablecoin.clone();
+        let spendable = self.spendable(&token_id);
         let vault = {
             let m = self.member_mut(&token_id);
             require!(m.listing.is_none(), "vault is frozen while listed");
             require!(m.debt == 0, "withdrawals are blocked while an advance is open");
             require!(amount.0 > 0 && amount.0 <= m.vault_balance, "amount exceeds vault balance");
+            require!(amount.0 <= spendable, "part of this balance is set aside for renewal");
             m.vault_balance -= amount.0;
             m.outflows_in_flight += 1;
             m.nonce += 1;

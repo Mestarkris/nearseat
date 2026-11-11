@@ -108,3 +108,17 @@ details.faq[open] .faq-plus { transform: rotate(45deg); }
   body { background: #fff !important; }
   body * { color: #000 !important; background: transparent !important; border-color: #bbb !important; }
 }
+
+/* ---------- Matchday effects ---------- */
+/* Goal: a wave runs once round the ground, seat by seat. */
+@keyframes seat-wave { 0%, 100% { transform: none; filter: none; } 40% { transform: scale(1.75); filter: brightness(2); } }
+.map-wave .seat { animation: seat-wave .5s ease-out var(--wd, 0ms) both; }
+/* Full time: coins leave the centre circle for every member's seat. */
+.payout-coin { position: absolute; left: 0; top: 0; border-radius: 9999px; background: var(--color-lime); box-shadow: 0 0 10px rgb(184 230 43 / .7); pointer-events: none; opacity: 0; }
+/* Goal stamp, pressed onto the card like ink. */
+.stamp { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 9999px; border: 1.5px solid currentColor; outline: 1px solid currentColor; outline-offset: -4px; font-size: 10px; font-weight: 800; line-height: 1; color: var(--color-lime); opacity: .9; transform: rotate(var(--r, -8deg)); }
+@keyframes stamp-press { 0% { opacity: 0; transform: rotate(-24deg) scale(2.6); } 55% { opacity: 1; transform: rotate(var(--r, -8deg)) scale(.86); } 100% { opacity: .9; transform: rotate(var(--r, -8deg)) scale(1); } }
+.stamp-new { animation: stamp-press .5s cubic-bezier(.3,1.4,.5,1) both; }
+/* A tapped seat grows into its membership card. */
+::view-transition-group(seat-card) { animation-duration: .5s; animation-timing-function: cubic-bezier(.2,.8,.2,1); }
+::view-transition-old(seat-card), ::view-transition-new(seat-card) { height: 100%; }

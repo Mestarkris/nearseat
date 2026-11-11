@@ -275,6 +275,7 @@ impl NearSeat {
             m.autolend_rules.clear();
             std::mem::take(&mut m.open_offers)
         };
+        self.clear_renewal_saving(token_id);
         // Un-rented offers die with the sale. Paid rentals stay: the renter keeps that match.
         for match_id in offers {
             let key = (match_id, token_id.clone());

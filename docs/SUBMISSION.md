@@ -32,4 +32,4 @@ NearSeat is a season membership and ticketing platform for football clubs, demoe
 
 The vault has zero access keys and obeys only the NFT contract, which checks the live owner on every call. Selling the NFT therefore moves the money, inventory, record and access in one transaction, and the seller is locked out. Resale is seller-proof: listing freezes the vault, and buyers pin a state nonce. A sale even works mid-payout, because payouts are owed to the token, not the person.
 
-Clubs get escrowed stablecoin ticketing, automatic refunds on postponement, capped resale with a NEP-199 royalty, and gasless fans via NEP-366. There is a public history and Verify page, an Attack Lab with 21 tested attacks, and the threat model was written before any code.
+Members can pay club-approved vendors straight from the seat's account, or set payouts aside until the seat has paid for next season. Clubs get escrowed stablecoin ticketing, automatic refunds on postponement, capped resale with a NEP-199 royalty, and gasless fans via NEP-366. There is a public history and Verify page, an Attack Lab with 21 tested attacks, and the threat model was written before any code.

@@ -967,3 +967,185 @@ fn migration_pays_out_old_equal_shares_then_switches_to_weights() {
     assert_eq!(owed(&c, SEAT_A), 14 * ONE);
     assert_eq!(owed(&c, "d1-1"), 9 * ONE);
 }
+
+// ---------- kiosk payments and renewal saving ----------
+
+const KIOSK: &str = "kiosk.testnet";
+
+fn approve_kiosk(c: &mut NearSeat, e: &Env) {
+    club(e);
+    c.set_vendor(a(KIOSK), Some("Mama Tee's Kitchen".into()));
+}
+
+#[test]
+fn club_approves_and_removes_vendors() {
+    let (mut c, e) = setup();
+    approve_kiosk(&mut c, &e);
+    assert_eq!(c.vendors().len(), 1);
+    assert_eq!(c.vendors()[0].name, "Mama Tee's Kitchen");
+    club(&e);
+    c.set_vendor(a(KIOSK), None);
+    assert!(c.vendors().is_empty());
+}
+
+#[test]
+#[should_panic(expected = "only the club can do this")]
+fn outsider_cannot_approve_vendor() {
+    let (mut c, e) = setup();
+    e.call(BOB, 0);
+    c.set_vendor(a(BOB), Some("Bob".into()));
+}
+
+#[test]
+fn holder_pays_vendor_from_the_seat() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    fund_vault(&mut c, &e, 10 * ONE);
+    approve_kiosk(&mut c, &e);
+    e.call(ALICE, 1);
+    let nonce = c.member(&tid(SEAT_A)).nonce;
+    c.pay_vendor(tid(SEAT_A), a(KIOSK), U128(3 * ONE), Some("Jollof rice".into())).detach();
+    let m = c.member(&tid(SEAT_A));
+    assert_eq!((m.vault_balance, m.outflows_in_flight, m.nonce), (7 * ONE, 1, nonce + 1));
+    e.callback(true);
+    assert!(c.on_vendor_paid(tid(SEAT_A), U128(3 * ONE), a(KIOSK)));
+    let v = c.membership(tid(SEAT_A)).unwrap();
+    assert_eq!((v.vault_balance.0, v.vendor_spent.0, v.outflows_in_flight), (7 * ONE, 3 * ONE, 0));
+}
+
+#[test]
+fn failed_vendor_payment_restores_balance() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    fund_vault(&mut c, &e, 10 * ONE);
+    approve_kiosk(&mut c, &e);
+    e.call(ALICE, 1);
+    c.pay_vendor(tid(SEAT_A), a(KIOSK), U128(3 * ONE), None).detach();
+    e.callback(false);
+    assert!(!c.on_vendor_paid(tid(SEAT_A), U128(3 * ONE), a(KIOSK)));
+    let v = c.membership(tid(SEAT_A)).unwrap();
+    assert_eq!((v.vault_balance.0, v.vendor_spent.0, v.outflows_in_flight), (10 * ONE, 0, 0));
+}
+
+#[test]
+#[should_panic(expected = "not an approved vendor")]
+fn unapproved_vendor_cannot_be_paid() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    fund_vault(&mut c, &e, 10 * ONE);
+    e.call(ALICE, 1);
+    c.pay_vendor(tid(SEAT_A), a(BOB), U128(ONE), None).detach();
+}
+
+#[test]
+#[should_panic(expected = "only the current holder can do this")]
+fn only_the_holder_can_spend_from_the_seat() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    fund_vault(&mut c, &e, 10 * ONE);
+    approve_kiosk(&mut c, &e);
+    e.call(KIOSK, 1);
+    c.pay_vendor(tid(SEAT_A), a(KIOSK), U128(ONE), None).detach();
+}
+
+#[test]
+#[should_panic(expected = "vault is frozen while listed")]
+fn vendor_payment_blocked_while_listed() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    fund_vault(&mut c, &e, 10 * ONE);
+    approve_kiosk(&mut c, &e);
+    list(&mut c, &e, 100 * ONE);
+    e.call(ALICE, 1);
+    c.pay_vendor(tid(SEAT_A), a(KIOSK), U128(ONE), None).detach();
+}
+
+fn save_half(c: &mut NearSeat, e: &Env) {
+    e.call(ALICE, 1);
+    c.set_renewal_saving(tid(SEAT_A), 5_000);
+}
+
+#[test]
+fn renewal_saving_sets_aside_a_share_of_each_payout() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    fund_vault(&mut c, &e, 4 * ONE); // before the rule: nothing set aside
+    save_half(&mut c, &e);
+    fund_vault(&mut c, &e, 10 * ONE);
+    let v = c.membership(tid(SEAT_A)).unwrap();
+    assert_eq!((v.vault_balance.0, v.renewal_saved.0, v.spendable.0, v.renewal_bps), (14 * ONE, 5 * ONE, 9 * ONE, 5_000));
+}
+
+#[test]
+#[should_panic(expected = "part of this balance is set aside for renewal")]
+fn set_aside_money_cannot_be_withdrawn() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    save_half(&mut c, &e);
+    fund_vault(&mut c, &e, 10 * ONE);
+    e.call(ALICE, 1);
+    c.withdraw(tid(SEAT_A), U128(6 * ONE)).detach();
+}
+
+#[test]
+#[should_panic(expected = "amount exceeds what this seat can spend")]
+fn set_aside_money_cannot_be_spent_at_a_vendor() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    save_half(&mut c, &e);
+    fund_vault(&mut c, &e, 10 * ONE);
+    approve_kiosk(&mut c, &e);
+    e.call(ALICE, 1);
+    c.pay_vendor(tid(SEAT_A), a(KIOSK), U128(6 * ONE), None).detach();
+}
+
+#[test]
+fn switching_saving_off_releases_everything() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    save_half(&mut c, &e);
+    fund_vault(&mut c, &e, 10 * ONE);
+    e.call(ALICE, 1);
+    c.withdraw(tid(SEAT_A), U128(5 * ONE)).detach(); // the free half is fine
+    e.callback(true);
+    c.on_withdrawn(tid(SEAT_A), U128(5 * ONE), a(ALICE));
+    e.call(ALICE, 1);
+    c.set_renewal_saving(tid(SEAT_A), 0);
+    let v = c.membership(tid(SEAT_A)).unwrap();
+    assert_eq!((v.renewal_saved.0, v.spendable.0), (0, 5 * ONE));
+}
+
+#[test]
+fn renewal_saving_stops_at_the_season_price() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    e.call(ALICE, 1);
+    c.set_renewal_saving(tid(SEAT_A), 10_000);
+    fund_vault(&mut c, &e, 150 * ONE);
+    fund_vault(&mut c, &e, 150 * ONE);
+    let v = c.membership(tid(SEAT_A)).unwrap();
+    assert_eq!((v.renewal_saved.0, v.spendable.0), (200 * ONE, 100 * ONE));
+}
+
+#[test]
+fn sale_clears_renewal_saving_for_the_buyer() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    save_half(&mut c, &e);
+    fund_vault(&mut c, &e, 10 * ONE);
+    list(&mut c, &e, 100 * ONE);
+    let nonce = c.member(&tid(SEAT_A)).nonce;
+    pay(&mut c, &e, BOB, 100 * ONE, &buy_msg(nonce));
+    let v = c.membership(tid(SEAT_A)).unwrap();
+    assert_eq!(v.owner_id, a(BOB));
+    assert_eq!((v.renewal_bps, v.renewal_saved.0, v.spendable.0), (0, 0, 10 * ONE));
+}
+
+#[test]
+#[should_panic(expected = "only the current holder can do this")]
+fn only_the_holder_can_change_renewal_saving() {
+    let (mut c, e) = setup();
+    mint(&mut c, &e, SEAT_A, ALICE);
+    e.call(BOB, 1);
+    c.set_renewal_saving(tid(SEAT_A), 5_000);
+}

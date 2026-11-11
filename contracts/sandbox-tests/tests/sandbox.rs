@@ -554,3 +554,36 @@ async fn vip_seat_costs_more_and_earns_a_bigger_share() -> anyhow::Result<()> {
     assert_eq!(w.balance(&w.vault_id()).await?, 4 * ONE);
     Ok(())
 }
+
+#[tokio::test]
+async fn seat_pays_a_vendor_and_keeps_renewal_savings_locked() -> anyhow::Result<()> {
+    let w = World::new(true).await?;
+    w.mint(SEAT, &w.alice).await?;
+    // Carol runs the food kiosk; the club approves her.
+    ok(w.call(&w.club, "set_vendor", json!({ "account_id": w.carol.id(), "name": "Mama Tee's Kitchen" }), 0).await?).await;
+    // Alice sets half of every payout aside for renewal, then a payout lands.
+    ok(w.call(&w.alice, "set_renewal_saving", json!({ "token_id": TOKEN, "bps": 5000 }), 1).await?).await;
+    w.pay_members(10 * ONE).await?;
+    let card = w.membership().await?;
+    assert_eq!((u(&card["vault_balance"]), u(&card["renewal_saved"]), u(&card["spendable"])), (10 * ONE, 5 * ONE, 5 * ONE));
+
+    // The seat's own account pays for the meal: vault → vendor, nothing via Alice.
+    ok(w.call(&w.alice, "pay_vendor", json!({ "token_id": TOKEN, "vendor_id": w.carol.id(), "amount": (3 * ONE).to_string(), "memo": "Jollof rice" }), 1).await?).await;
+    assert_eq!(w.balance(w.carol.id()).await?, 3 * ONE);
+    assert_eq!(w.balance(&w.vault_id()).await?, 7 * ONE);
+    assert_eq!(w.balance(w.alice.id()).await?, 0);
+    assert_eq!(u(&w.membership().await?["vendor_spent"]), 3 * ONE);
+
+    // Only 2 tUSDC is free now: the saved half can't be spent or withdrawn.
+    let r = w.call(&w.alice, "pay_vendor", json!({ "token_id": TOKEN, "vendor_id": w.carol.id(), "amount": (3 * ONE).to_string() }), 1).await?;
+    failed_with(&r, "amount exceeds what this seat can spend");
+    let r = w.call(&w.alice, "withdraw", json!({ "token_id": TOKEN, "amount": (3 * ONE).to_string() }), 1).await?;
+    failed_with(&r, "set aside for renewal");
+    // Someone who isn't an approved vendor can't be paid, and a non-holder can't pay.
+    let r = w.call(&w.alice, "pay_vendor", json!({ "token_id": TOKEN, "vendor_id": w.bob.id(), "amount": ONE.to_string() }), 1).await?;
+    failed_with(&r, "not an approved vendor");
+    let r = w.call(&w.carol, "pay_vendor", json!({ "token_id": TOKEN, "vendor_id": w.carol.id(), "amount": ONE.to_string() }), 1).await?;
+    failed_with(&r, "only the current holder can do this");
+    assert_eq!(w.balance(&w.vault_id()).await?, 7 * ONE);
+    Ok(())
+}
