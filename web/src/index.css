@@ -125,3 +125,19 @@ details.faq[open] .faq-plus { transform: rotate(45deg); }
 /* A tapped seat grows into its membership card. */
 ::view-transition-group(seat-card) { animation-duration: .5s; animation-timing-function: cubic-bezier(.2,.8,.2,1); }
 ::view-transition-old(seat-card), ::view-transition-new(seat-card) { height: 100%; }
+
+/* Season seal: glossy enamel badge with a ring of words that turns with the scroll. */
+.seal { transition: transform .35s cubic-bezier(.2,.8,.2,1); -webkit-tap-highlight-color: transparent; }
+.seal:hover { transform: scale(1.06); }
+.seal:active { transform: scale(.97); }
+.seal:focus-visible { outline: 2px solid var(--color-lime); outline-offset: 4px; }
+.seal-face { position: absolute; inset: 0; overflow: hidden; border-radius: 9999px; box-shadow: 0 10px 24px -10px rgb(0 0 0 / .8), inset 0 -6px 12px rgb(0 0 0 / .35); }
+.seal-ring { transform-box: view-box; transform-origin: 50% 50%; will-change: transform; }
+@keyframes seal-breathe { 0%, 100% { opacity: .45; transform: scale(.96); } 50% { opacity: .95; transform: scale(1.08); } }
+.seal-glow { position: absolute; inset: -22%; border-radius: 9999px; background: radial-gradient(closest-side, rgb(200 72 107 / .75), rgb(155 37 69 / .35) 55%, transparent 78%); filter: blur(6px); animation: seal-breathe 3.6s ease-in-out infinite; pointer-events: none; }
+@keyframes seal-sheen { 0%, 62% { transform: translateX(-160%) skewX(-20deg); } 100% { transform: translateX(260%) skewX(-20deg); } }
+.seal-sheen { position: absolute; inset: 0; width: 45%; background: linear-gradient(90deg, transparent, rgb(255 246 223 / .5), transparent); animation: seal-sheen 5.5s ease-in-out infinite; pointer-events: none; }
+@keyframes seal-blink { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+@keyframes seal-ping { 0% { transform: scale(1); opacity: .8; } 100% { transform: scale(3.2); opacity: 0; } }
+.seal-dot { position: absolute; right: 9%; top: 9%; width: 11%; height: 11%; min-width: 9px; min-height: 9px; border-radius: 9999px; background: #f5ead2; border: 2px solid var(--color-ink); box-shadow: 0 0 10px 2px rgb(245 234 210 / .8); animation: seal-blink 1.4s ease-in-out infinite; }
+.seal-dot > span { position: absolute; inset: -2px; border-radius: 9999px; background: #f5ead2; animation: seal-ping 1.4s ease-out infinite; }

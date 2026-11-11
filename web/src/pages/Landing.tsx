@@ -7,6 +7,7 @@ import type { FeedItem, Membership, Season } from "../lib/types";
 import { Reveal, useCountUp, useInView } from "../lib/motion";
 import { MembershipCard } from "../components/MembershipCard";
 import { SeatStory } from "../components/SeatStory";
+import { SeasonSeal } from "../components/SeasonSeal";
 import { describe } from "../components/Feed";
 import { Loading } from "../components/ui";
 
@@ -33,6 +34,7 @@ export function Landing({ section }: { section?: string }) {
       <Roadmap />
       <Faq />
       <JoinCta />
+      <SeasonSeal />
     </main>
   );
 }
