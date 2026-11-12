@@ -1,0 +1,10 @@
+# Default gitleaks rules, plus public values that look like keys but are not.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Public NEAR contract addresses"
+regexes = [
+  # Circle's USDC token contract on NEAR mainnet: an implicit account id, public.
+  '''17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad2011e36133a1''',
+]
