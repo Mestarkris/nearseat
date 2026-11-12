@@ -6,14 +6,24 @@ The demo is a 2:34 motion video at 60 fps with a voiceover and captions. It foll
 
 ## X post
 
-> Your seat now earns. 🏟️
+Main post (269 of 280 characters, with the demo video attached):
+
+> Season tickets earn their holders nothing.
 >
-> NearSeat turns a football season ticket into an NFT that owns its own @NEARProtocol account: it earns 5% of every ticket sold, lends your seat, refunds itself and opens the gate. Sell it and everything moves to the buyer. The old owner is locked out.
->
-> Keyless vaults · NEP-171 · stablecoin payouts · gasless fans
+> NearSeat makes each membership an NFT that owns a keyless @NEARProtocol account. It earns 5% of every match's ticket sales. Sell it and the money goes with it; the seller is locked out.
 >
 > Built at NEAR HACKATHON #NEARHackathon
-> https://github.com/Mestarkris/nearseat · https://nearseat.vercel.app
+
+Reply to it:
+
+> Try it with test money, no install: https://nearseat.vercel.app
+> Code, tests and the attacks it refuses: https://github.com/Mestarkris/nearseat
+>
+> If you run a club or a supporters' group: what would you want a membership to pay for?
+
+## Where to submit
+
+Once, at https://nearhackathon.com/#apply (or its API), tracks `nfts` and `realworld`, after the X post is up. Mistakes are fixed at https://nearhackathon.com/request-changes, never by submitting again.
 
 ## Project description (about 1,400 characters)
 
