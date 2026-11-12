@@ -3,7 +3,7 @@
 // attack to testnet so you can watch the contract refuse it.
 import { useState } from "react";
 import { useWallet, friendlyError } from "../near/wallet";
-import { config } from "../config";
+import { config, MAINNET } from "../config";
 import { toRaw } from "../lib/format";
 
 type Actor = "Seller" | "Previous owner" | "Renter" | "Tout" | "Outsider" | "Club";
@@ -37,7 +37,7 @@ const ATTACKS: Attack[] = [
   { id: "T12", actor: "Previous owner", title: "Withdraw after selling", path: "Old owner calls withdraw() on the membership they sold.", fix: "Every action reads the live NEP-171 owner in the same receipt. No cached ownership.", tests: ["unit: old_owner_cannot_withdraw_after_sale", "sandbox: sale_mid_payout_buyer_receives_settlement"],
     attempt: (w) => w.call("withdraw", { token_id: T, amount: "1" }, { deposit: "1" }) },
   { id: "T12b", actor: "Previous owner", title: "Reuse an old gate pass or members session", path: "Keep a QR or a signed members-only message from before the sale.", fix: "Scanner and members API re-check the live owner on every scan or load; QR expires in 30 s; members nonces are single-use.", tests: ["shared: old owner's pass fails after a sale (T12)", "shared: members-only request: valid once, replay rejected, non-holder rejected"] },
-  { id: "T6", actor: "Seller", title: "Drain the vault while listed", path: "List at 200, buyer sees 80 tUSDC inside, seller withdraws before the buy lands.", fix: "Listing freezes the vault: withdraw, lend and borrow are refused.", tests: ["unit: withdraw_blocked_while_listed"] },
+  { id: "T6", actor: "Seller", title: "Drain the vault while listed", path: "List at 200, buyer sees 80 inside, seller withdraws before the buy lands.", fix: "Listing freezes the vault: withdraw, lend and borrow are refused.", tests: ["unit: withdraw_blocked_while_listed"] },
   { id: "T7", actor: "Seller", title: "Change the vault between look and buy", path: "Delist, withdraw, relist at the same price.", fix: "Every outflow and (de)list bumps a nonce; buy() needs the nonce the buyer saw, else full refund.", tests: ["sandbox: wrong_nonce_refunds_buyer_and_keeps_owner", "unit: wrong_nonce_rejected"] },
   { id: "T8", actor: "Seller", title: "Sell mid-withdrawal", path: "Start withdraw(), get the sale in before the callback.", fix: "Withdrawals mark themselves in flight; buy() refuses until the callback ran.", tests: ["unit: buy_rejected_during_inflight_withdraw"] },
   { id: "T9", actor: "Seller", title: "Pocket a payout that lands after the sale", path: "Payout transfer is in flight when the membership sells.", fix: "Payouts are owed to the token and land in the vault; the new holder withdraws them.", tests: ["sandbox: sale_mid_payout_buyer_receives_settlement", "unit: sale_mid_payout_buyer_receives_settlement"] },
@@ -45,7 +45,7 @@ const ATTACKS: Attack[] = [
   { id: "T45", actor: "Seller", title: "Vote, sell, vote again", path: "Buyer votes again with the same membership.", fix: "Votes are keyed by (poll, membership), not by account.", tests: ["sandbox: double_vote_blocked_after_sale", "unit: double_vote_blocked_after_sale"] },
   { id: "T27", actor: "Renter", title: "Use the seat after the loan", path: "Renter scans the pass after full time or at the next match.", fix: "A loan covers one match; full time / postponement closes the gates for it.", tests: ["sandbox: renter_and_old_owner_locked_out", "unit: renter_locked_out_after_full_time"] },
   { id: "T28", actor: "Renter", title: "Owner and renter both enter", path: "Owner lends the seat and still scans in.", fix: "While rented, only the renter is a valid holder for that match.", tests: ["unit: owner_refused_while_lent"] },
-  { id: "T13", actor: "Tout", title: "List a membership at 10×", path: "List at 2,000 tUSDC.", fix: "list() and NEP-199 payouts reject prices above the 120% cap.", tests: ["sandbox: price_caps_enforced", "unit: price_above_cap_rejected"],
+  { id: "T13", actor: "Tout", title: "List a membership at 10×", path: "List at 2,000.", fix: "list() and NEP-199 payouts reject prices above the 120% cap.", tests: ["sandbox: price_caps_enforced", "unit: price_above_cap_rejected"],
     attempt: (w) => w.call("list", { token_id: T, price: toRaw("2000") }, { deposit: "1" }) },
   { id: "T23", actor: "Tout", title: "Sell a member's seat without consent", path: `Buy seat C5-12 for a match its member didn't lend.`, fix: "Member seats are only sold if the member offered them for that match; payment is refunded.", tests: ["unit: cannot_sell_unlent_member_seat"],
     attempt: (w) => w.payTusdc("1000000", { action: "buy_seat", match_id: 1, seat: "c5-12" }) },
@@ -88,7 +88,7 @@ export function AttackLabPage() {
       <h1 className="text-4xl font-extrabold sm:text-5xl">Attack Lab</h1>
       <p className="mt-2 max-w-3xl text-fg/70">
         {ATTACKS.length} attacks against NearSeat, each with the mitigation and the test that proves it. Where a browser wallet can attempt it, press
-        <b> Try it on testnet</b>: the transaction is really sent, and you see the contract refuse it. Full model: <code>docs/THREAT_MODEL.md</code>.
+        {MAINNET ? <> The live attempts run on the <a className="underline" href="/#/lab">testnet site</a>, where a failed attack costs nothing.</> : <><b> Try it on testnet</b>: the transaction is really sent, and you see the contract refuse it.</>} Full model: <code>docs/THREAT_MODEL.md</code>.
       </p>
       <div className="mt-5 flex flex-wrap gap-2">
         {actors.map((x) => <button key={x} className={actor === x ? "btn-primary" : "btn-ghost"} onClick={() => setActor(x)}>{x}</button>)}
@@ -103,7 +103,7 @@ export function AttackLabPage() {
               <p className="mt-1 text-sm text-fg/80"><b className="text-danger">Attack:</b> {a.path}</p>
               <p className="mt-1 text-sm text-fg/80"><b className="text-lime">Mitigation:</b> {a.fix}</p>
               <ul className="mt-2 space-y-0.5 text-xs text-muted">{a.tests.map((t) => <li key={t} className="mono break-all">✓ {t}</li>)}</ul>
-              {a.attempt && <button className="btn-ghost mt-3" disabled={r?.state === "busy"} onClick={() => go(a)}>Try it on testnet</button>}
+              {a.attempt && !MAINNET && <button className="btn-ghost mt-3" disabled={r?.state === "busy"} onClick={() => go(a)}>Try it on testnet</button>}
               {r && (
                 <p className={`mt-3 rounded-xl p-3 text-sm ${r.state === "refused" ? "bg-wine/15 text-lime" : r.state === "passed" ? "bg-warn/15 text-warn" : "text-muted"}`} role="status">
                   {r.state === "refused" ? `🛡 Refused by the chain: ${r.msg}` : r.msg}

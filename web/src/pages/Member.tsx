@@ -1,5 +1,6 @@
 // Member dashboard: live match, live feed, earnings, Seat account side panel,
 // and tabs for lending, advance and voting.
+import { MAINNET, SYM } from "../config";
 import { NewHere } from "../components/NewHere";
 import { useState } from "react";
 import { view, viewAccessKeys } from "../near/rpc";
@@ -136,7 +137,7 @@ function Overview({ m, live, next, season, isHolder }: { m: Membership; live?: M
           </div>
           <div className="space-y-3">
             <Progress label="Tickets sold today" value={live.tickets_sold} max={360} right={`${live.tickets_sold} of 360`} />
-            <Progress label="Members' pool from today" value={Number((BigInt(live.escrow) * cutBps) / 10_000n)} max={Number(BigInt(live.ticket_price) * 360n * cutBps / 10_000n)} right={`${usd((BigInt(live.escrow) * cutBps) / 10_000n)} tUSDC`} />
+            <Progress label="Members' pool from today" value={Number((BigInt(live.escrow) * cutBps) / 10_000n)} max={Number(BigInt(live.ticket_price) * 360n * cutBps / 10_000n)} right={`${usd((BigInt(live.escrow) * cutBps) / 10_000n)} ${SYM}`} />
             <Progress label="Your progress to Legend" value={m.attended.length} max={legend} right={`${m.attended.length} of ${legend} matches`} />
           </div>
           {m.goal_stamps.some((g) => g.match_id === live.id) && (
@@ -146,7 +147,7 @@ function Overview({ m, live, next, season, isHolder }: { m: Membership; live?: M
             </div>
           )}
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-2xl border border-lime/60 p-3 text-center"><div className="text-xs text-muted">Your share today</div><div className="font-bold text-lime">+{usd(shareToday)} tUSDC</div></div>
+            <div className="rounded-2xl border border-lime/60 p-3 text-center"><div className="text-xs text-muted">Your share today</div><div className="font-bold text-lime">+{usd(shareToday)} {SYM}</div></div>
             <div className="rounded-2xl border border-lime/60 p-3 text-center"><div className="text-xs text-muted">Next home game</div><div className="font-bold">{next ? `v ${next.opponent}` : "—"}</div></div>
             <div className="rounded-2xl border border-lime/60 p-3 text-center"><div className="text-xs text-muted">Auto-lend rule</div><div className="font-bold">{rule ? `On · ${rule.hours_before}h before` : m.season_autolend ? `Every match · ${m.season_autolend.hours_before}h before` : "Off"}</div></div>
           </div>
@@ -181,7 +182,7 @@ function Earnings({ tokenId, historyLen }: { tokenId: string; historyLen: number
   const settled = (h.data ?? []).filter((e) => e.kind === "settled").slice(-8);
   const max = settled.reduce((a, e) => (BigInt(e.amount ?? 0) > a ? BigInt(e.amount ?? 0) : a), 1n);
   return (
-    <Section title="Earned per payout" right={<span className="text-xs text-muted">tUSDC landed in the seat account</span>}>
+    <Section title="Earned per payout" right={<span className="text-xs text-muted">{SYM} landed in the seat account</span>}>
       {settled.length === 0 ? <p className="text-sm text-muted">No payouts yet. They appear after the first full time.</p> : (
         <div className="flex h-48 items-end gap-3" role="img" aria-label="Bar chart of recent payouts">
           {settled.map((e, i) => {
@@ -219,7 +220,7 @@ function SeatAccount({ m, isHolder, refresh }: { m: Membership; isHolder: boolea
       <div className="mono text-xs text-muted">{m.vault} · keys: {keys.data ?? "…"}</div>
       <div>
         <div className="text-sm text-muted">Balance</div>
-        <div className="font-display text-5xl font-extrabold tabular-nums">{usd(BigInt(Math.round(balance * 1e6)))} <span className="text-base font-semibold text-muted">tUSDC</span></div>
+        <div className="font-display text-5xl font-extrabold tabular-nums">{usd(BigInt(Math.round(balance * 1e6)))} <span className="text-base font-semibold text-muted">{SYM}</span></div>
         {BigInt(m.unsettled) > 0n && <div className="text-sm text-lime">+{usd(m.unsettled)} on its way</div>}
         {saved > 0n && <div className="text-sm text-muted">{usd(saved)} of it is set aside for renewal</div>}
       </div>
@@ -248,7 +249,7 @@ function SeatAccount({ m, isHolder, refresh }: { m: Membership; isHolder: boolea
           <button
             className="btn-primary w-full justify-center py-3"
             disabled={!!a.busy || frozen || BigInt(m.spendable) === 0n}
-            onClick={() => a.run("Withdrawing", () => call("withdraw", { token_id: m.token_id, amount: m.spendable }, { deposit: ONE_YOCTO }), `Sent ${usd(m.spendable)} tUSDC to ${accountId}`)}
+            onClick={() => a.run("Withdrawing", () => call("withdraw", { token_id: m.token_id, amount: m.spendable }, { deposit: ONE_YOCTO }), `Sent ${usd(m.spendable)} ${SYM} to ${accountId}`)}
           >
             Withdraw {usd(m.spendable)} to {accountId}
           </button>
@@ -281,7 +282,7 @@ function Renewal({ m, isHolder, refresh }: { m: Membership; isHolder: boolean; r
   return (
     <div className="rounded-2xl border border-line p-3">
       <div className="text-sm font-semibold">This seat has earned {pct >= 100 ? "all" : `${pct.toFixed(pct < 10 ? 1 : 0)}%`} of next season's price</div>
-      <div className="mt-2"><Progress value={Number(earned)} max={Number(price)} label={`${usd(earned)} of ${usd(price, 0)} tUSDC`} right={BigInt(m.renewal_saved) > 0n ? `${usd(m.renewal_saved)} set aside` : undefined} /></div>
+      <div className="mt-2"><Progress value={Number(earned)} max={Number(price)} label={`${usd(earned)} of ${usd(price, 0)} ${SYM}`} right={BigInt(m.renewal_saved) > 0n ? `${usd(m.renewal_saved)} set aside` : undefined} /></div>
       <div className="mt-3 text-xs text-muted" id="saving-label">Set aside from each payout</div>
       <div className="mt-1.5 grid grid-cols-4 gap-1.5" role="radiogroup" aria-labelledby="saving-label">
         {[0, 2500, 5000, 10000].map((bps) => {
@@ -314,13 +315,13 @@ function Spend({ m, isHolder, refresh }: { m: Membership; isHolder: boolean; ref
   const spendable = BigInt(m.spendable);
   const raw = (() => { try { return BigInt(toRaw(amount)); } catch { return 0n; } })();
   const blocked = m.listing ? "The seat's account is frozen while the membership is listed for sale." : BigInt(m.debt) > 0n ? "Payments are blocked until the advance is repaid." : null;
-  const problem = !amount ? null : raw <= 0n ? "Enter an amount like 4.50" : raw > spendable ? `This seat can spend up to ${usd(spendable)} tUSDC` : null;
+  const problem = !amount ? null : raw <= 0n ? "Enter an amount like 4.50" : raw > spendable ? `This seat can spend up to ${usd(spendable)} ${SYM}` : null;
   return (
-    <Section title="Pay at the ground" right={<span className="text-xs text-muted">Spent so far: {usd(m.vendor_spent)} tUSDC</span>}>
+    <Section title="Pay at the ground" right={<span className="text-xs text-muted">Spent so far: {usd(m.vendor_spent)} {SYM}</span>}>
       <p className="text-sm text-muted">Pay for food and drink with what the seat has earned. The money goes from the seat's account straight to the vendor, and only to vendors the club has approved.</p>
       <div className="mt-4 rounded-2xl bg-ink/70 p-4">
         <div className="text-xs text-muted">This seat can spend</div>
-        <div className="font-display text-2xl font-bold">{usd(spendable)} tUSDC</div>
+        <div className="font-display text-2xl font-bold">{usd(spendable)} {SYM}</div>
         {BigInt(m.renewal_saved) > 0n && <div className="text-xs text-muted">{usd(m.renewal_saved)} more is set aside for renewal</div>}
       </div>
       {vendors.loading && !vendors.data ? <Loading what="Loading vendors" /> : list.length === 0 ? (
@@ -338,10 +339,10 @@ function Spend({ m, isHolder, refresh }: { m: Membership; isHolder: boolean; ref
           </div>
           {isHolder && vendor && (
             <div className="mt-3 grid gap-2 sm:grid-cols-[140px_1fr_auto]">
-              <input className="input" inputMode="decimal" placeholder="Amount" aria-label="Amount in tUSDC" value={amount} onChange={(e) => setAmount(e.target.value)} />
+              <input className="input" inputMode="decimal" placeholder="Amount" aria-label={`Amount in ${SYM}`} value={amount} onChange={(e) => setAmount(e.target.value)} />
               <input className="input" maxLength={80} placeholder="What for (optional)" aria-label="Note for the vendor" value={memo} onChange={(e) => setMemo(e.target.value)} />
               <button className="btn-primary justify-center" disabled={!!a.busy || !!blocked || !!problem || raw <= 0n}
-                onClick={() => a.run("Paying", () => call("pay_vendor", { token_id: m.token_id, vendor_id: vendor.account_id, amount: raw.toString(), memo: memo.trim() || null }, { deposit: ONE_YOCTO, gasTgas: 100 }), `Paid ${usd(raw)} tUSDC to ${vendor.name}`).then((ok) => { if (ok) { setAmount(""); setMemo(""); } })}>
+                onClick={() => a.run("Paying", () => call("pay_vendor", { token_id: m.token_id, vendor_id: vendor.account_id, amount: raw.toString(), memo: memo.trim() || null }, { deposit: ONE_YOCTO, gasTgas: 100 }), `Paid ${usd(raw)} ${SYM} to ${vendor.name}`).then((ok) => { if (ok) { setAmount(""); setMemo(""); } })}>
                 Pay {vendor.name}
               </button>
             </div>
@@ -436,14 +437,14 @@ function Lending({ m, matches, season, isHolder, refresh }: { m: Membership; mat
           return (
             <li key={x.id} className="rounded-2xl border border-line p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <div><div className="font-semibold">v {x.opponent}</div><div className="text-xs text-muted">{shortDate(x.kickoff_at)} · cap {usd(cap)} tUSDC</div></div>
+                <div><div className="font-semibold">v {x.opponent}</div><div className="text-xs text-muted">{shortDate(x.kickoff_at)} · cap {usd(cap)} {SYM}</div></div>
                 {loan && "Rented" in loan && <span className="chip border-lime text-lime">Rented by {loan.Rented.renter} · {usd(loan.Rented.price)}</span>}
                 {loan && "Offered" in loan && <span className="chip">Offered at {usd(loan.Offered.price)}{loan.Offered.to ? ` to ${loan.Offered.to}` : ""}</span>}
               </div>
               {isHolder && !loan && (
                 <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
-                  <input className="input" inputMode="decimal" placeholder={`Price (max ${usd(cap)})`} aria-label="Lend price in tUSDC" value={price[x.id] ?? ""} onChange={(e) => setPrice({ ...price, [x.id]: e.target.value })} />
-                  <input className="input" placeholder="Only for (optional) friend.testnet" aria-label="Private renter account" value={to[x.id] ?? ""} onChange={(e) => setTo({ ...to, [x.id]: e.target.value })} />
+                  <input className="input" inputMode="decimal" placeholder={`Price (max ${usd(cap)})`} aria-label={`Lend price in ${SYM}`} value={price[x.id] ?? ""} onChange={(e) => setPrice({ ...price, [x.id]: e.target.value })} />
+                  <input className="input" placeholder={`Only for (optional) friend.${MAINNET ? "near" : "testnet"}`} aria-label="Private renter account" value={to[x.id] ?? ""} onChange={(e) => setTo({ ...to, [x.id]: e.target.value })} />
                   <button className="btn-primary justify-center" disabled={!!a.busy} onClick={() => a.run("Lending", () => call("lend", { token_id: m.token_id, match_id: x.id, price: toRaw(price[x.id] ?? ""), to: to[x.id] || null }, { deposit: ONE_YOCTO }), "Seat offered")}>Lend</button>
                 </div>
               )}
@@ -499,12 +500,12 @@ function Advance({ m, isHolder, refresh }: { m: Membership; isHolder: boolean; r
     <Section title="Advance on future earnings">
       <p className="text-sm text-muted">Borrow up to 50% of your expected remaining-season share. Every payout repays the advance first. While it's open you can't withdraw, and a sale repays it from the price in the same transaction.</p>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <div className="rounded-2xl bg-ink/70 p-4"><div className="text-xs text-muted">You can borrow</div><div className="font-display text-2xl font-bold">{cap.data ? usd(cap.data) : "…"} tUSDC</div></div>
-        <div className="rounded-2xl bg-ink/70 p-4"><div className="text-xs text-muted">Owed now</div><div className="font-display text-2xl font-bold">{usd(m.debt)} tUSDC</div></div>
+        <div className="rounded-2xl bg-ink/70 p-4"><div className="text-xs text-muted">You can borrow</div><div className="font-display text-2xl font-bold">{cap.data ? usd(cap.data) : "…"} {SYM}</div></div>
+        <div className="rounded-2xl bg-ink/70 p-4"><div className="text-xs text-muted">Owed now</div><div className="font-display text-2xl font-bold">{usd(m.debt)} {SYM}</div></div>
       </div>
       {isHolder && (
         <div className="mt-4 flex gap-2">
-          <input className="input" inputMode="decimal" placeholder="Amount in tUSDC" aria-label="Advance amount" value={amount} onChange={(e) => setAmount(e.target.value)} />
+          <input className="input" inputMode="decimal" placeholder={`Amount in ${SYM}`} aria-label="Advance amount" value={amount} onChange={(e) => setAmount(e.target.value)} />
           <button className="btn-primary" disabled={!!a.busy} onClick={() => a.run("Borrowing", () => call("borrow", { token_id: m.token_id, amount: toRaw(amount) }, { deposit: ONE_YOCTO }), "Advance sent to your wallet")}>Borrow</button>
         </div>
       )}
@@ -559,11 +560,11 @@ function Sell({ m, season, isHolder, refresh }: { m: Membership; season: Season;
       <p className="text-sm text-muted">
         Listing freezes the seat account: no withdrawals, loans or advances until it sells or you delist. The buyer pays exactly your price and gets the balance,
         passes, history and gate access in one transaction. You receive the price minus a {season.config.resale_fee_bps / 100}% club royalty
-        {BigInt(m.debt) > 0n ? ` and your ${usd(m.debt)} tUSDC advance` : ""}. Cap for a {CATEGORIES[m.category].label} seat: {usd(m.resale_cap)} tUSDC.
+        {BigInt(m.debt) > 0n ? ` and your ${usd(m.debt)} ${SYM} advance` : ""}. Cap for a {CATEGORIES[m.category].label} seat: {usd(m.resale_cap)} {SYM}.
       </p>
       {m.listing ? (
         <div className="mt-4 flex flex-wrap items-center gap-3">
-          <span className="chip border-lime text-lime">Listed at {usd(m.listing.price)} tUSDC</span>
+          <span className="chip border-lime text-lime">Listed at {usd(m.listing.price)} {SYM}</span>
           {isHolder && <button className="btn-ghost" disabled={!!a.busy} onClick={() => a.run("Delisting", () => call("delist", { token_id: m.token_id }, { deposit: ONE_YOCTO }))}>Delist</button>}
         </div>
       ) : isHolder ? (

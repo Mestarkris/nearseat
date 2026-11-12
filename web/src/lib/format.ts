@@ -5,6 +5,10 @@ export function usd(raw: string | bigint | null | undefined, digits = 2): string
   if (raw == null) return "0.00";
   const v = typeof raw === "bigint" ? raw : BigInt(raw);
   const whole = v / ONE;
+  // Never round a real amount down to nothing: 0.20 asked for with no decimals
+  // still shows as 0.20, and a fraction of a cent shows enough digits to be seen.
+  if (digits === 0 && v % ONE !== 0n) digits = 2;
+  if (v > 0n && v < ONE / 100n) digits = v % 100n === 0n ? 4 : 6;
   const frac = (v % ONE).toString().padStart(6, "0").slice(0, digits);
   return `${whole.toLocaleString("en-US")}${digits ? "." + frac : ""}`;
 }

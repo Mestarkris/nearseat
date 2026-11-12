@@ -7,7 +7,7 @@ import { usePoll } from "../lib/usePoll";
 import { useAction } from "../lib/useAction";
 import type { Match, Season, Vendor } from "../lib/types";
 import { matchMinute, shortDate, toRaw, usd } from "../lib/format";
-import { config } from "../config";
+import { config, SYM } from "../config";
 import { downloadClubPayments, downloadFixtureSummary } from "../lib/exports";
 import { ActionStatus } from "../components/ActionStatus";
 import { Feed } from "../components/Feed";
@@ -36,7 +36,7 @@ export function ClubPage() {
       <h1 className="text-4xl font-extrabold sm:text-5xl">Illia Stars United · Club dashboard</h1>
       <p className="mt-2 text-fg/70">Ticket sales, member payouts and refunds, settled in stablecoins with no spreadsheets.</p>
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Ticket revenue this season" value={`${usd(revenue, 0)} tUSDC`} sub={`${matches.length} fixtures`} />
+        <Stat label="Ticket revenue this season" value={`${usd(revenue, 0)} ${SYM}`} sub={`${matches.length} fixtures`} />
         <Stat label="Paid to member accounts" value={usd(season.pool_total_distributed, 0)} sub={`${season.memberships} memberships`} />
         <Stat label="Refunded automatically" value={refunded} sub={`${matches.filter((m) => m.status === "Postponed").length} postponed`} />
         <Stat label="Seats lent by members" value={lent} sub="this season" />
@@ -199,13 +199,13 @@ function ClubTools({ season, refresh }: { season: Season; refresh: () => void })
   return (
     <section className="card p-5">
       <h2 className="text-lg font-bold">Club treasury</h2>
-      <p className="mt-1 text-sm text-muted">Club balance: {usd(season.club_balance)} tUSDC · advance fund {usd(season.advance_fund)}</p>
+      <p className="mt-1 text-sm text-muted">Club balance: {usd(season.club_balance)} {SYM} · advance fund {usd(season.advance_fund)}</p>
       <div className="mt-3 flex gap-2">
-        <input className="input" inputMode="decimal" placeholder="Top up members' pool (tUSDC)" aria-label="Top-up amount" value={topUp} onChange={(e) => setTopUp(e.target.value)} />
-        <button className="btn-primary" disabled={!amount || !!a.busy} onClick={() => a.run("Topping up", () => payTusdc(String(amount), { action: "top_up_pool" }), `${topUp} tUSDC shared across all members`).then((ok) => ok && setTopUp(""))}>Send</button>
+        <input className="input" inputMode="decimal" placeholder={`Top up members' pool (${SYM})`} aria-label="Top-up amount" value={topUp} onChange={(e) => setTopUp(e.target.value)} />
+        <button className="btn-primary" disabled={!amount || !!a.busy} onClick={() => a.run("Topping up", () => payTusdc(String(amount), { action: "top_up_pool" }), `${topUp} ${SYM} shared across all members`).then((ok) => ok && setTopUp(""))}>Send</button>
       </div>
-      <button className="btn-ghost mt-2 w-full justify-center" disabled={BigInt(season.club_balance) === 0n || !!a.busy} onClick={() => a.run("Withdrawing club revenue", () => call("club_withdraw", { amount: season.club_balance }, { deposit: "1" }), `${usd(season.club_balance)} tUSDC sent to ${config.clubId}`)}>
-        Withdraw {usd(season.club_balance)} tUSDC club revenue
+      <button className="btn-ghost mt-2 w-full justify-center" disabled={BigInt(season.club_balance) === 0n || !!a.busy} onClick={() => a.run("Withdrawing club revenue", () => call("club_withdraw", { amount: season.club_balance }, { deposit: "1" }), `${usd(season.club_balance)} ${SYM} sent to ${config.clubId}`)}>
+        Withdraw {usd(season.club_balance)} {SYM} club revenue
       </button>
 
       <h3 className="mt-5 font-semibold">New fixture</h3>
@@ -213,7 +213,7 @@ function ClubTools({ season, refresh }: { season: Season; refresh: () => void })
         <input className="input" placeholder="Opponent" aria-label="Opponent" maxLength={40} value={opp} onChange={(e) => setOpp(e.target.value)} />
         <input className="input" type="datetime-local" aria-label="Kickoff date and time" value={when} onChange={(e) => setWhen(e.target.value)} />
         <div className="flex gap-2">
-          <input className="input" inputMode="decimal" aria-label="Ticket price in tUSDC" placeholder="Ticket price" value={price} onChange={(e) => setPrice(e.target.value)} />
+          <input className="input" inputMode="decimal" aria-label={`Ticket price in ${SYM}`} placeholder="Ticket price" value={price} onChange={(e) => setPrice(e.target.value)} />
           <label className="flex shrink-0 items-center gap-2 text-sm"><input type="checkbox" className="accent-wine" checked={big} onChange={(e) => setBig(e.target.checked)} />Big match</label>
         </div>
         {fixtureError && (opp || when) ? <p className="text-xs text-warn">{fixtureError}</p> : null}
@@ -262,7 +262,7 @@ function Vendors() {
             onClick={() => a.run("Approving vendor", () => call("set_vendor", { account_id: account, name: name.trim() }), `${name.trim()} approved`).then((ok) => { if (ok) { setId(""); setName(""); } })}>
             Approve vendor
           </button>
-          <p className="text-xs text-muted">The vendor's account must be registered with tUSDC first, or payments to it are returned to the seat.</p>
+          <p className="text-xs text-muted">The vendor's account must be registered with {SYM} first, or payments to it are returned to the seat.</p>
         </div>
       )}
       <ActionStatus a={a} />

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { view } from "../near/rpc";
 import { usePoll } from "../lib/usePoll";
 import type { Season } from "../lib/types";
-import { config } from "../config";
+import { config, MAINNET, MAINNET_LIVE } from "../config";
 import { Logo } from "./ui";
 
 const REPO = "https://github.com/Mestarkris/nearseat";
@@ -81,7 +81,7 @@ export function Footer() {
             </h2>
             <div className="mt-4 space-y-2">
               <Copy label="Contract" value={config.contractId} />
-              <Copy label="Test stablecoin (tUSDC)" value={config.tusdcId} />
+              <Copy label={MAINNET ? "Stablecoin (Circle USDC)" : "Test stablecoin (tUSDC)"} value={config.tusdcId} />
               {season.data && <Copy label="Seat program hash" value={season.data.vault_code_hash} />}
             </div>
             <a className="mt-3 inline-block text-sm text-fg/65 hover:text-lime" href={`${config.explorer}/address/${config.contractId}`} {...ext}>View the contract on NearBlocks</a>
@@ -89,7 +89,7 @@ export function Footer() {
         </div>
         <div className="mt-12 flex flex-col gap-3 border-t border-line pt-6 text-xs text-muted md:flex-row md:justify-between">
           <p>© 2026 NearSeat. Built for the NEAR hackathon. Open source under the MIT licence.</p>
-          <p className="max-w-xl md:text-right">Testnet only. tUSDC is a test token with no value. Illia Stars United is a fictional club. This build has not been audited and nothing here is financial advice.</p>
+          <p className="max-w-xl md:text-right">{MAINNET ? <>Real USDC on NEAR mainnet, at prices of a few cents. <a className="underline hover:text-fg" href="/">The full demo is on testnet.</a></> : <>Testnet. tUSDC is a test token with no value.{MAINNET_LIVE && <> <a className="underline hover:text-fg" href="/mainnet/">There is also a mainnet copy that takes real USDC.</a></>}</>} Illia Stars United is a fictional club. This build has not been audited and nothing here is financial advice.</p>
         </div>
       </div>
     </footer>

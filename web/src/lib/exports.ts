@@ -1,7 +1,7 @@
 // The two accounting exports: one seat's ledger, and the club's payments.
 // Every row is read from the contract at the moment of the download.
 import { view } from "../near/rpc";
-import { config } from "../config";
+import { config, SYM } from "../config";
 import { downloadCsv, money, utc, type Cell } from "./csv";
 import { CATEGORIES, categoryOf } from "./category";
 import { parseSeat } from "./format";
@@ -52,7 +52,7 @@ export async function downloadSeatLedger(m: Membership, matches: Match[], season
     return [
       utc(e.at), k.text,
       k.dir === "in" ? amount : "", k.dir === "out" ? amount : "", k.dir === "note" ? amount : "",
-      amount === "" ? "" : "tUSDC", e.account ?? "", e.account ? k.who ?? "" : "",
+      amount === "" ? "" : SYM, e.account ?? "", e.account ? k.who ?? "" : "",
       e.match_id != null ? vs.get(e.match_id) ?? `Match ${e.match_id}` : "",
       seatName(m.seat), m.vault, season.name, `${config.explorer}/address/${m.vault}`,
     ];
@@ -83,7 +83,7 @@ export async function downloadClubPayments(matches: Match[], season: Season): Pr
       rows.push([
         `${x.id}-${index + 1}`, utc(x.kickoff_at), `v ${x.opponent}`, x.competition, x.status,
         rental ? "Seat rented from a member" : "Match ticket", seatName(seat), CATEGORIES[categoryOf(seat)].label,
-        p.payer, money(p.amount), "tUSDC", STATUS[p.status],
+        p.payer, money(p.amount), SYM, STATUS[p.status],
         rental ? money(fee) : money(p.amount), rental ? money(BigInt(p.amount) - fee!) : "",
         rental ? rental.token_id : "", `${config.explorer}/address/${config.contractId}`,
       ]);
@@ -102,7 +102,7 @@ export function downloadFixtureSummary(matches: Match[], season: Season): number
     const sales = x.status === "Finished" && cut > 0n ? (BigInt(x.members_cut) * 10_000n) / cut : BigInt(x.escrow);
     return [
       utc(x.kickoff_at), `v ${x.opponent}`, x.competition, x.status, money(x.ticket_price), x.tickets_sold, x.seats_rented, x.members_checked_in,
-      money(sales), x.status === "Finished" ? money(x.members_cut) : 0, money(x.rental_fees), x.payment_count, x.refunds_done, "tUSDC",
+      money(sales), x.status === "Finished" ? money(x.members_cut) : 0, money(x.rental_fees), x.payment_count, x.refunds_done, SYM,
       x.status === "Finished" || x.status === "Live" ? `${x.home_goals}-${x.away_goals}` : "",
     ];
   });

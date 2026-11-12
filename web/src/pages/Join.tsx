@@ -16,7 +16,7 @@ import { ActionStatus } from "../components/ActionStatus";
 import { Faucet } from "../components/Faucet";
 import { NewHere } from "../components/NewHere";
 import { ErrorBox, Loading } from "../components/ui";
-import { config } from "../config";
+import { config, SYM } from "../config";
 
 const PERKS = [
   "Your own NEAR account for the seat, with zero keys: only the NFT holder controls it",
@@ -106,7 +106,7 @@ export function JoinPage() {
               <ul className="mt-4 space-y-2 text-sm text-fg/80">
                 {PERKS.map((p) => <li key={p} className="flex gap-2"><span className="text-lime">✓</span>{p}</li>)}
               </ul>
-              <div className="mt-4 flex justify-between border-t border-line pt-3 text-base font-bold"><span>Season price</span><span>{usd(price)} tUSDC</span></div>
+              <div className="mt-4 flex justify-between border-t border-line pt-3 text-base font-bold"><span>Season price</span><span>{usd(price)} {SYM}</span></div>
               <p className="mt-1 text-xs text-muted">{CATEGORIES[cat!].label} seats pay {multiple(cat!)} the standard price and earn {multiple(cat!)} a standard share of every payout.</p>
               <PayFromAnyChain amount={price} what="this membership" />
               {accountId ? (

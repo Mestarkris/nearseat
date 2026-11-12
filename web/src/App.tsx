@@ -1,7 +1,7 @@
 import { ThemeToggle } from "./components/ThemeToggle";
 import { useEffect, useState, type ReactNode } from "react";
 import { useWallet } from "./near/wallet";
-import { config } from "./config";
+import { config, MAINNET } from "./config";
 import { Logo } from "./components/ui";
 import { Landing } from "./pages/Landing";
 import { MemberPage } from "./pages/Member";
@@ -104,9 +104,9 @@ export function App() {
     case "verify": body = <VerifyPage tokenId={arg} />; break;
     case "statement": body = <StatementPage tokenId={arg} />; break;
     case "pass": body = <PassPage tokenId={arg} />; break;
-    case "scan": body = <ScanPage />; break;
+    case "scan": body = MAINNET ? <TestnetOnly what="The gate scanner" /> : <ScanPage />; break;
     case "market": body = <MarketPage />; break;
-    case "members": body = <MembersOnlyPage />; break;
+    case "members": body = MAINNET ? <TestnetOnly what="The members-only page" /> : <MembersOnlyPage />; break;
     case "lab": body = <AttackLabPage />; break;
     case "whitepaper": body = <WhitepaperPage />; break;
     default: body = <div className="py-20 text-center text-muted">Page not found. <a className="text-lime" href="#/">Go home</a></div>;
@@ -116,10 +116,30 @@ export function App() {
   return (
     <>
       <Nav route={landing ? "" : page} />
+      {MAINNET && <MainnetNotice />}
       <ContractAccountWarning />
       {landing ? <Landing section={page || undefined} /> : <main className="mx-auto max-w-6xl px-4 pb-24 pt-6 sm:pt-10">{body}</main>}
       <Footer />
     </>
+  );
+}
+
+/** Pages that need the demo's server (it signs as the gate and checks signatures) stay on testnet. */
+function TestnetOnly({ what }: { what: string }) {
+  return (
+    <div className="py-20 text-center text-muted">
+      {what} runs on the testnet site only. <a className="text-lime underline" href="/">Open the testnet site</a>
+    </div>
+  );
+}
+
+/** Real money: say so on every page, and point to the free testnet site. */
+function MainnetNotice() {
+  return (
+    <div className="border-b border-warn/40 bg-warn/10 px-4 py-2 text-center text-sm text-warn" role="note">
+      NEAR mainnet: this copy takes real USDC. Prices are a few cents and the contract is not audited.{" "}
+      <a className="underline" href="/">Try everything for free on the testnet site</a>
+    </div>
   );
 }
 
@@ -130,7 +150,7 @@ function ContractAccountWarning() {
   return (
     <div className="border-b border-warn/40 bg-warn/10 px-4 py-3 text-center text-sm text-warn" role="alert">
       You're connected as <b>{accountId}</b>, the NearSeat contract account itself. It can't buy tickets or memberships from itself.
-      Connect a fan wallet (any other testnet account) to try the app.
+      Connect a fan wallet (any other {config.network} account) to try the app.
     </div>
   );
 }

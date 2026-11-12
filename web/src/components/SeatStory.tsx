@@ -2,6 +2,7 @@
 // lent for a match, then sold. One stage, four states. On wide screens the
 // state follows the scroll position; on phones it plays on its own and the
 // reader can tap a step.
+import { config, SYM } from "../config";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useCountUp, useInView, useMedia } from "../lib/motion";
 import { Crest } from "./ui";
@@ -100,10 +101,10 @@ function Stage({ step }: { step: number }) {
           <span className="text-sm text-fg/80">The account owned by seat C5-12</span>
           <span className="chip shrink-0 text-lime">0 keys</span>
         </div>
-        <div className="mono mt-1 truncate text-xs text-muted">seat-c5-12.nearseat.testnet</div>
+        <div className="mono mt-1 truncate text-xs text-muted">seat-c5-12.{config.contractId}</div>
         <div className="mt-2 flex items-baseline gap-2">
           <span className="font-number text-5xl leading-none text-lime tabular-nums">{balance.toFixed(2)}</span>
-          <span className="text-sm text-muted">tUSDC</span>
+          <span className="text-sm text-muted">{SYM}</span>
         </div>
         <div className="mt-1 min-h-4 text-xs text-muted">{STEPS[step].note}</div>
       </div>

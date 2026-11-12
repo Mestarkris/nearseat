@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { view } from "../near/rpc";
 import type { FeedItem } from "../lib/types";
-import { config } from "../config";
+import { config, SYM } from "../config";
 import { nsToDate, usd } from "../lib/format";
 import { ErrorBox, Loading } from "./ui";
 
@@ -11,7 +11,7 @@ type Data = Record<string, unknown>;
 /** Human sentence for each contract event. */
 export function describe(event: string, d: Data): { title: string; sub?: string } {
   const a = (k: string) => String(d[k] ?? "");
-  const money = (k: string) => `${usd(a(k))} tUSDC`;
+  const money = (k: string) => `${usd(a(k))} ${SYM}`;
   switch (event) {
     case "kickoff": return { title: "Kickoff · seat loans locked", sub: `${a("tickets_sold")} tickets sold, ${a("seats_rented")} seats rented` };
     case "goal": {

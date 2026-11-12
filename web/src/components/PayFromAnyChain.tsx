@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import { PAY_ASSETS, quoteExactUsdc, type PayAsset, type PayQuote } from "../lib/oneclick";
 import { usd } from "../lib/format";
+import { MAINNET } from "../config";
 
 type State = { asset: string; quote?: PayQuote; error?: string };
 
@@ -59,7 +60,7 @@ export function PayFromAnyChain({ amount, what }: { amount: bigint; what: string
             )}
           </div>
           <p className="mt-2 text-xs text-muted">
-            A live quote from NEAR Intents (1Click API), which runs on mainnet. This demo is on testnet and takes a test stablecoin, so the payment itself can't be sent from here. On mainnet the USDC lands in your NEAR account and the purchase is one gasless tap.{" "}
+            {MAINNET ? "A live quote from NEAR Intents (1Click API). This page shows the price only: it does not send the swap. Once the USDC is in your NEAR account, you pay here as usual." : "A live quote from NEAR Intents (1Click API), which runs on mainnet. This demo is on testnet and takes a test stablecoin, so the payment itself can't be sent from here. On mainnet the USDC lands in your NEAR account and the purchase is one gasless tap."}{" "}
             <button type="button" className="underline hover:text-fg" onClick={() => { setState(undefined); setTick(tick + 1); }}>Refresh the price</button>
           </p>
         </div>

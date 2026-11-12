@@ -1,5 +1,6 @@
 // The membership NFT card, drawn from live on-chain state (the contract also
 // renders an equivalent SVG in `nft_token` for wallets and explorers).
+import { SYM } from "../config";
 import { useEffect, useRef, type CSSProperties } from "react";
 import type { Membership } from "../lib/types";
 import { parseSeat, usd } from "../lib/format";
@@ -46,7 +47,7 @@ export function MembershipCard({ m, compact = false }: { m: Membership; compact?
         {renter && "Rented" in renter.loan && (
           <div className="mt-2 text-center text-sm font-semibold text-lime">Lent to @{renter.loan.Rented.renter}</div>
         )}
-        {m.listing && <div className="mt-2 text-center text-sm font-semibold text-warn">For sale · {usd(m.listing.price)} tUSDC</div>}
+        {m.listing && <div className="mt-2 text-center text-sm font-semibold text-warn">For sale · {usd(m.listing.price)} {SYM}</div>}
         <dl className="mt-4 grid grid-cols-3 gap-2">
           {stats.map(([k, v]) => (
             <div key={k} className="rounded-xl border border-line bg-ink/80 px-2 py-2 text-center">

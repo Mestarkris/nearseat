@@ -5,7 +5,7 @@ import { view } from "../near/rpc";
 import { usePoll } from "../lib/usePoll";
 import type { Season } from "../lib/types";
 import { usd } from "../lib/format";
-import { config } from "../config";
+import { config, MAINNET, SYM } from "../config";
 import { Logo } from "../components/ui";
 
 const REPO = "https://github.com/Mestarkris/nearseat";
@@ -43,7 +43,7 @@ export function WhitepaperPage() {
   const c = s?.config;
   const go = (id: string) => document.getElementById(`wp-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
   const params: [string, string][] = s && c ? [
-    ...s.categories.map((k): [string, string] => [`${k.category === "FansEnd" ? "Fans' End" : k.category === "Vip" ? "VIP" : k.category} seat: season price, share of the pool`, `${usd(k.season_price, 0)} tUSDC, ${k.weight / 4}x a standard share`]),
+    ...s.categories.map((k): [string, string] => [`${k.category === "FansEnd" ? "Fans' End" : k.category === "Vip" ? "VIP" : k.category} seat: season price, share of the pool`, `${usd(k.season_price, 0)} ${SYM}, ${k.weight / 4}x a standard share`]),
     ["Memberships sold / maximum", `${s.memberships} / ${s.max_supply}`],
     ["Members' share of each match's ticket sales", pct(c.members_cut_bps)],
     ["Highest price for lending a seat", `${pct(c.lend_cap_bps)} of the club's ticket price for that category`],
@@ -79,7 +79,7 @@ export function WhitepaperPage() {
           <S id="summary" n={++n} title="Summary">
             <p>NearSeat turns a football season membership into something that works for its holder. Each membership is an NFT, and each NFT owns a real account on NEAR. That account collects a share of every ticket the club sells, holds the seat's match passes and attendance record, and is the thing the gate checks on matchday.</p>
             <p>Nobody holds a key to a seat's account. The contract moves its money only when the current NFT holder asks. So when a membership is sold, the buyer gets the seat and everything in it, and the seller loses access in the same transaction.</p>
-            <p>It is built for a fictional club, Illia Stars United, and runs on NEAR testnet with a test stablecoin called tUSDC.</p>
+            <p>It is built for a fictional club, Illia Stars United, and {MAINNET ? "This copy runs on NEAR mainnet with Circle's USDC, at prices of a few cents." : "runs on NEAR testnet with a test stablecoin called tUSDC."}</p>
           </S>
 
           <S id="problem" n={++n} title="The problem">
@@ -94,7 +94,7 @@ export function WhitepaperPage() {
           </S>
 
           <S id="money" n={++n} title="How money moves">
-            <p>Fans buy match tickets and memberships in tUSDC. Ticket money for a match is held by the contract until the match is played. At full time a fixed share of that match's sales goes to the members' pool and the rest becomes club revenue.</p>
+            <p>Fans buy match tickets and memberships in {SYM}. Ticket money for a match is held by the contract until the match is played. At full time a fixed share of that match's sales goes to the members' pool and the rest becomes club revenue.</p>
             <p>Seats come in four categories, set by where they are in the stadium: VIP, Pitchside, Standard and Fans' End. The category sets the price of the membership and of a single ticket, and it sets the seat's share of the pool in the same proportion. A VIP seat costs 2.5 times a standard seat and earns 2.5 times a standard share. A seat in the Fans' End costs three quarters and earns three quarters. These ratios are fixed in the contract, so the club cannot re-weight the pool after fans have bought in.</p>
             <p>The pool is split between memberships by those weights using a running per-share total, so the cost of a payout does not grow with the number of members. Each seat's share is then settled into its own account. If a membership changes hands in the middle of a payout round, earnings up to the sale stay with the seat, and so go to the buyer, exactly as the listing showed.</p>
             <p>A holder can withdraw from the seat account to their wallet at any time. They can also take a capped advance on future earnings, which is repaid first out of later payouts or out of the sale price.</p>
@@ -143,7 +143,7 @@ export function WhitepaperPage() {
           </S>
 
           <S id="limits" n={++n} title="Known limits">
-            <p>This is a hackathon build on a test network, and it has not been audited. tUSDC has no value.</p>
+            <p>{MAINNET ? "This is a hackathon build and it has not been audited. This copy takes real USDC, which is why its prices are a few cents." : "This is a hackathon build on a test network, and it has not been audited. tUSDC has no value."}</p>
             <p>The steward's scanner key lives on the club's server. A stolen scanner key still can't let in someone who doesn't hold a seat, because the contract re-checks, but it could mark an absent member as present. The club can replace that key.</p>
             <p>Limits on touts are per account, so someone with many accounts is slowed but not stopped. Free transactions for fans depend on the wallet supporting them, and otherwise cost a fraction of a cent of test NEAR. There is deliberately no upgrade switch, so fixing a bug means a fresh deployment.</p>
           </S>

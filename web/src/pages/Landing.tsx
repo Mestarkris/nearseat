@@ -1,5 +1,6 @@
 // Landing page: hero, the problem, the animated seat story, live proof,
 // roadmap + FAQ, and the call to join. Sections ease in as they are reached.
+import { config, MAINNET, SYM } from "../config";
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import { view } from "../near/rpc";
 import { usePoll } from "../lib/usePoll";
@@ -53,7 +54,7 @@ function Hero() {
   return (
     <section className={`${wrap} grid items-center gap-10 pb-14 pt-8 sm:pt-14 lg:min-h-[calc(100dvh-140px)] lg:grid-cols-[1.25fr_1fr]`}>
       <div>
-        <p className="hero-fade text-sm text-muted">Illia Stars United, season 2026/27. Running on NEAR testnet.</p>
+        <p className="hero-fade text-sm text-muted">Illia Stars United, season 2026/27. Running on NEAR {config.network}{MAINNET ? " with real USDC, at prices of a few cents" : ""}.</p>
         <h1 className="mt-4 font-number whitespace-nowrap text-[clamp(4rem,8.5vw,7.5rem)] font-normal leading-[0.9] tracking-normal">
           <span className="rise-line"><span>Your seat</span></span>
           <span className="rise-line"><span style={{ "--d": "110ms" } as CSSProperties}>now <span className="text-lime">earns.</span></span></span>
@@ -70,7 +71,7 @@ function Hero() {
       </div>
       <div className="hero-settle mx-auto w-full max-w-sm" onPointerMove={tilt} onPointerLeave={level}>
         <div ref={card} className="tilt">
-          {sample.data ? <MembershipCard m={sample.data} /> : sample.loading ? <Loading what="Reading seat-c5-12 from testnet" /> : (
+          {sample.data ? <MembershipCard m={sample.data} /> : sample.loading ? <Loading what={`Reading seat-c5-12 from ${config.network}`} /> : (
             <div className="card p-6 text-sm text-muted">Deploy and seed the contract to see a live card here.</div>
           )}
         </div>
@@ -153,8 +154,8 @@ function Proof() {
   const inView = useInView(ref);
   const s = season.data;
   const scores: [number, number, string][] = [
-    [s?.memberships ?? 0, 0, "seat accounts live on testnet"],
-    [s ? Number(s.pool_total_distributed) / 1e6 : 0, 2, "tUSDC shared with members so far"],
+    [s?.memberships ?? 0, 0, `seat accounts live on ${config.network}`],
+    [s ? Number(s.pool_total_distributed) / 1e6 : 0, 2, `${SYM} shared with members so far`],
     [0, 0, "keys on any seat account"],
     [21, 0, "attacks you can try yourself, all refused"],
     [123, 0, "automated tests, including a sale in the middle of a payout"],
@@ -181,7 +182,7 @@ function Proof() {
 }
 
 const ROADMAP: [string, string, string[]][] = [
-  ["Live now", "On NEAR testnet", [
+  ["Live now", `On NEAR ${config.network}`, [
     "Memberships that own a keyless account",
     "Ticket sales in a stablecoin, with members' share paid each match",
     "Seat lending, capped resale and automatic refunds",
@@ -226,7 +227,9 @@ function Roadmap() {
 }
 
 const FAQ: [string, string][] = [
-  ["Do I need real money to try it?", "No. NearSeat runs on NEAR's test network. You connect a free testnet wallet, press one button to get test tUSDC, and use that to buy tickets or a membership. Nothing here has real value."],
+  MAINNET
+    ? ["Is this real money?", "Yes. This copy of NearSeat runs on NEAR mainnet and takes Circle's USDC. Prices are set to a few cents because the contract has not been audited. To try everything for free, use the testnet site."]
+    : ["Do I need real money to try it?", "No. NearSeat runs on NEAR's test network. You connect a free testnet wallet, press one button to get test tUSDC, and use that to buy tickets or a membership. Nothing here has real value."],
   ["What do I actually own?", "An NFT in your wallet, and through it the seat's own account. That account holds the seat's earnings, match passes and attendance record. Nobody has a key to it, the club included. The contract only moves its money when the current NFT holder asks."],
   ["Are all seats the same?", "No. Where a seat is decides its category: VIP, Pitchside, Standard or Fans' End. A VIP seat costs 2.5 times a standard one and earns 2.5 times the share of every payout. A seat in the Fans' End costs less and earns in proportion. The grade on the card (Bronze to Legend) is separate: you earn it by turning up."],
   ["I lent my seat. How does the other person get in?", "For that one match the contract records them as the seat's holder. Their wallet shows a gate pass that changes every 30 seconds, and the steward's scanner checks it against the contract. Your own pass is paused for that match, then comes back on its own after full time."],
@@ -266,7 +269,7 @@ function JoinCta() {
       <Reveal>
         <div className="rounded-[32px] bg-wine px-6 py-14 text-wine-ink sm:px-14 sm:py-20">
           <h2 className="font-number text-6xl font-normal leading-[0.9] tracking-normal sm:text-8xl">Pick your seat.</h2>
-          <p className="mt-4 max-w-xl text-lg font-medium">Choose a free seat in Stars Arena, pay the season price in test tUSDC, and watch its account appear on chain.</p>
+          <p className="mt-4 max-w-xl text-lg font-medium">Choose a free seat in Stars Arena, pay the season price in {MAINNET ? "USDC" : "test tUSDC"}, and watch its account appear on chain.</p>
           <div className="mt-8 flex flex-wrap gap-3">
             <a href="#/join" className="pill bg-ink px-6 py-3 text-base font-semibold text-fg hover:bg-card">Become a member</a>
             <a href="#/matches" className="pill border border-ink/40 px-6 py-3 text-base font-semibold hover:bg-ink/10">Buy a single match ticket</a>

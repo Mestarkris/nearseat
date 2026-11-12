@@ -5,7 +5,7 @@ import { view, viewAccessKeys, viewAccount } from "../near/rpc";
 import { usePoll } from "../lib/usePoll";
 import type { HistoryEntry, Membership, Season } from "../lib/types";
 import { nsToDate, usd } from "../lib/format";
-import { config } from "../config";
+import { config, SYM } from "../config";
 import { MembershipCard } from "../components/MembershipCard";
 import { GateAccess } from "../components/GateAccess";
 import { CATEGORIES, multiple } from "../lib/category";
@@ -58,8 +58,8 @@ function History({ tokenId }: { tokenId: string }) {
             <div className="flex justify-between gap-3"><dt className="text-muted">Category</dt><dd className={`font-semibold ${CATEGORIES[m.category].text}`}>{CATEGORIES[m.category].label}</dd></div>
             <div className="flex justify-between gap-3"><dt className="text-muted">Share of every payout</dt><dd className="font-semibold">{multiple(m.category)} a standard seat</dd></div>
             <div className="flex justify-between gap-3"><dt className="text-muted">Grade, from matches attended</dt><dd className="font-semibold">{m.tier}</dd></div>
-            <div className="flex justify-between gap-3"><dt className="text-muted">New from the club</dt><dd className="font-semibold">{usd(m.season_price, 0)} tUSDC</dd></div>
-            <div className="flex justify-between gap-3"><dt className="text-muted">Highest resale price</dt><dd className="font-semibold">{usd(m.resale_cap, 0)} tUSDC</dd></div>
+            <div className="flex justify-between gap-3"><dt className="text-muted">New from the club</dt><dd className="font-semibold">{usd(m.season_price, 0)} {SYM}</dd></div>
+            <div className="flex justify-between gap-3"><dt className="text-muted">Highest resale price</dt><dd className="font-semibold">{usd(m.resale_cap, 0)} {SYM}</dd></div>
           </dl>
           <VerifyBox m={m} />
         </div>
@@ -92,7 +92,7 @@ function History({ tokenId }: { tokenId: string }) {
               {[...h].reverse().map((e, i) => (
                 <li key={i} className="flex flex-wrap justify-between gap-2 py-2">
                   <span>{KIND_LABEL[e.kind] ?? e.kind}{e.account ? ` ${e.account}` : ""}{e.match_id != null ? ` · match ${e.match_id}` : ""}</span>
-                  <span className="text-muted">{e.amount != null && e.kind !== "voted" && e.kind !== "credits_spent" ? `${usd(e.amount)} tUSDC · ` : e.amount ? `${e.amount} · ` : ""}{nsToDate(e.at).toLocaleString()}</span>
+                  <span className="text-muted">{e.amount != null && e.kind !== "voted" && e.kind !== "credits_spent" ? `${usd(e.amount)} ${SYM} · ` : e.amount ? `${e.amount} · ` : ""}{nsToDate(e.at).toLocaleString()}</span>
                 </li>
               ))}
             </ol>

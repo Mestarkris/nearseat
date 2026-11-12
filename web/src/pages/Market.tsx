@@ -1,5 +1,6 @@
 // Second-hand memberships. The buyer pins the vault nonce they inspected; if the
 // seller changes anything before the purchase lands, it reverts and refunds.
+import { SYM } from "../config";
 import { view } from "../near/rpc";
 import { useWallet } from "../near/wallet";
 import { usePoll } from "../lib/usePoll";
@@ -42,7 +43,7 @@ function Listing({ m, refresh }: { m: Membership; refresh: () => void }) {
     <article className="card p-5">
       <div className="flex items-center justify-between"><span className="font-display text-xl font-bold">{m.token_id}</span><TierBadge tier={m.tier} /></div>
       <div className="text-sm text-muted">{seatLabel(m.seat)} · held by {m.owner_id}</div>
-      <div className="mt-1 text-sm"><span className={`font-semibold ${CATEGORIES[m.category].text}`}>{CATEGORIES[m.category].label}</span> <span className="text-muted">· {m.share_weight / 4}x a standard share · {usd(m.season_price, 0)} tUSDC new from the club</span></div>
+      <div className="mt-1 text-sm"><span className={`font-semibold ${CATEGORIES[m.category].text}`}>{CATEGORIES[m.category].label}</span> <span className="text-muted">· {m.share_weight / 4}x a standard share · {usd(m.season_price, 0)} {SYM} new from the club</span></div>
       <dl className="mt-4 grid grid-cols-2 gap-2 text-sm">
         <div className="rounded-xl bg-ink/70 p-2"><dt className="text-xs text-muted">Vault balance</dt><dd className="font-semibold">{usd(m.vault_balance)}</dd></div>
         <div className="rounded-xl bg-ink/70 p-2"><dt className="text-xs text-muted">Unsettled</dt><dd className="font-semibold">{usd(m.unsettled)}</dd></div>
@@ -51,7 +52,7 @@ function Listing({ m, refresh }: { m: Membership; refresh: () => void }) {
       </dl>
       <div className="mt-3 text-xs text-muted">State nonce <span className="mono">{m.nonce}</span> · <a className="text-lime" href={`#/verify/${m.token_id}`}>full history</a></div>
       <div className="mt-4 flex items-center justify-between">
-        <span className="font-display text-2xl font-bold">{usd(m.listing!.price)} <span className="text-sm text-muted">tUSDC</span></span>
+        <span className="font-display text-2xl font-bold">{usd(m.listing!.price)} <span className="text-sm text-muted">{SYM}</span></span>
         {accountId ? (
           <button className="btn-primary" disabled={!!a.busy || accountId === m.owner_id}
             onClick={() => a.run("Buying", () => payTusdc(m.listing!.price, { action: "buy_membership", token_id: m.token_id, expected_nonce: m.nonce }), `${m.token_id} is yours, with everything inside`)}>

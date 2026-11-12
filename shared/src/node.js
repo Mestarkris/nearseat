@@ -11,7 +11,8 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
 /** Loads <repo>/.env into process.env (without overriding real env vars). */
 export function loadEnv() {
-  const file = join(ROOT, ".env");
+  // NEAR_NETWORK=mainnet in the shell selects .env.mainnet, so the testnet .env is never touched.
+  const file = envFile();
   if (!existsSync(file)) return;
   for (const line of readFileSync(file, "utf8").split("\n")) {
     const m = /^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/.exec(line);
@@ -26,6 +27,10 @@ export function env(name, fallback) {
 }
 
 export const repoRoot = ROOT;
+/** The env file for the selected network: .env, or .env.mainnet when NEAR_NETWORK=mainnet. */
+export const envFile = () => join(ROOT, process.env.NEAR_NETWORK === "mainnet" ? ".env.mainnet" : ".env");
+/** Circle's native USDC on NEAR mainnet (6 decimals). */
+export const MAINNET_USDC = "17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad2011e36133a1";
 export const network = () => process.env.NEAR_NETWORK ?? "testnet";
 export const provider = () => new JsonRpcProvider({ url: process.env.NEAR_RPC_URL ?? (network() === "mainnet" ? "https://free.rpc.fastnear.com" : "https://test.rpc.fastnear.com") });
 
@@ -65,6 +70,12 @@ export const ONE_YOCTO = 1n;
 /** Calls a contract method and throws a readable error on failure. */
 export async function call(acc, contractId, methodName, args = {}, { deposit = 0n, gas = 100n * TGAS } = {}) {
   return acc.callFunction({ contractId, methodName, args, deposit, gas });
+}
+
+/** Like `call`, but returns the transaction hash (for evidence links). */
+export async function callTx(acc, contractId, methodName, args = {}, { deposit = 0n, gas = 100n * TGAS } = {}) {
+  const out = await acc.callFunctionRaw({ contractId, methodName, args, deposit, gas });
+  return out.transaction?.hash ?? out.transaction_outcome?.id;
 }
 
 /** True if `publicKey` is a FullAccess key of `accountId` right now. */

@@ -111,7 +111,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       const receiverId = opts.contractId ?? config.contractId;
       const gas = BigInt(opts.gasTgas ?? 100) * TGAS;
       const deposit = opts.deposit ?? "0";
-      if (gasless) {
+      if (gasless && config.relayerUrl) {
         try {
           return await relay(receiverId, naj.functionCall(method, args, gas, BigInt(deposit)));
         } catch (e) {

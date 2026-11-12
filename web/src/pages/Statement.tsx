@@ -6,7 +6,7 @@ import { usePoll } from "../lib/usePoll";
 import { useCountUp } from "../lib/motion";
 import type { HistoryEntry, Match, Membership, Season } from "../lib/types";
 import { nsToDate, parseSeat, usd } from "../lib/format";
-import { config } from "../config";
+import { config, SYM } from "../config";
 import { CATEGORIES, multiple } from "../lib/category";
 import { downloadSeatLedger } from "../lib/exports";
 import { Stamps } from "../components/MembershipCard";
@@ -91,15 +91,15 @@ function Statement({ m, matches, season, history }: { m: Membership; matches: Ma
             <Figure label={`of ${played.length} home matches attended`} value={m.attended.length} />
             <Figure label="home goals seen from this seat" value={m.goal_stamps.length} />
             <Figure label={`${lentFor.size === 1 ? "match" : "matches"} lent to another fan`} value={lentFor.size} />
-            <Figure label="earned from ticket sales" value={num(m.totals.pool_earned)} unit="tUSDC" digits={2} />
-            <Figure label="earned from lending the seat" value={num(m.totals.loan_income)} unit="tUSDC" digits={2} />
-            <Figure label="spent at the ground" value={num(m.vendor_spent)} unit="tUSDC" digits={2} />
+            <Figure label="earned from ticket sales" value={num(m.totals.pool_earned)} unit={SYM} digits={2} />
+            <Figure label="earned from lending the seat" value={num(m.totals.loan_income)} unit={SYM} digits={2} />
+            <Figure label="spent at the ground" value={num(m.vendor_spent)} unit={SYM} digits={2} />
           </dl>
 
           <div className="mt-8 rounded-2xl border border-lime/50 bg-ink p-4">
             <div className="font-display text-lg font-bold">This seat has earned {pct >= 100 ? "all" : `${pct.toFixed(pct < 10 ? 1 : 0)}%`} of next season's price</div>
-            <div className="mt-3"><Progress value={Number(earned)} max={Number(price)} label={`${usd(earned)} of ${usd(price, 0)} tUSDC`} right={`${usd(m.vault_balance)} in the seat now`} /></div>
-            {BigInt(m.renewal_saved) > 0n && <p className="mt-2 text-sm text-fg/80">{usd(m.renewal_saved)} tUSDC is set aside for renewal ({m.renewal_bps / 100}% of each payout).</p>}
+            <div className="mt-3"><Progress value={Number(earned)} max={Number(price)} label={`${usd(earned)} of ${usd(price, 0)} ${SYM}`} right={`${usd(m.vault_balance)} in the seat now`} /></div>
+            {BigInt(m.renewal_saved) > 0n && <p className="mt-2 text-sm text-fg/80">{usd(m.renewal_saved)} {SYM} is set aside for renewal ({m.renewal_bps / 100}% of each payout).</p>}
           </div>
 
           {m.goal_stamps.length > 0 && (

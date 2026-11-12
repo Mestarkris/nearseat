@@ -1,6 +1,7 @@
 // Pick a match, pick your seat. Burgundy seats are lent by members: buying one pays
 // that member's seat account. The other free seats are sold by the club, priced
 // by category.
+import { MAINNET, SYM } from "../config";
 import { useEffect, useState } from "react";
 import { view } from "../near/rpc";
 import { useWallet } from "../near/wallet";
@@ -127,7 +128,7 @@ function SeatPicker({ match }: { match: Match }) {
         if (landed.length === wanted.length) break;
         await pause(1500);
       }
-      if (!landed.length) throw new Error("No seat was bought. The payment was refused and your tUSDC came straight back. The seats may have just been taken, or this wallet has reached its ticket limit for the match.");
+      if (!landed.length) throw new Error("No seat was bought. The payment was refused and your payment came straight back. The seats may have just been taken, or this wallet has reached its ticket limit for the match.");
       result = {
         got: landed.map((p) => ({ label: seatLabel(p.seat), passId: isLent(p) ? p.v!.token_id! : `t${match.id}-${p.seat}` })),
         missed: wanted.filter((p) => !landed.includes(p)).map((p) => seatLabel(p.seat)),
@@ -202,7 +203,7 @@ function SeatPicker({ match }: { match: Match }) {
               <div className="flex items-center justify-between gap-2">
                 <dt className="text-muted">Network fee</dt>
                 <dd>
-                  {basket.length > 1 ? <span className="text-xs text-muted">{"< 0.01 NEAR from your wallet"}</span> : (
+                  {basket.length > 1 || MAINNET ? <span className="text-xs text-muted">{"< 0.01 NEAR from your wallet"}</span> : (
                     <label className="flex cursor-pointer items-center gap-2 text-xs">
                       <input type="checkbox" checked={gasless} onChange={(e) => setGasless(e.target.checked)} className="accent-wine" />
                       <span className={gasless ? "text-lime" : "text-muted"}>{gasless ? "Gasless via relayer*" : "< 0.001 NEAR from your wallet"}</span>
@@ -210,7 +211,7 @@ function SeatPicker({ match }: { match: Match }) {
                   )}
                 </dd>
               </div>
-              <div className="flex justify-between border-t border-line pt-2 text-base font-bold"><dt>Total{basket.length > 1 ? ` for ${basket.length} seats` : ""}</dt><dd>{usd(total)} tUSDC</dd></div>
+              <div className="flex justify-between border-t border-line pt-2 text-base font-bold"><dt>Total{basket.length > 1 ? ` for ${basket.length} seats` : ""}</dt><dd>{usd(total)} {SYM}</dd></div>
             </dl>
             <PayFromAnyChain amount={total} what={basket.length > 1 ? "these seats" : "this seat"} />
             {accountId ? (
@@ -257,7 +258,7 @@ function FullTime({ match, seats, payoutPlays, play }: { match: Match; seats: Se
         <div className="text-sm text-fg/80">Paid to members at the whistle</div>
         <div className="mt-1 flex items-baseline gap-2">
           <span className="font-number text-5xl leading-none text-lime tabular-nums">{paid.toFixed(2)}</span>
-          <span className="text-sm text-muted">tUSDC</span>
+          <span className="text-sm text-muted">{SYM}</span>
         </div>
         <p className="mt-2 text-xs text-muted">5% of this match's ticket sales, split across {members} seat accounts by category. A VIP seat's coin is bigger because its share is 2.5 times a standard one.</p>
         <button className="btn-primary mt-3 w-full justify-center" onClick={() => play("payout")}>Replay the payout</button>
