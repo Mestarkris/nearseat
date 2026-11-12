@@ -2,6 +2,8 @@
 
 # NearSeat: your seat now earns
 
+[![CI](https://github.com/Mestarkris/nearseat/actions/workflows/ci.yml/badge.svg)](https://github.com/Mestarkris/nearseat/actions/workflows/ci.yml)
+
 **Season memberships that own their own NEAR accounts.** Built for the fictional Nigerian club **Illia Stars United**.
 
 Every season membership is an NEP-171 NFT that owns a keyless NEAR sub-account, for example `seat-c5-12.nearseat.testnet`. That account:
@@ -17,6 +19,34 @@ Every season membership is an NEP-171 NFT that owns a keyless NEAR sub-account, 
 **Live app:** https://nearseat.vercel.app (mirror: https://mestarkris.github.io/nearseat/) · **Contract:** [`nearseat.testnet`](https://testnet.nearblocks.io/address/nearseat.testnet) · **Example vault:** [`seat-c5-12.nearseat.testnet`](https://testnet.nearblocks.io/address/seat-c5-12.nearseat.testnet)
 
 > Testnet only. **tUSDC is a valueless test token** with an open faucet. Illia Stars United, its players and its stadium are fictional.
+
+## Check it in two minutes, with nothing installed
+
+Every claim below can be checked against public sources. Nothing here asks you to trust the README.
+
+| Claim | Check |
+|---|---|
+| A seat's account has no keys | `curl -s https://test.rpc.fastnear.com -H 'content-type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"query","params":{"request_type":"view_access_key_list","finality":"final","account_id":"seat-c5-12.nearseat.testnet"}}'` returns `"keys": []` |
+| The live contract is this repository's code | `npm run build:contracts && npm run verify` compares the built hash with testnet. Or open [Verify](https://nearseat.vercel.app/#/verify/seat-c5-12) and press **Verify on-chain** |
+| The tests pass | [CI](https://github.com/Mestarkris/nearseat/actions/workflows/ci.yml) builds the contracts and runs 96 unit tests, 15 end-to-end tests on a NEAR sandbox and the JS tests on every push |
+| A sale in the middle of a payout pays the buyer | `sale_mid_payout_buyer_receives_settlement` in [`tests.rs`](contracts/nearseat/src/tests.rs) and, with real interleaved receipts, in [`sandbox.rs`](contracts/sandbox-tests/tests/sandbox.rs) |
+| The old owner and a past renter are locked out | `renter_and_old_owner_locked_out` in [`sandbox.rs`](contracts/sandbox-tests/tests/sandbox.rs) |
+| The contract refuses attacks on the live deployment | [Attack Lab](https://nearseat.vercel.app/#/lab): 21 attacks, each sent as a real testnet transaction |
+| The threat model came before the code | `git log --reverse` shows it as the first commit |
+
+## More than an NFT with a wallet
+
+An NFT that owns an account is the starting point. NearSeat is what a club runs on top of it for a whole season, and each part is in the contract and tested:
+
+| A club needs | NearSeat does | Test |
+|---|---|---|
+| Members who earn from matchday | 5% of ticket sales is split by seat category and settled into each seat's account. The split never pays out more than it took in | `weighted_pool_never_over_distributes`, `full_season_on_real_tusdc` |
+| One seat, one person at the gate | Lending pauses the owner's pass for that match. Passes rotate and expire in 30 s. The contract checks the live holder at scan time | `renter_holds_pass_and_income_follows_token`, gate tests in `npm run test:js` |
+| Resale without touts or rug-pulls | Price cap per category, club royalty, and a state nonce so the seller can't empty the account between listing and sale | `price_caps_enforced`, `wrong_nonce_refunds_buyer_and_keeps_owner` |
+| Refunds when a match is off | Postponing queues every refund. A refund that can't be delivered is held for the payer, not kept by the club | `postpone_refunds_every_ticket`, `postpone_refunds_once_and_parks_failures` |
+| Money that survives failed transfers | Every outgoing payment has a callback that restores the balance if the token transfer fails | `failed_settlement_callback_restores_state`, `failed_withdraw_callback_restores_vault_balance` |
+| Spending at the ground | The holder pays a club-approved vendor from the seat's account, while savings for next season stay locked | `seat_pays_a_vendor_and_keeps_renewal_savings_locked` |
+| Books for the accountant | Three CSV files with a status on every payment. See [For the bookkeeper](#for-the-bookkeeper) | Built in the browser from contract views |
 
 ## Tracks
 
@@ -48,7 +78,7 @@ Prerequisites: Rust (the pinned toolchain installs itself via `rust-toolchain.to
 git clone https://github.com/Mestarkris/nearseat && cd nearseat
 npm install
 npm run build:contracts      # → target/near/*/*.wasm + prints code hashes
-npm run test:unit            # see: 83 Rust unit tests pass
+npm run test:unit            # see: 96 Rust unit tests pass (89 NearSeat, 4 vault, 3 tUSDC)
 npm run test:sandbox         # see: 15 end-to-end tests pass on a local NEAR sandbox
 npm run test:js              # see: gate pass, NEP-413 and relayer policy tests pass
 ```
@@ -165,7 +195,7 @@ Builds are deterministic for a given toolchain. `rust-toolchain.toml` pins Rust 
 
 | Command | What it proves |
 |---|---|
-| `npm run test:unit` | **87** NearSeat unit tests + 4 vault + 3 tUSDC. Includes: the season lending rule (waits for its window, never lends a checked-in holder's seat, cleared on sale, price follows the cap), paying a club-approved vendor from the seat (unapproved, listed, over-limit and failed payments), renewal saving (set aside, capped at the season price, cleared on sale), seat categories (prices, weighted split that never over-distributes, per-category caps, migration from the equal-split layout), sale mid-payout, failed-callback rollback (settle, withdraw, refunds), wrong nonce, old owner locked out, renter locked out after full time, price caps (lend + resale), goal stamps only for checked-in members, advance repaid on sale, double vote blocked, auto-lend cleared on sale, admin bounds |
+| `npm run test:unit` | **89** NearSeat unit tests + 4 vault + 3 tUSDC. Includes: the season lending rule (waits for its window, never lends a checked-in holder's seat, cleared on sale, price follows the cap), paying a club-approved vendor from the seat (unapproved, listed, over-limit and failed payments), renewal saving (set aside, capped at the season price, cleared on sale), seat categories (prices, weighted split that never over-distributes, per-category caps, migration from the equal-split layout), sale mid-payout, failed-callback rollback (settle, withdraw, refunds), wrong nonce, old owner locked out, renter locked out after full time, price caps (lend + resale), goal stamps only for checked-in members, advance repaid on sale, double vote blocked, auto-lend cleared on sale, admin bounds |
 | `npm run test:sandbox` | **15** end-to-end tests with real receipts, including: a seat paying a vendor in real tUSDC while its renewal savings stay locked; a VIP seat costing more and earning a bigger share; a fan buying a new membership from the club with tUSDC; vault keyless + global code hash + parent-only; full season on real tUSDC; **sale mid-payout with interleaved receipts**; failed settlement and withdrawal callbacks with a failing token; wrong nonce refunds buyer; renter + old owner locked out; goal stamps; postponement refunds; advance repaid on sale; double vote blocked |
 | `npm run test:js` | Gate pass (fresh OK, screenshot > 30 s rejected, old owner rejected, forged cert rejected), members-only replay and non-holder rejection, relayer allow-list and rate limits |
 

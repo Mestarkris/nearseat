@@ -1,19 +1,8 @@
 # Submission kit
 
-## Demo video script (about 2:45)
+## Demo video
 
-Record in the browser at 1280×800, with a phone mirrored for the gate pass. Run `npm run demo` in a terminal you can cut to.
-
-| Time | On screen | Say |
-|---|---|---|
-| 0:00–0:15 | Landing page, live card | "This is NearSeat. Every season membership for Illia Stars United is an NFT that owns its own NEAR account. Your seat now earns." |
-| 0:15–0:35 | `#/verify/seat-c5-12` → **Verify on-chain** | "The card's account is `seat-c5-12.nearseat.testnet`. Verify asks public RPC directly: zero access keys, and the code hash matches our published build. Only the NFT holder can move this money." |
-| 0:35–0:55 | **Matches** → buy a grey seat; club dashboard pool grows | "A fan buys a ticket in tUSDC. Five percent of every ticket goes to the members' pool, live." |
-| 0:55–1:10 | **My membership → Seat lending** → lend for one match; a second wallet buys the lime seat | "Can't make it? Lend your seat for one match. The renter pays, the renter gets the gate pass, and the fee goes into the seat's own account." |
-| 1:10–1:40 | Club **Matchday control**: Kickoff → Goal → Full time. Member dashboard feed and payout bar | "Matchday is on-chain. Kickoff locks loans. A goal stamps every member who checked in. Full time ends loans and starts the payout: watch each seat account get settled." |
-| 1:40–2:10 | Member lists the card; payout is running; buyer buys with the nonce; `#/verify` shows the new holder and the payout landing in the vault; old owner's withdraw fails | "Now the twist: sell mid-payout. The buyer pins the vault state they saw. NFT, balance, passes and gate access move in one transaction. The payout lands in the vault, so the buyer gets it, and the seller is locked out." |
-| 2:10–2:30 | Phone: rotating gate pass; scanner says *Welcome in*; old screenshot says *Refused* | "At the gate, the pass rotates every five seconds and dies after thirty. Screenshots and old owners fail." |
-| 2:30–2:45 | **Attack Lab** → **Try it on testnet** twice → refusals | "Twenty-one documented attacks, each with a test, and you can fire them at testnet yourself. NearSeat: your seat now earns." |
+The demo is a 2:34 motion video at 60 fps with a voiceover and captions. It follows one seat: it gets its account, earns on matchday, is lent for a match, is sold with everything in it, and the old owner is refused at the gate. The narration script is kept with the video files, outside this repository.
 
 ## X post
 
@@ -26,10 +15,12 @@ Record in the browser at 1280×800, with a phone mirrored for the gate pass. Run
 > Built at NEAR HACKATHON #NEARHackathon
 > https://github.com/Mestarkris/nearseat · https://nearseat.vercel.app
 
-## Project description (about 1,250 characters)
+## Project description (about 1,400 characters)
 
-NearSeat is a season membership and ticketing platform for football clubs, demoed with the fictional Nigerian club Illia Stars United. Every season membership is an NEP-171 NFT that owns its own keyless NEAR sub-account (for example `seat-c5-12.nearseat.testnet`). That account holds the member's stablecoin balance and collects its share of 5% of every match's ticket sales through an O(1) pool weighted by seat category (VIP, pitchside, standard, fans' end). It also earns when the member lends their seat for a match, holds passes, credits and attendance and goal stamps, and opens the stadium gate with a 30-second rotating NEP-413 pass.
+NearSeat runs a football club's whole season on NEAR, shown with the fictional Nigerian club Illia Stars United. Every season membership is an NEP-171 NFT that owns a keyless NEAR account (for example `seat-c5-12.nearseat.testnet`). The account earns: 5% of every match's ticket sales is split by seat category and settled into it, and it collects rent when the member lends the seat for one match. The holder pays club-approved vendors from it, saves towards next season, and opens the gate with a pass that expires in 30 seconds.
 
-The vault has zero access keys and obeys only the NFT contract, which checks the live owner on every call. Selling the NFT therefore moves the money, inventory, record and access in one transaction, and the seller is locked out. Resale is seller-proof: listing freezes the vault, and buyers pin a state nonce. A sale even works mid-payout, because payouts are owed to the token, not the person.
+The account has zero keys and obeys only the NFT contract, which checks the live owner on every call. Sell the NFT and the money, passes, record and gate access move in one transaction, and the seller is refused from that block on. A sale works even in the middle of a payout. Listing freezes the account and buyers pin a state nonce, so a seller can't empty it first.
 
-Members can pay club-approved vendors straight from the seat's account, or set payouts aside until the seat has paid for next season. Clubs get escrowed stablecoin ticketing, automatic refunds on postponement, capped resale with a NEP-199 royalty, and gasless fans via NEP-366. There is a public history and Verify page, an Attack Lab with 21 tested attacks, and the threat model was written before any code.
+Clubs get stablecoin ticketing with per-match escrow, automatic refunds on postponement, capped resale with a royalty, gasless fans, and CSV books an accountant can open.
+
+Every claim can be checked: 96 unit tests and 15 sandbox tests run in CI on every push, the Verify page compares the live code hash with the repository, the Attack Lab sends 21 attacks to testnet, and the threat model (67 threats) was the first commit. It runs on testnet with a test stablecoin.
